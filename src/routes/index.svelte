@@ -1,2 +1,10 @@
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to read the documentation</p>
+<svelte:head>
+	<title>EVE Online Visual Industry Calculator</title>
+</svelte:head>
+
+<h1>EVE Online Visual Industry Calculator</h1>
+
+<label>
+    Item
+    <input type="text" />
+</label>
