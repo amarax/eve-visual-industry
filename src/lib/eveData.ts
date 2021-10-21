@@ -1,4 +1,5 @@
 import { readable } from "svelte/store";
+// import Papa from "https://cdnjs.cloudflare.com/ajax/libs/PapaParse/4.6.2/papaparse.min.js";
 
 interface ESIOptions {
     dev?: any,
@@ -78,7 +79,35 @@ async function loadCategoriesESI() {
     return categories;
 }
 
+async function loadMarketTypesESI(marketGroups) {
+    let types = {};
 
+    for(let group_id in marketGroups) {
+        for(let type_id of marketGroups[group_id].types) {
+            types[type_id] = true;
+        }
+    }
+
+
+    let total = Object.keys(types).length;
+    let progress = 0;
+
+    // function reportProgress() {
+    //     console.log("Loading market types...", progress/total);
+    //     if(progress < total) {
+    //         setTimeout(reportProgress, 1000);
+    //     }
+    // }
+    // setTimeout(reportProgress, 1000);
+
+    for(let type_id in types) {
+        // types[type_id] = await loadFromESI(`/universe/types/${type_id}/`);
+
+        progress++;
+    }
+
+    return types;
+}
 
 
 
@@ -142,6 +171,29 @@ async function loadMarketsStatic() {
     return Promise.reject(response);
 }
 
+async function loadTypesStatic(marketGroups) {
+    return new Promise((resolve)=>{
+        Papa.parse("/data/types.csv", {
+            download: true,
+            header: true,
+            complete: (results, file) => {
+                let types = {};
+                for(let group_id in marketGroups) {
+                    marketGroups[group_id].types.forEach(type_id => {
+                        types[type_id] = true;
+                    });
+                }
+
+                for(let type of results.data) {
+                    if(types[type.type_id])
+                        types[type.type_id] = type;
+                }
+
+                resolve(types);
+            }
+        });
+    });
+}
 
 function setupUniverse( set:(value:any)=>void ) {
     const universe = {
@@ -153,17 +205,27 @@ function setupUniverse( set:(value:any)=>void ) {
     set(universe);
 
     loadCategoriesStatic()
-        .then((categories:Object) => {
+        .then((categories) => {
             universe.categories = categories;
             set(universe);
         })
         .catch(err => {console.error(err)});
 
     loadMarketsStatic()
-        .then((markets:Object)=>{
+        .then((markets)=>{
             universe.markets = markets;
+            set(universe);
+
+            loadTypesStatic(markets.groups)
+                .then((types)=>{
+                    universe.types = types;
+                    set(universe);
+                })
+                .catch(err => {console.error(err)});
         })
         .catch(err => {console.error(err)});
+
+        
 
 
     return () => {};

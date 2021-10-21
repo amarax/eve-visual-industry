@@ -1,13 +1,19 @@
 <script lang="ts">
     import { Universe } from '$lib/EveData';
 
-
-    Universe.subscribe(value => {console.log("Universe updated", value)});
+    let scienceSkills = [];
+    $: {
+        scienceSkills = $Universe.markets.groups[375].types.map(type_id=>$Universe.types[type_id]).sort((a,b)=>a.name.localeCompare(b.name));
+    }
 </script>
 
 
 <label>
-    Science skill 1
+    <select>
+        {#each scienceSkills as {id,name} }
+            <option value={id}>{name}</option>
+        {/each}
+    </select>
     <input type="range" min={0} max={5} />
 </label>
 <br />
