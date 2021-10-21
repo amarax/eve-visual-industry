@@ -9,6 +9,8 @@
     let types:Array<Type> = [];
     let filteredTypes:Array<Type> = [];
 
+    export let selectedTypeId:number = null;
+
     $: {
         if($Universe.types) {
             types = Object.keys($Universe.types).map(type_id=>$Universe.types[type_id]);
@@ -75,7 +77,7 @@
         </select>
     {/each}
     <br />
-    <select>
+    <select bind:value={selectedTypeId}>
         {#each filteredTypes as {type_id,name} }
             <option value={type_id}>{name}</option>
         {/each}

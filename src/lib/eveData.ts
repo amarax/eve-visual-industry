@@ -216,7 +216,9 @@ async function loadTypesStatic(marketGroups:EntityCollection<MarketGroup>) {
             download: true,
             header: true,
             complete: async (results, file) => {
-                let types:EntityCollection<MarketGroup> = {};
+                let types:EntityCollection<Type> = {};
+
+                // For now we are only showing items that show up in any market group
                 for(let group_id in marketGroups) {
                     marketGroups[group_id].types.forEach(type_id => {
                         types[type_id] = null;
@@ -246,10 +248,12 @@ async function loadTypesStatic(marketGroups:EntityCollection<MarketGroup>) {
     });
 }
 
+let _types:EntityCollection<Type> = null;
+
 function setupUniverse( set:(value:any)=>void ) {
     const universe = {
         categories: null,
-        types: null,
+        types: _types,
         markets: null,
     };
 
@@ -268,8 +272,9 @@ function setupUniverse( set:(value:any)=>void ) {
             set(universe);
 
             loadTypesStatic(markets.groups)
-                .then((types)=>{
-                    universe.types = types;
+                .then((types:EntityCollection<Type>)=>{
+                    _types = types;
+                    universe.types = _types;
                     set(universe);
                 })
                 .catch(err => {console.error(err)});
@@ -282,4 +287,79 @@ function setupUniverse( set:(value:any)=>void ) {
     return () => {};
 }
 
+export async function loadType(type_id:number):Promise<Type> {
+    try {
+        let type = await loadFromESI(`/universe/types/${type_id}/`);
+
+        _types[type_id] = type;
+
+        return type;
+    } catch (error) {
+        console.error(error);
+    }
+}
+
 export const Universe = readable({}, setupUniverse);
+
+type Attribute = {
+    attribute_id: number,
+    default_value: number,
+    description: string,
+    display_name: string,
+    high_is_good: boolean,
+    icon_id: number,
+    name: string,
+    published: boolean,
+    stackable: boolean,
+    unit_id: string
+  }
+
+interface Dogma {
+    attributes: EntityCollection<Attribute>
+}
+
+export const Dogma = readable({}, setupDogma);
+
+
+async function loadDogmaFromESI() {
+    let dogma:Dogma = {
+        attributes: {},
+    };
+
+    let progressTimeout;
+    try {
+        let attribute_ids:Array<number> = await loadFromESI("/dogma/attributes/");
+
+        let total = attribute_ids.length;
+        let progress = 0;
+    
+        function reportProgress() {
+            console.log("Loading attributes...", progress/total);
+            if(progress < total) {
+                progressTimeout = setTimeout(reportProgress, 1000);
+            }
+        }
+        progressTimeout = setTimeout(reportProgress, 1000);
+
+        for(let attribute_id of attribute_ids) {
+            dogma.attributes[attribute_id] = await loadFromESI(`/dogma/attributes/${attribute_id}/`);
+
+            progress++;
+        }
+
+    
+    } catch (error) {
+        console.log(error);
+        clearTimeout(progressTimeout);
+    }
+}
+
+function setupDogma( set:(value:any)=>void ) {
+    set({
+        attributes: null,
+    })
+
+    //loadDogmaFromESI();
+
+    return () => {}
+}
