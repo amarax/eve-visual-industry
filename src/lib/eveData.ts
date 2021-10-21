@@ -7,9 +7,11 @@ interface ESIOptions {
 
 }
 
+export type Type_Id = number;
+
 
 export type Type = {
-    type_id: number;
+    type_id: Type_Id;
     name: string;
 }
 
@@ -210,6 +212,18 @@ async function loadMarketsStatic() {
     return Promise.reject(response);
 }
 
+function loadFromSDE( route: string ):Promise<Object> {
+    return new Promise((resolve)=>{
+        Papa.parse(route, {
+            download: true,
+            header: true,
+            complete: async (results) => {
+                resolve(results.data);
+            }
+        });    
+    });
+}
+
 async function loadTypesStatic(marketGroups:EntityCollection<MarketGroup>) {
     return new Promise((resolve)=>{
         Papa.parse("/data/types.csv", {
@@ -363,3 +377,104 @@ function setupDogma( set:(value:any)=>void ) {
 
     return () => {}
 }
+
+
+export type Activity_Id = number;
+
+export type RAMActivity = {
+    activityID:Activity_Id,
+    activityName:string,
+    iconNo:number,
+    description:string,
+    published:boolean
+};
+
+export type IndustryType = {
+    type_id: Type_Id,
+    activities: EntityCollection<{ 
+        activity: RAMActivity,
+        time: number,
+        materials: EntityCollection<{
+            materialTypeID: Type_Id,
+            quantity: number,
+        }>,
+        products: EntityCollection<{
+            type_id: Type_Id,
+            quantity: number,
+        }>,
+    }>,
+    maxProductionLimit?: number,
+}
+
+
+
+function setupIndustry( set:(value:any)=>void ) {
+    let industry: {activities:EntityCollection<RAMActivity>, types:EntityCollection<IndustryType>} = {
+        activities: {},
+        types: {},
+    }
+
+    loadFromSDE("/data/ramActivities.csv")
+        .then((data:Array<RAMActivity>)=>{
+            data.forEach(activity=>industry.activities[activity.activityID]=activity);
+
+            return loadFromSDE("/data/industryActivity.csv");
+        })
+        .then((data:Array<{
+            type_id:Type_Id,
+            activityID:number,
+            time:number
+        }>)=>{
+            data.forEach(typeActivity=>{
+                let type = industry.types[typeActivity.type_id];
+                if(type === undefined) {
+                    type = {type_id:typeActivity.type_id, activities:{}};
+                    industry.types[typeActivity.type_id] = type;
+                }
+                
+                type.activities[typeActivity.activityID] = {
+                    activity: industry.activities[typeActivity.activityID],
+                    time: typeActivity.time,
+                    materials: {},
+                    products: {},
+                }
+
+            });
+
+            return loadFromSDE("/data/industryActivityProducts.csv");
+        })
+        .then((data:Array<{
+            type_id: Type_Id,
+            activityID: Activity_Id,
+            productTypeID: Type_Id,
+            quantity: number
+        }>)=>{
+            data.forEach(activityProduct=>{
+                let activity = industry.types[activityProduct.type_id].activities[activityProduct.activityID];
+                activity.products[activityProduct.productTypeID] = {
+                    type_id: activityProduct.productTypeID,
+                    quantity: activityProduct.quantity
+                };
+            });
+
+            return loadFromSDE("/data/industryBlueprints.csv");
+        })
+        .then((data:Array<{
+            type_id:Type_Id, 
+            maxProductionLimit:number
+        }>)=>{
+            //TODO check if industry type exists
+
+            data.forEach(blueprint=>industry.types[blueprint.type_id].maxProductionLimit = blueprint.maxProductionLimit);
+
+        })
+        .catch(reason=>console.error(reason));
+
+    set(industry);
+
+    return () => {}
+}
+
+export const Industry = readable({
+    types:null,
+}, setupIndustry);

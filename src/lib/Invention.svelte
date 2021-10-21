@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { Universe, loadType } from '$lib/EveData';
+    import { Universe, Industry, loadType, IndustryType } from '$lib/EveData';
     import type { Type } from '$lib/EveData';
     import TypeSelector from '$lib/TypeSelector.svelte';
 
@@ -8,6 +8,8 @@
 
     let selectedTypeId:number = null;
     let selectedType:Type = null;
+
+    let selectedIndustryType:IndustryType;
 
     $: {
         if($Universe.markets && $Universe.types) {
@@ -22,9 +24,24 @@
                 selectedType=type;
             });
     }
+
+    $: {
+        selectedIndustryType = $Industry.types[selectedTypeId];
+
+        console.log(selectedIndustryType);
+    }
 </script>
 
 <TypeSelector bind:selectedTypeId />
+
+{#if selectedIndustryType}
+<dl>
+    {#each Object.entries(selectedIndustryType) as property }
+        <dt>{property[0]}</dt>
+        <dd>{property[1] instanceof Object?Object.entries(property[1]):property[1]}</dd>
+    {/each}
+</dl>
+{/if}
 
 <label>
     <select>

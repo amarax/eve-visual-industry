@@ -45,7 +45,8 @@
             filteredTypes = types.filter(()=>true);
         }
 
-        filteredTypes.sort((a,b)=>a.name.localeCompare(b.name));
+        // Return first 1000 results for performance reasons
+        filteredTypes.sort((a,b)=>a.name.localeCompare(b.name)).splice(1000);   
     }
 
     $: {
