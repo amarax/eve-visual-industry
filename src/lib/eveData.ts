@@ -7,6 +7,22 @@ interface ESIOptions {
 
 }
 
+
+export type Type = {
+    type_id: number;
+    name: string;
+}
+
+export type MarketGroup = {
+    market_group_id: number;
+    name: string;
+    types?: Array<number>;
+    child_groups?: Object;
+}
+
+
+
+
 async function loadFromESI( route:string, options?:ESIOptions ) {
     let endpoint = `https://esi.evetech.net/${(options&&options.dev)?"dev":"latest"}${route}`;
 
@@ -145,25 +161,25 @@ async function loadMarketsStatic() {
     const data = await response.json();
 
     if( response.ok ) {
-        let groupsTree = {};
+        let groupTree = {};
         for(let group_id in data.groups) {
             let group = data.groups[group_id];
             if(group.parent_group_id) {
-                if(data.groups[group.parent_group_id].child_groups instanceof Array) {
-                    data.groups[group.parent_group_id].child_groups.push(group);
-                } else {
-                    data.groups[group.parent_group_id].child_groups = [group];
+                let parentGroup = data.groups[group.parent_group_id];
+                if(parentGroup.child_groups === undefined) {
+                    parentGroup.child_groups = {};
                 }
+                parentGroup.child_groups[group_id] = group;
             }
         }
         for(let group_id in data.groups) {
             let group = data.groups[group_id];
             if(group.parent_group_id === undefined) {
-                groupsTree[group.market_group_id] = group;
+                groupTree[group.market_group_id] = group;
             }
         }
 
-        data.groupsTree = groupsTree;
+        data.groupTree = groupTree;
 
         return data;
     }
