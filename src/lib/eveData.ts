@@ -125,6 +125,27 @@ async function loadMarketTypesESI(marketGroups) {
     return types;
 }
 
+async function loadTypesESI(type_ids:Array<string>) {
+    let total = type_ids.length;
+    let progress = 0;
+
+    function reportProgress() {
+        console.log("Loading market types...", progress/total);
+        if(progress < total) {
+            setTimeout(reportProgress, 1000);
+        }
+    }
+    setTimeout(reportProgress, 1000);
+
+    let types = {};
+    for(let type_id of type_ids) {
+        types[type_id] = await loadFromESI(`/universe/types/${type_id}/`);
+
+        progress++;
+    }
+
+    return types;
+}
 
 
 async function loadCategoriesStatic() {
@@ -192,7 +213,7 @@ async function loadTypesStatic(marketGroups) {
         Papa.parse("/data/types.csv", {
             download: true,
             header: true,
-            complete: (results, file) => {
+            complete: async (results, file) => {
                 let types = {};
                 for(let group_id in marketGroups) {
                     marketGroups[group_id].types.forEach(type_id => {
@@ -201,8 +222,20 @@ async function loadTypesStatic(marketGroups) {
                 }
 
                 for(let type of results.data) {
-                    if(types[type.type_id])
+                    if(types[type.type_id] && type.published)
                         types[type.type_id] = type;
+                    else
+                        delete types[type.type_id];
+                }
+
+                // Fallback if static types don't contain data for some new types
+                let missingTypes = await loadTypesESI( Object.keys(types).filter(type_id=>types[type_id]===true) );
+                
+                for(let type_id in missingTypes) {
+                    if(missingTypes[type_id].published)
+                        types[type_id] = missingTypes[type_id];
+                    else
+                        delete types[type_id];
                 }
 
                 resolve(types);
