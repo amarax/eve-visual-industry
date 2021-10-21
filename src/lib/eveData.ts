@@ -20,7 +20,9 @@ export type MarketGroup = {
     child_groups?: Object;
 }
 
-
+interface EntityCollection<Entity> {
+    [id: string]: Entity;
+}
 
 
 async function loadFromESI( route:string, options?:ESIOptions ) {
@@ -208,28 +210,28 @@ async function loadMarketsStatic() {
     return Promise.reject(response);
 }
 
-async function loadTypesStatic(marketGroups) {
+async function loadTypesStatic(marketGroups:EntityCollection<MarketGroup>) {
     return new Promise((resolve)=>{
         Papa.parse("/data/types.csv", {
             download: true,
             header: true,
             complete: async (results, file) => {
-                let types = {};
+                let types:EntityCollection<MarketGroup> = {};
                 for(let group_id in marketGroups) {
                     marketGroups[group_id].types.forEach(type_id => {
-                        types[type_id] = true;
+                        types[type_id] = null;
                     });
                 }
 
                 for(let type of results.data) {
-                    if(types[type.type_id] && type.published)
+                    if(types[type.type_id] !== undefined && type.published)
                         types[type.type_id] = type;
                     else
                         delete types[type.type_id];
                 }
 
                 // Fallback if static types don't contain data for some new types
-                let missingTypes = await loadTypesESI( Object.keys(types).filter(type_id=>types[type_id]===true) );
+                let missingTypes = await loadTypesESI( Object.keys(types).filter(type_id=>types[type_id]===null) );
                 
                 for(let type_id in missingTypes) {
                     if(missingTypes[type_id].published)
