@@ -173,43 +173,43 @@ async function loadCategoriesStatic() {
 }
 
 async function loadMarketsStatic() {
-    const response = await window.fetch(
-        "/data/markets.json",
-        {
-            method: 'GET',
-            headers: {
-                accept: 'application/json',
-            }
-        }
-    )
-
-    const data = await response.json();
-
-    if( response.ok ) {
-        let groupTree = {};
-        for(let group_id in data.groups) {
-            let group = data.groups[group_id];
-            if(group.parent_group_id) {
-                let parentGroup = data.groups[group.parent_group_id];
-                if(parentGroup.child_groups === undefined) {
-                    parentGroup.child_groups = {};
-                }
-                parentGroup.child_groups[group_id] = group;
-            }
-        }
-        for(let group_id in data.groups) {
-            let group = data.groups[group_id];
-            if(group.parent_group_id === undefined) {
-                groupTree[group.market_group_id] = group;
-            }
-        }
-
-        data.groupTree = groupTree;
-
-        return data;
+    let raw;
+    try {
+        raw = await loadFromSDE("/data/invMarketGroups.csv");
+    } catch (error) {
+        console.error(error);        
     }
 
-    return Promise.reject(response);
+    let data = {groups:{}, groupTree:{}};
+    raw.forEach(group => {
+        data.groups[group.market_group_id] = group;
+        group.types = [];
+        if(group.parent_group_id == "None") {
+            delete group.parent_group_id;
+        }
+    });
+
+    let groupTree = {};
+    for(let group_id in data.groups) {
+        let group = data.groups[group_id];
+        if(group.parent_group_id) {
+            let parentGroup = data.groups[group.parent_group_id];
+            if(parentGroup.child_groups === undefined) {
+                parentGroup.child_groups = {};
+            }
+            parentGroup.child_groups[group_id] = group;
+        }
+    }
+    for(let group_id in data.groups) {
+        let group = data.groups[group_id];
+        if(group.parent_group_id === undefined) {
+            groupTree[group.market_group_id] = group;
+        }
+    }
+
+    data.groupTree = groupTree;
+
+    return data;
 }
 
 function loadFromSDE( route: string ):Promise<Object> {
@@ -232,29 +232,27 @@ async function loadTypesStatic(marketGroups:EntityCollection<MarketGroup>) {
             complete: async (results, file) => {
                 let types:EntityCollection<Type> = {};
 
-                // For now we are only showing items that show up in any market group
-                for(let group_id in marketGroups) {
-                    marketGroups[group_id].types.forEach(type_id => {
-                        types[type_id] = null;
-                    });
-                }
-
                 for(let type of results.data) {
-                    if(types[type.type_id] !== undefined && type.published)
+                    if(type.published) {
                         types[type.type_id] = type;
-                    else
+    
+                        if(type.market_group_id === "None")
+                            delete type.market_group_id
+                        else
+                            marketGroups[type.market_group_id].types.push(type.type_id);
+                    } else
                         delete types[type.type_id];
                 }
 
                 // Fallback if static types don't contain data for some new types
-                let missingTypes = await loadTypesESI( Object.keys(types).filter(type_id=>types[type_id]===null) );
+                // let missingTypes = await loadTypesESI( Object.keys(types).filter(type_id=>types[type_id]===null) );
                 
-                for(let type_id in missingTypes) {
-                    if(missingTypes[type_id].published)
-                        types[type_id] = missingTypes[type_id];
-                    else
-                        delete types[type_id];
-                }
+                // for(let type_id in missingTypes) {
+                //     if(missingTypes[type_id].published)
+                //         types[type_id] = missingTypes[type_id];
+                //     else
+                //         delete types[type_id];
+                // }
 
                 resolve(types);
             }
@@ -279,6 +277,8 @@ function setupUniverse( set:(value:any)=>void ) {
             set(universe);
         })
         .catch(err => {console.error(err)});
+
+    
 
     loadMarketsStatic()
         .then((markets)=>{
