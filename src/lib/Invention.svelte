@@ -9,6 +9,33 @@
     let selectedTypeId:number = null;
     let selectedType:Type = null;
 
+    let selectableTypes: Array<Type> = null;
+
+    let INVENTION_ACTIVITY_ID = null;
+    $: INVENTION_ACTIVITY_ID = Object.keys($Industry.activities).find(activityID=>$Industry.activities[activityID].activityName=="Invention");
+
+    let REVERSE_ENGINEERING_ACTIVITY_ID = null;
+    $: REVERSE_ENGINEERING_ACTIVITY_ID = Object.keys($Industry.activities).find(activityID=>$Industry.activities[activityID].activityName=="Reverse Engineering");
+
+    $: if($Universe.types && $Industry.types) {
+        selectableTypes = [];
+
+        Object.values($Industry.types).forEach(t=>{
+            if(t.activities[INVENTION_ACTIVITY_ID]) {
+                selectableTypes.push(...Object.keys(t.activities[INVENTION_ACTIVITY_ID].products))
+            }
+
+            if(t.activities[REVERSE_ENGINEERING_ACTIVITY_ID]) {
+                selectableTypes.push(...Object.keys(t.activities[REVERSE_ENGINEERING_ACTIVITY_ID].products))
+            }
+        })
+
+        selectableTypes = selectableTypes.map(id=>$Universe.types[id]);
+        console.log("Recalculated selectable types");
+    }
+
+    console.log($Industry);
+
     let selectedIndustryType:IndustryType;
 
     $: {
@@ -28,11 +55,15 @@
     $: {
         selectedIndustryType = $Industry.types[selectedTypeId];
 
-        console.log(selectedIndustryType);
+        selectedIndustryType && console.log(selectedIndustryType);
     }
 </script>
 
-<TypeSelector bind:selectedTypeId />
+{#if !INVENTION_ACTIVITY_ID}
+    Loading...
+{/if}
+
+<TypeSelector bind:selectedTypeId {selectableTypes} />
 
 {#if selectedIndustryType}
 <dl>

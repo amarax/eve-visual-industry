@@ -1,4 +1,6 @@
 import { readable } from "svelte/store";
+import type { Readable } from "svelte/store";
+
 // import Papa from "https://cdnjs.cloudflare.com/ajax/libs/PapaParse/4.6.2/papaparse.min.js";
 
 import { browser } from "$app/env";
@@ -18,15 +20,18 @@ export type Type = {
     name: string;
 }
 
+export type MarketGroup_Id = number;
+
 export type MarketGroup = {
-    market_group_id: number;
+    market_group_id: MarketGroup_Id;
     name: string;
-    types?: Array<number>;
-    child_groups?: Object;
+    types?: Array<Type_Id>;
+    child_groups?: EntityCollection<MarketGroup>;
+    parent_group_id: MarketGroup_Id;
 }
 
-interface EntityCollection<Entity> {
-    [id: string]: Entity;
+export interface EntityCollection<Entity> {
+    [id: number]: Entity;
 }
 
 
@@ -218,24 +223,27 @@ async function loadMarketsStatic() {
 }
 
 function loadFromSDE( route: string ):Promise<Object> {
+
+    let parseOptions = (resolve) => ({
+        header: true,
+        dynamicTyping: true,
+        complete: async (results) => {
+            resolve(results.data);
+        }
+    });
+
     if(browser) {
         return new Promise((resolve)=>{
             Papa.parse(route, {
                 download: true,
-                header: true,
-                complete: async (results) => {
-                    resolve(results.data);
-                }
+                ...parseOptions(resolve)
             });    
         });
     } else {
         // Need to check if this actually works on the server
         return new Promise((resolve)=>{
             Papa.parse(route, {
-                header: true,
-                complete: async (results) => {
-                    resolve(results.data);
-                }
+                ...parseOptions(resolve)
             });    
         });
     }
@@ -333,7 +341,16 @@ export async function loadType(type_id:number):Promise<Type> {
     }
 }
 
-export const Universe = readable({}, setupUniverse);
+type UniverseStore = {
+    categories: any,
+    types: EntityCollection<Type>, 
+    markets: {
+        groups: EntityCollection<MarketGroup>,
+
+    }
+}
+
+export const Universe: Readable<UniverseStore> = readable({}, setupUniverse);
 
 type Attribute = {
     attribute_id: number,
@@ -421,31 +438,38 @@ export type IndustryType = {
         products: EntityCollection<{
             type_id: Type_Id,
             quantity: number,
+            probability?: number,
         }>,
     }>,
     maxProductionLimit?: number,
 }
 
+export type IndustryStore = {
+    activities:EntityCollection<RAMActivity>, 
+    types:EntityCollection<IndustryType>
+}
 
 
 function setupIndustry( set:(value:any)=>void ) {
-    let industry: {activities:EntityCollection<RAMActivity>, types:EntityCollection<IndustryType>} = {
+    let industry: IndustryStore = {
         activities: {},
         types: {},
     }
 
     loadFromSDE("/data/ramActivities.csv")
-        .then((data:Array<RAMActivity>)=>{
+        .then((data: Array<RAMActivity>)=>{
             data.forEach(activity=>industry.activities[activity.activityID]=activity);
 
             return loadFromSDE("/data/industryActivity.csv");
         })
-        .then((data:Array<{
+        .then((data: Array<{
             type_id:Type_Id,
-            activityID:number,
+            activityID:Activity_Id,
             time:number
         }>)=>{
             data.forEach(typeActivity=>{
+                if(typeActivity.type_id === null) return;
+
                 let type = industry.types[typeActivity.type_id];
                 if(type === undefined) {
                     type = {type_id:typeActivity.type_id, activities:{}};
@@ -461,6 +485,30 @@ function setupIndustry( set:(value:any)=>void ) {
 
             });
 
+            return loadFromSDE("/data/industryActivityMaterials.csv");
+        })
+        .then((data: Array<{
+            typeID: Type_Id,
+            activityID: Activity_Id,
+            materialTypeID: Type_Id,
+            quantity: number
+        }>)=>{
+            data.forEach(typeActivityMaterial=>{
+                if(typeActivityMaterial.typeID === null) return;
+
+                let type = industry.types[typeActivityMaterial.typeID];
+
+                console.assert(type !== undefined, typeActivityMaterial);
+
+                let materials = type.activities[typeActivityMaterial.activityID].materials;
+                console.assert(materials instanceof Object);
+
+                materials[typeActivityMaterial.materialTypeID] = {
+                    materialTypeID: typeActivityMaterial.materialTypeID,
+                    quantity: typeActivityMaterial.quantity
+                }
+            })
+
             return loadFromSDE("/data/industryActivityProducts.csv");
         })
         .then((data:Array<{
@@ -470,6 +518,8 @@ function setupIndustry( set:(value:any)=>void ) {
             quantity: number
         }>)=>{
             data.forEach(activityProduct=>{
+                if(activityProduct.type_id === null) return;
+
                 let activity = industry.types[activityProduct.type_id].activities[activityProduct.activityID];
                 activity.products[activityProduct.productTypeID] = {
                     type_id: activityProduct.productTypeID,
@@ -487,14 +537,15 @@ function setupIndustry( set:(value:any)=>void ) {
 
             data.forEach(blueprint=>industry.types[blueprint.type_id].maxProductionLimit = blueprint.maxProductionLimit);
 
+            set(industry);
         })
         .catch(reason=>console.error(reason));
 
+    // Initialise to empty
     set(industry);
+
 
     return () => {}
 }
 
-export const Industry = readable({
-    types:null,
-}, setupIndustry);
+export const Industry: Readable<IndustryStore> = readable(null, setupIndustry);
