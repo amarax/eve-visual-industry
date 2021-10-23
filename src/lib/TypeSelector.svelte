@@ -35,25 +35,22 @@
     $: {
         let smallestSelectedBranch = selectedGroupTreeBranches[selectedGroupTreeBranches.length-1] || selectedGroupTreeBranches[selectedGroupTreeBranches.length-2];
         
-        console.log($Universe.markets && $Universe.markets.groups[smallestSelectedBranch]);
-
         if(smallestSelectedBranch) {
             // Find all sub types under the branch
             filteredTypes = [];
-            let filteredTypeIDs: Set<Type> = new Set();
-            let selectableTypeIDs: Set<Type> = new Set(types);
+            let filteredTypeIDs: Set<Type_Id> = new Set();
+            let selectableTypeIDs: Set<Type_Id> = new Set(types.map(type=>type.type_id));
 
             let group_ids = getChildGroupIds( $Universe.markets.groups[smallestSelectedBranch] );
-            console.log(group_ids);
 
             for(let market_group_id of group_ids) {
                 $Universe.markets.groups[market_group_id].types.forEach( type_id=>{
-                    //if(selectableTypeIDs.has($Universe.types[type_id])) 
-                        filteredTypeIDs.add($Universe.types[type_id])
+                    if(selectableTypeIDs.has(type_id)) 
+                        filteredTypeIDs.add(type_id)
                 } );
             }
 
-            filteredTypes = Array.from(filteredTypeIDs);
+            filteredTypes = Array.from(filteredTypeIDs).map(id=>$Universe.types[id]);
         } else {
             filteredTypes = types;
         }
@@ -103,7 +100,6 @@
             let selectedMarketGroup = marketGroup[event.target.value];
             if(selectedMarketGroup.child_groups) {
                 selectedGroupTreeBranches = [...selectedGroupTreeBranches.slice(0, i+1), null];
-                console.log(selectedGroupTreeBranches);
             }
         }}>
             {#each Object.values(marketGroup) as {market_group_id, name} }
