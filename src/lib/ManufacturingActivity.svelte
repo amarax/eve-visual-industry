@@ -14,6 +14,10 @@
     let selectedProductId: Type_Id = null;
 
 
+    export let salesTaxRate = 0.036;
+    export let brokerFeeRate = 0.0151114234532; // Aqua Silentium's broker fee
+
+
     function subscribeToTypeStore( type_id: Type_Id ) {
         relatedTypeStores.push( getMarketType(type_id).subscribe(value=>{
             relatedTypes[type_id] = value;
@@ -100,7 +104,11 @@ Products
     {#each Object.keys(manufacturing.products) as type_id}
         <dt>{$Universe.types[type_id].name} [{type_id}]</dt>
         <dd>
-            <MarketOrdersBar {extents} quantity={manufacturing.products[type_id].quantity} highestBuyOrder={relatedTypes[type_id].orders.buy[0]} lowestSellOrder={relatedTypes[type_id].orders.sell[0]} />
+            <MarketOrdersBar {extents} quantity={manufacturing.products[type_id].quantity} 
+                highestBuyOrder={relatedTypes[type_id].orders.buy[0]} lowestSellOrder={relatedTypes[type_id].orders.sell[0]} 
+                buyOverheadRate={-salesTaxRate} sellOverheadRate={-brokerFeeRate-salesTaxRate}
+                {totalCost}
+            />
             {manufacturing.products[type_id].quantity}
         </dd>
     {/each}
@@ -115,7 +123,10 @@ Materials
     {#each Object.keys(manufacturing.materials) as type_id}
         <dt>{$Universe.types[type_id].name} [{type_id}]</dt>
         <dd>
-            <MarketOrdersBar height={20} {extents} quantity={manufacturing.materials[type_id].quantity} highestBuyOrder={relatedTypes[type_id].orders.buy[0]} lowestSellOrder={relatedTypes[type_id].orders.sell[0]} />
+            <MarketOrdersBar height={20} {extents} quantity={manufacturing.materials[type_id].quantity} 
+                highestBuyOrder={relatedTypes[type_id].orders.buy[0]} lowestSellOrder={relatedTypes[type_id].orders.sell[0]} 
+                buyOverheadRate={brokerFeeRate}
+            />
             {manufacturing.materials[type_id].quantity}
         </dd>
     {/each}
