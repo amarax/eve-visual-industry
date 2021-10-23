@@ -156,7 +156,7 @@ Products
                 buyOverheadRate={-salesTaxRate} sellOverheadRate={-brokerFeeRate-salesTaxRate}
                 {totalCost}
             />
-            Profit {relatedTypes[type_id].orders.sell[0] && relatedTypes[type_id].orders.sell[0].price*(1-brokerFeeRate-salesTaxRate) - totalCost}
+            Profit {(relatedTypes[type_id].orders.sell[0] && relatedTypes[type_id].orders.sell[0].price)*(1-brokerFeeRate-salesTaxRate)*runs - totalCost}
         </dd>
     {/each}
 </dl>

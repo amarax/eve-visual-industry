@@ -29,6 +29,10 @@
                     selectableTypeIDs.push(...Object.keys( $Industry.types[blueprint_id].activities[MANUFACTURING_ACTIVITY_ID].products ));
                 }
             }
+
+            if(t.activities[MANUFACTURING_ACTIVITY_ID]) {
+                selectableTypeIDs.push(...Object.keys( $Industry.types[t.type_id].activities[MANUFACTURING_ACTIVITY_ID].products ));            
+            }
         })
 
         let missingTypes = selectableTypeIDs.filter(id=>$Universe.types[id]===undefined);
