@@ -17,8 +17,6 @@
     function subscribeToTypeStore( type_id: Type_Id ) {
         relatedTypeStores.push( getMarketType(type_id).subscribe(value=>{
             relatedTypes[type_id] = value;
-            updateTotalCost();
-            updateExtents();
         }) );
     }
 
@@ -49,13 +47,10 @@
                 selectedProductId = parseInt( Object.keys(manufacturing.products)[0] );
             }
         }
-
-        updateTotalCost();
-        updateExtents();
     }
 
     let totalCost = 0;
-    function updateTotalCost(): void {
+    $: {
         if(manufacturing) {
             totalCost = 0;
             for(let type_id in manufacturing.materials) {
@@ -69,7 +64,7 @@
 
 
     let extents = [0,1000]
-    function updateExtents(): void{
+    $: {
         if(manufacturing) {
             let prices = [];
 
