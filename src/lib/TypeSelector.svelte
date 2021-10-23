@@ -6,7 +6,7 @@
     let selectableMarketGroupIds: Set<MarketGroup_Id> = new Set();
 
     let groupTreeBranches:Array<EntityCollection<MarketGroup>> = [];
-    let selectedGroupTreeBranches = [];
+    let selectedGroupTreeBranches = [null];
 
     let types: Array<Type> = [];
     let filteredTypes: Array<Type> = [];
@@ -20,10 +20,10 @@
         }
     }
 
-    function getChildGroupIds(group:MarketGroup) : Array<string> {
-        if(group.child_groups === undefined) return [];
+    function getChildGroupIds(group:MarketGroup) : Array<MarketGroup_Id> {
+        if(group.child_groups === undefined) return [group.market_group_id];
 
-        let childGroups = Object.keys(group.child_groups);
+        let childGroups = Object.keys(group.child_groups).map(id=>parseInt(id));
 
         for(let childGroupId in group.child_groups) {
             childGroups = childGroups.concat( getChildGroupIds(group.child_groups[childGroupId]) )
@@ -35,6 +35,8 @@
     $: {
         let smallestSelectedBranch = selectedGroupTreeBranches[selectedGroupTreeBranches.length-1] || selectedGroupTreeBranches[selectedGroupTreeBranches.length-2];
         
+        console.log($Universe.markets && $Universe.markets.groups[smallestSelectedBranch]);
+
         if(smallestSelectedBranch) {
             // Find all sub types under the branch
             filteredTypes = [];
@@ -42,12 +44,12 @@
             let selectableTypeIDs: Set<Type> = new Set(types);
 
             let group_ids = getChildGroupIds( $Universe.markets.groups[smallestSelectedBranch] );
+            console.log(group_ids);
 
             for(let market_group_id of group_ids) {
-                filteredTypes = filteredTypes.concat( $Universe.markets.groups[market_group_id].types.map(type_id=>$Universe.types[type_id]) );
-
                 $Universe.markets.groups[market_group_id].types.forEach( type_id=>{
-                    if(selectableTypeIDs.has($Universe.types[type_id])) filteredTypeIDs.add($Universe.types[type_id])
+                    //if(selectableTypeIDs.has($Universe.types[type_id])) 
+                        filteredTypeIDs.add($Universe.types[type_id])
                 } );
             }
 
@@ -57,7 +59,7 @@
         }
 
         // Return first 1000 results for performance reasons
-        filteredTypes.sort((a,b)=>a.name.localeCompare(b.name)).splice(1000);   
+        filteredTypes.sort((a,b)=>a.name.localeCompare(b.name));   
     }
 
     $: {
@@ -78,17 +80,20 @@
                     }
                 }
             }
-
-            console.log(selectableMarketGroupIds);
-
-            if(groupTreeBranches.length==0 && $Universe.markets.groupTree) {
-                groupTreeBranches[0] = $Universe.markets.groupTree;
-                selectedGroupTreeBranches[0] = null;
-            }
+            selectableMarketGroupIds = selectableMarketGroupIds;
         }
     }
 
-    console.log(groupTreeBranches);
+    $: {
+        if($Universe.markets)
+        {
+            groupTreeBranches = [$Universe.markets.groupTree];
+            for(let selectedBranch of selectedGroupTreeBranches) {
+                if(selectedBranch != null && $Universe.markets.groups[selectedBranch].child_groups)
+                    groupTreeBranches.push($Universe.markets.groups[selectedBranch].child_groups)
+            }
+        }
+    }
 </script>
 
 <p>
@@ -97,17 +102,11 @@
         <select name={i.toString()} bind:value={selectedGroupTreeBranches[i]} on:change={(event)=>{
             let selectedMarketGroup = marketGroup[event.target.value];
             if(selectedMarketGroup.child_groups) {
-                groupTreeBranches = groupTreeBranches.slice(0, i+1);
-                groupTreeBranches.push(selectedMarketGroup.child_groups);
-                
-                selectedGroupTreeBranches = selectedGroupTreeBranches.slice(0, i+1);
-                selectedGroupTreeBranches.push(null);
-
-                console.log(groupTreeBranches);
-
+                selectedGroupTreeBranches = [...selectedGroupTreeBranches.slice(0, i+1), null];
+                console.log(selectedGroupTreeBranches);
             }
         }}>
-            {#each Object.values(marketGroup).filter(group=>selectableMarketGroupIds.has(group.market_group_id)) as {market_group_id, name} }
+            {#each Object.values(marketGroup) as {market_group_id, name} }
                 <option value={market_group_id}>{name}</option>
             {/each}
         </select>

@@ -265,7 +265,7 @@ async function loadTypesStatic(marketGroups:EntityCollection<MarketGroup>) {
                         types[type.type_id] = type;
     
                         if(type.market_group_id === "None")
-                            delete type.market_group_id
+                            delete type.market_group_id;
                         else
                             marketGroups[type.market_group_id].types.push(type.type_id);
                     } else
