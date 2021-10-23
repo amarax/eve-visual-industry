@@ -79,6 +79,8 @@
         if(manufacturing) {
             let prices = [];
 
+            totalCost += manufacturingJobCost;
+
             for(let type_id in manufacturing.materials) {
                 if(relatedTypes[type_id] && relatedTypes[type_id].orders.lastUpdated !== null) {
                     let materialQuantity = materialQty(manufacturing.materials[type_id].quantity);
@@ -101,6 +103,8 @@
         }
     }
 
+    export let systemCostIndex = 0.03;
+
     let manufacturingJobCost = 0;
     $: {
         manufacturingJobCost = 0;
@@ -111,7 +115,7 @@
                 totalAdjustedCostPrice += manufacturing.materials[type_id].quantity * ($MarketPrices[type_id].adjusted_price || $MarketPrices[type_id].average_price);
             }
 
-            manufacturingJobCost = totalAdjustedCostPrice;
+            manufacturingJobCost = totalAdjustedCostPrice * systemCostIndex;
 
         }
     }
@@ -127,6 +131,11 @@ Blueprint
     <label>ME <input type="range" bind:value={materialEfficiency} min={0} max={10} /> {materialEfficiency}</label>
     <label>TE <input type="range" bind:value={timeEfficiency} min={0} max={20} step={2} /> {timeEfficiency}</label>
 </p>
+
+Facility
+<dl>
+    <label>System cost index <input bind:value={systemCostIndex} /></label>
+</dl>
 
 Manufacturing
 <dl>
@@ -147,7 +156,7 @@ Products
                 buyOverheadRate={-salesTaxRate} sellOverheadRate={-brokerFeeRate-salesTaxRate}
                 {totalCost}
             />
-            {manufacturing.products[type_id].quantity}
+            Profit {relatedTypes[type_id].orders.sell[0] && relatedTypes[type_id].orders.sell[0].price*(1-brokerFeeRate-salesTaxRate) - totalCost}
         </dd>
     {/each}
 </dl>
