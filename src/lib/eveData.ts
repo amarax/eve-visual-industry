@@ -428,20 +428,22 @@ export type RAMActivity = {
 
 export type IndustryType = {
     type_id: Type_Id,
-    activities: EntityCollection<{ 
-        activity: RAMActivity,
-        time: number,
-        materials: EntityCollection<{
-            materialTypeID: Type_Id,
-            quantity: number,
-        }>,
-        products: EntityCollection<{
-            type_id: Type_Id,
-            quantity: number,
-            probability?: number,
-        }>,
-    }>,
+    activities: EntityCollection<IndustryActivity>,
     maxProductionLimit?: number,
+}
+
+export type IndustryActivity = { 
+    activity: RAMActivity,
+    time: number,
+    materials: EntityCollection<{
+        materialTypeID: Type_Id,
+        quantity: number,
+    }>,
+    products: EntityCollection<{
+        type_id: Type_Id,
+        quantity: number,
+        probability?: number,
+    }>
 }
 
 export type IndustryStore = {
@@ -450,10 +452,17 @@ export type IndustryStore = {
 }
 
 
+export const MANUFACTURING_ACTIVITY_ID = 1;
+export const INVENTION_ACTIVITY_ID = 8;
+export const REVERSE_ENGINEERING_ACTIVITY_ID = 7;
+
+
+
 function setupIndustry( set:(value:any)=>void ) {
     let industry: IndustryStore = {
         activities: {},
         types: {},
+
     }
 
     loadFromSDE("/data/ramActivities.csv")

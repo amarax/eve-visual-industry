@@ -1,7 +1,10 @@
 <script lang="ts">
-    import { Universe, Industry, loadType, RAMActivity, EntityCollection } from '$lib/EveData';
+    import { Universe, Industry, loadType, RAMActivity, EntityCollection } from "$lib/EveData";
+    import { INVENTION_ACTIVITY_ID, REVERSE_ENGINEERING_ACTIVITY_ID, MANUFACTURING_ACTIVITY_ID } from '$lib/EveData';
     import type { Type, IndustryType, Type_Id } from '$lib/EveData';
+
     import TypeSelector from '$lib/TypeSelector.svelte';
+    import ManufacturingActivity from "./ManufacturingActivity.svelte";
 
     let scienceSkills = [];
     let encryptionSkills = [];
@@ -10,20 +13,6 @@
     let selectedType:Type = null;
 
     let selectableTypes: Array<Type> = null;
-
-    function getActivity(activityName:string, activities:EntityCollection<RAMActivity>): number {
-        return parseInt( Object.keys(activities).find(activityID=>activities[activityID].activityName==activityName) );
-    }
-
-    let INVENTION_ACTIVITY_ID = null;
-    $: INVENTION_ACTIVITY_ID = getActivity('Invention', $Industry.activities);
-
-    let REVERSE_ENGINEERING_ACTIVITY_ID = null;
-    $: REVERSE_ENGINEERING_ACTIVITY_ID = getActivity("Reverse Engineering", $Industry.activities);
-
-    let MANUFACTURING_ACTIVITY_ID = null;
-    $: MANUFACTURING_ACTIVITY_ID = getActivity("Manufacturing", $Industry.activities);
-
 
     $: if($Universe.types && $Industry.types) {
         let selectableTypeIDs = [];
@@ -51,7 +40,7 @@
 
     console.log($Industry);
 
-    let selectedIndustryType:IndustryType;
+    let selectedBlueprint:IndustryType;
 
     $: {
         if($Universe.markets && $Universe.types) {
@@ -68,9 +57,8 @@
     }
 
     $: {
-        selectedIndustryType = Object.values($Industry.types).map(type=>type.activities[MANUFACTURING_ACTIVITY_ID]).find(manufacturing=>manufacturing&&manufacturing.products[selectedTypeId]);
-
-        selectedIndustryType && console.log(selectedIndustryType);
+        selectedBlueprint = Object.values($Industry.types)
+            .find(type=>type.activities[MANUFACTURING_ACTIVITY_ID]&&type.activities[MANUFACTURING_ACTIVITY_ID].products[selectedTypeId]);
     }
 </script>
 
@@ -80,14 +68,8 @@
 
 <TypeSelector bind:selectedTypeId {selectableTypes} />
 
-{#if selectedIndustryType}
-<dl>
-    {#each Object.entries(selectedIndustryType) as property }
-        <dt>{property[0]}</dt>
-        <dd>{property[1] instanceof Object?Object.entries(property[1]):property[1]}</dd>
-    {/each}
-</dl>
-{/if}
+<p><ManufacturingActivity blueprint={selectedBlueprint} /></p>
+
 
 <label>
     <select>
