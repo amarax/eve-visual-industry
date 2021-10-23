@@ -70,15 +70,14 @@
 
             for(let type_id in manufacturing.materials) {
                 if(relatedTypes[type_id] && relatedTypes[type_id].lastUpdated !== null) {
-                    prices.push( manufacturing.materials[type_id].quantity * (relatedTypes[type_id].orders.buy[0] && relatedTypes[type_id].orders.buy[0].price) );
-                    prices.push( manufacturing.materials[type_id].quantity * (relatedTypes[type_id].orders.sell[0] && relatedTypes[type_id].orders.sell[0].price) );
+                    if(relatedTypes[type_id].orders.buy.length > 0) prices.push( manufacturing.materials[type_id].quantity * relatedTypes[type_id].orders.buy[0].price );
+                    if(relatedTypes[type_id].orders.sell.length > 0) prices.push( manufacturing.materials[type_id].quantity * relatedTypes[type_id].orders.sell[0].price );
                 }
             }
             for(let type_id in manufacturing.products) {
                 if(relatedTypes[type_id] && relatedTypes[type_id].lastUpdated !== null) {
-                    prices.push( manufacturing.products[type_id].quantity * (relatedTypes[type_id].orders.buy[0] && relatedTypes[type_id].orders.buy[0].price) );
-                    prices.push( manufacturing.products[type_id].quantity * (relatedTypes[type_id].orders.sell[0] && relatedTypes[type_id].orders.sell[0].price) );
-
+                    if(relatedTypes[type_id].orders.buy.length > 0) prices.push( manufacturing.products[type_id].quantity * relatedTypes[type_id].orders.buy[0].price );
+                    if(relatedTypes[type_id].orders.sell.length > 0) prices.push( manufacturing.products[type_id].quantity * relatedTypes[type_id].orders.sell[0].price );
                 }
             }
 
