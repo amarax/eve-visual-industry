@@ -1,6 +1,6 @@
 <script lang="ts">
-    import { Universe, Industry, loadType, IndustryType } from '$lib/EveData';
-    import type { Type } from '$lib/EveData';
+    import { Universe, Industry, loadType, RAMActivity, EntityCollection } from '$lib/EveData';
+    import type { Type, IndustryType, Type_Id } from '$lib/EveData';
     import TypeSelector from '$lib/TypeSelector.svelte';
 
     let scienceSkills = [];
@@ -11,26 +11,41 @@
 
     let selectableTypes: Array<Type> = null;
 
+    function getActivity(activityName:string, activities:EntityCollection<RAMActivity>): number {
+        return parseInt( Object.keys(activities).find(activityID=>activities[activityID].activityName==activityName) );
+    }
+
     let INVENTION_ACTIVITY_ID = null;
-    $: INVENTION_ACTIVITY_ID = Object.keys($Industry.activities).find(activityID=>$Industry.activities[activityID].activityName=="Invention");
+    $: INVENTION_ACTIVITY_ID = getActivity('Invention', $Industry.activities);
 
     let REVERSE_ENGINEERING_ACTIVITY_ID = null;
-    $: REVERSE_ENGINEERING_ACTIVITY_ID = Object.keys($Industry.activities).find(activityID=>$Industry.activities[activityID].activityName=="Reverse Engineering");
+    $: REVERSE_ENGINEERING_ACTIVITY_ID = getActivity("Reverse Engineering", $Industry.activities);
+
+    let MANUFACTURING_ACTIVITY_ID = null;
+    $: MANUFACTURING_ACTIVITY_ID = getActivity("Manufacturing", $Industry.activities);
+
 
     $: if($Universe.types && $Industry.types) {
-        selectableTypes = [];
+        let selectableTypeIDs = [];
 
         Object.values($Industry.types).forEach(t=>{
             if(t.activities[INVENTION_ACTIVITY_ID]) {
-                selectableTypes.push(...Object.keys(t.activities[INVENTION_ACTIVITY_ID].products))
+                for(let blueprint_id in t.activities[INVENTION_ACTIVITY_ID].products) {
+                    selectableTypeIDs.push(...Object.keys( $Industry.types[blueprint_id].activities[MANUFACTURING_ACTIVITY_ID].products ));
+                }
             }
 
             if(t.activities[REVERSE_ENGINEERING_ACTIVITY_ID]) {
-                selectableTypes.push(...Object.keys(t.activities[REVERSE_ENGINEERING_ACTIVITY_ID].products))
+                for(let blueprint_id in Object.keys(t.activities[REVERSE_ENGINEERING_ACTIVITY_ID].products)) {
+                    selectableTypeIDs.push(...Object.keys( $Industry.types[blueprint_id].activities[MANUFACTURING_ACTIVITY_ID].products ));
+                }
             }
         })
 
-        selectableTypes = selectableTypes.map(id=>$Universe.types[id]);
+        let missingTypes = selectableTypeIDs.filter(id=>$Universe.types[id]===undefined);
+
+        selectableTypes = selectableTypeIDs.filter(id=>$Universe.types[id]!==undefined).map(id=>$Universe.types[id]);
+
         console.log("Recalculated selectable types");
     }
 
@@ -59,7 +74,7 @@
     }
 </script>
 
-{#if !INVENTION_ACTIVITY_ID}
+{#if !INVENTION_ACTIVITY_ID === null}
     Loading...
 {/if}
 

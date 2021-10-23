@@ -2,6 +2,7 @@
     import { Universe } from '$lib/EveData';
 
     import type { MarketGroup_Id, Type_Id, MarketGroup, Type, EntityCollection } from '$lib/EveData';
+import { group_outros } from 'svelte/internal';
     
     let selectableMarketGroupIds: Set<MarketGroup_Id> = new Set();
 
@@ -102,7 +103,7 @@
                 selectedGroupTreeBranches = [...selectedGroupTreeBranches.slice(0, i+1), null];
             }
         }}>
-            {#each Object.values(marketGroup) as {market_group_id, name} }
+            {#each Object.values(marketGroup).filter(group=>selectableMarketGroupIds.has(group.market_group_id)) as {market_group_id, name} }
                 <option value={market_group_id}>{name}</option>
             {/each}
         </select>
