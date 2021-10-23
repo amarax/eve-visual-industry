@@ -68,7 +68,7 @@
     }
 
     $: {
-        selectedIndustryType = $Industry.types[selectedTypeId];
+        selectedIndustryType = Object.values($Industry.types).map(type=>type.activities[MANUFACTURING_ACTIVITY_ID]).find(manufacturing=>manufacturing&&manufacturing.products[selectedTypeId]);
 
         selectedIndustryType && console.log(selectedIndustryType);
     }
