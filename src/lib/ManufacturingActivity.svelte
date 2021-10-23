@@ -63,8 +63,6 @@
         } else {
             totalCost = 0;
         }
-
-        console.log(totalCost);
     }
 
 
