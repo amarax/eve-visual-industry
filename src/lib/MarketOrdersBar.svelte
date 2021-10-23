@@ -21,8 +21,12 @@
 
     export let quantity: number = 1;
 
-    function scale(value: number): number {
-        return 0 + width*(value-extents[0])/(extents[1]-extents[0]);
+    let scale = (value: number): number => {return 1}
+    
+    $:{
+        scale = (value) => {
+            return 0 + width*(value-extents[0])/(extents[1]-extents[0]);
+        }
     }
 
     let validExtents = false;
