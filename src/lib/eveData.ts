@@ -1,6 +1,9 @@
 import { readable } from "svelte/store";
 // import Papa from "https://cdnjs.cloudflare.com/ajax/libs/PapaParse/4.6.2/papaparse.min.js";
 
+import { browser } from "$app/env";
+import Papa from "papaparse";
+
 interface ESIOptions {
     dev?: any,
     datasource?: "tranquility" | "singularity",
@@ -153,6 +156,8 @@ async function loadTypesESI(type_ids:Array<string>) {
 
 
 async function loadCategoriesStatic() {
+    if(!browser) return Promise.reject("Doesn't work on server");
+
     const response = await window.fetch(
         "/data/categories.json",
         {
@@ -213,18 +218,33 @@ async function loadMarketsStatic() {
 }
 
 function loadFromSDE( route: string ):Promise<Object> {
-    return new Promise((resolve)=>{
-        Papa.parse(route, {
-            download: true,
-            header: true,
-            complete: async (results) => {
-                resolve(results.data);
-            }
-        });    
-    });
+    if(browser) {
+        return new Promise((resolve)=>{
+            Papa.parse(route, {
+                download: true,
+                header: true,
+                complete: async (results) => {
+                    resolve(results.data);
+                }
+            });    
+        });
+    } else {
+        // Need to check if this actually works on the server
+        return new Promise((resolve)=>{
+            Papa.parse(route, {
+                header: true,
+                complete: async (results) => {
+                    resolve(results.data);
+                }
+            });    
+        });
+    }
+
 }
 
 async function loadTypesStatic(marketGroups:EntityCollection<MarketGroup>) {
+    if(!browser) return;
+
     return new Promise((resolve)=>{
         Papa.parse("/data/types.csv", {
             download: true,
