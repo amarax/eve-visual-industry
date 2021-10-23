@@ -35,7 +35,7 @@ export interface EntityCollection<Entity> {
 }
 
 
-async function loadFromESI( route:string, options?:ESIOptions ) {
+export async function loadFromESI( route:string, options?:ESIOptions ) {
     let endpoint = `https://esi.evetech.net/${(options&&options.dev)?"dev":"latest"}${route}`;
 
     const response = await window.fetch(
