@@ -17,10 +17,12 @@ type Quantity = number;
 
 type IskAmount = number;
 
+type Timestamp = number;
+
 type MarketOrder = {
     duration: DurationDays,
     is_buy_order: boolean,
-    issued: Date,
+    issued: Timestamp,
     location_id: Location_Id,
     min_volume: Quantity,
     order_id: number,
@@ -37,6 +39,8 @@ export type MarketType = {
         buy: Array<MarketOrder>,
         sell: Array<MarketOrder>,
     },
+
+    lastUpdated: Timestamp,
 }
 
 export type MarketTypeStore = Writable<MarketType>
@@ -56,8 +60,10 @@ export const Markets: Markets = {regions:{
 }}
 
 async function loadOrders(type: Type_Id, region: Region_Id = 10000002, store: MarketTypeStore) {
+    let marketType = get(store);
+
+    if(marketType.lastUpdated === null || marketType.lastUpdated <= new Date().getTime() - 5*60*1000 /*5 minutes*/ )
     try {
-        let marketType = get(store);
 
         let buyOrders: Array<MarketOrder> = await loadFromESI( `/markets/${region}/orders/?datasource=tranquility&order_type=buy&page=1&type_id=${type}` );
         buyOrders.sort((a,b)=>b.price-a.price);  // Descending order
@@ -70,6 +76,8 @@ async function loadOrders(type: Type_Id, region: Region_Id = 10000002, store: Ma
         marketType.orders.sell = sellOrders;
 
         store.set(marketType);
+
+        marketType.lastUpdated = new Date().getTime();
     } catch(error) {
     }
 }
@@ -77,10 +85,13 @@ async function loadOrders(type: Type_Id, region: Region_Id = 10000002, store: Ma
 export function getMarketType(type: Type_Id, region: Region_Id = 10000002) {
 
     if(Markets.regions[region].types[type] === undefined) {
-        Markets.regions[region].types[type] = writable({orders:{
-            buy: [],
-            sell: []
-        }});
+        Markets.regions[region].types[type] = writable({ 
+            orders:{
+                buy: [],
+                sell: []
+            },
+            lastUpdated: null,
+        });
     }
 
     loadOrders(type, region, Markets.regions[region].types[type]);
