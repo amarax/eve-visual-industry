@@ -19,7 +19,7 @@ type IskAmount = number;
 
 type Timestamp = number;
 
-type MarketOrder = {
+export type MarketOrder = {
     duration: DurationDays,
     is_buy_order: boolean,
     issued: Timestamp,

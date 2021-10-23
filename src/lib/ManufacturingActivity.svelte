@@ -2,6 +2,7 @@
     import { Universe, Industry, MANUFACTURING_ACTIVITY_ID, Type_Id  } from "$lib/EveData";
     import type { IndustryType, IndustryActivity, EntityCollection } from "$lib/EveData";
     import { getMarketType, MarketType } from "$lib/EveMarkets";
+    import MarketOrdersBar from "./MarketOrdersBar.svelte";
 
 
 
@@ -10,9 +11,14 @@
     let relatedTypeStores = [];
     let relatedTypes: EntityCollection<MarketType> = {};
 
+    let selectedProductId: Type_Id = null;
+
+
     function subscribeToTypeStore( type_id: Type_Id ) {
         relatedTypeStores.push( getMarketType(type_id).subscribe(value=>{
             relatedTypes[type_id] = value;
+            updateTotalCost();
+            updateExtents();
         }) );
     }
 
@@ -28,15 +34,61 @@
             manufacturing = nextManufacturing;
             relatedTypeStores = [];
             relatedTypes = {};
+            selectedProductId = null;
 
-            // Request for new materials
+            if(manufacturing) {
+                // Request for new materials
+                for(let type_id in manufacturing.materials) {
+                    subscribeToTypeStore( parseInt(type_id) );
+                }
+                // And the manufactured product(s)
+                for(let type_id in manufacturing.products) {
+                    subscribeToTypeStore( parseInt(type_id) );
+                }
+
+                selectedProductId = parseInt( Object.keys(manufacturing.products)[0] );
+            }
+        }
+
+        updateTotalCost();
+        updateExtents();
+    }
+
+    let totalCost = 0;
+    function updateTotalCost(): void {
+        if(manufacturing) {
+            totalCost = 0;
             for(let type_id in manufacturing.materials) {
-                subscribeToTypeStore( parseInt(type_id) );
+                if(relatedTypes[type_id] && relatedTypes[type_id].orders.sell[0]) totalCost += manufacturing.materials[type_id].quantity * relatedTypes[type_id].orders.sell[0].price;
             }
-            // And the manufactured product(s)
+        } else {
+            totalCost = 0;
+        }
+    }
+
+
+
+    let extents = [0,1000]
+    function updateExtents(): void{
+        if(manufacturing) {
+            let prices = [];
+
+            for(let type_id in manufacturing.materials) {
+                if(relatedTypes[type_id] && relatedTypes[type_id].lastUpdated !== null) {
+                    prices.push( manufacturing.materials[type_id].quantity * (relatedTypes[type_id].orders.buy[0] && relatedTypes[type_id].orders.buy[0].price) );
+                    prices.push( manufacturing.materials[type_id].quantity * (relatedTypes[type_id].orders.sell[0] && relatedTypes[type_id].orders.sell[0].price) );
+                }
+            }
             for(let type_id in manufacturing.products) {
-                subscribeToTypeStore( parseInt(type_id) );
+                if(relatedTypes[type_id] && relatedTypes[type_id].lastUpdated !== null) {
+                    prices.push( manufacturing.products[type_id].quantity * (relatedTypes[type_id].orders.buy[0] && relatedTypes[type_id].orders.buy[0].price) );
+                    prices.push( manufacturing.products[type_id].quantity * (relatedTypes[type_id].orders.sell[0] && relatedTypes[type_id].orders.sell[0].price) );
+
+                }
             }
+
+            extents[1] = 1.1*Math.max(...prices, totalCost);
+
         }
     }
 </script>
@@ -54,21 +106,23 @@ Products
     {#each Object.keys(manufacturing.products) as type_id}
         <dt>{$Universe.types[type_id].name} [{type_id}]</dt>
         <dd>
-            {manufacturing.products[type_id].quantity}x
-            Highest buy: {relatedTypes[type_id].orders.buy[0] && relatedTypes[type_id].orders.buy[0].price}
-            Lowest sell: {relatedTypes[type_id].orders.sell[0] && relatedTypes[type_id].orders.sell[0].price}
+            <MarketOrdersBar {extents} quantity={manufacturing.products[type_id].quantity} highestBuyOrder={relatedTypes[type_id].orders.buy[0]} lowestSellOrder={relatedTypes[type_id].orders.sell[0]} />
+            {manufacturing.products[type_id].quantity}
         </dd>
     {/each}
 </dl>
 
 Materials
 <dl>
+    <dt>Total</dt>
+    <dd>
+        <MarketOrdersBar {extents} quantity={manufacturing.products[selectedProductId].quantity} {totalCost} />
+    </dd>
     {#each Object.keys(manufacturing.materials) as type_id}
         <dt>{$Universe.types[type_id].name} [{type_id}]</dt>
         <dd>
-            {manufacturing.materials[type_id].quantity}x
-            Highest buy: {relatedTypes[type_id].orders.buy[0] && relatedTypes[type_id].orders.buy[0].price}
-            Lowest sell: {relatedTypes[type_id].orders.sell[0] && relatedTypes[type_id].orders.sell[0].price}
+            <MarketOrdersBar height={20} {extents} quantity={manufacturing.materials[type_id].quantity} highestBuyOrder={relatedTypes[type_id].orders.buy[0]} lowestSellOrder={relatedTypes[type_id].orders.sell[0]} />
+            {manufacturing.materials[type_id].quantity}
         </dd>
     {/each}
 </dl>
