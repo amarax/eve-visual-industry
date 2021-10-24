@@ -30,13 +30,23 @@
     }
 
     let validExtents = false;
+    let scaleMarks = [];
     $: {
         validExtents = extents[1] > extents[0];
+
+        let step = 1000000;
+        for(let mark = step; mark < 1100000; mark+=step) {
+            scaleMarks.push(mark);
+        }
     }
 </script>
 
 <svg style="background: #ccc" {width} {height} viewBox={`0 0 ${300} ${height}`} xmlns="http://www.w3.org/2000/svg">
     {#if validExtents}
+        {#each scaleMarks as mark}
+            <rect class="mark" x={scale(mark)} fill="#bbb" stroke="none" width={1} height={height} />
+        {/each}
+
         {#if highestBuyOrder && highestBuyOrder.price !== null}
             <rect class="mark" x={scale(highestBuyOrder.price*quantity*(1+buyOverheadRate))} fill="red" stroke="none" width={1} height={height} />
             {#if buyOverheadRate != 0}
@@ -52,6 +62,7 @@
         {#if totalCost !== null}
             <rect class="mark" x={scale(totalCost)} fill="#333" stroke="none" width={1} height={height} />
         {/if}
+        
     {/if}
 </svg>
 
