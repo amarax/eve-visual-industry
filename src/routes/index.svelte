@@ -1,0 +1,11 @@
+<script lang="ts">
+    import Invention from "$lib/Invention.svelte";
+</script>
+
+<svelte:head>
+	<title>EVE Online Visual Industry Calculator</title>
+</svelte:head>
+
+<h1>EVE Online Visual Industry Calculator</h1>
+
+<Invention />
