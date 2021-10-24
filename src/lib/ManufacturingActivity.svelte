@@ -71,6 +71,14 @@
         manufacturingTime = (base) => base * (1-timeEfficiency/100);
     }
 
+    function getBuySellInJita() {
+        let jita_tradehub_location_id = 60003760;
+        let jita_system_id = 30000142;
+
+        let perimeter_system_id = 30000144;
+        let tq_trading_location_id = 1028858195912;
+    }
+
     let totalCost = 0;
     let extents = [0,1000]
     $: {
