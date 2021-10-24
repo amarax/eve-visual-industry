@@ -34,8 +34,8 @@
     $: {
         validExtents = extents[1] > extents[0];
 
-        let step = 1000000;
-        for(let mark = step; mark < 1100000; mark+=step) {
+        let step = 10;
+        for(let mark = 1000000; mark < extents[1]; mark*=step) {
             scaleMarks.push(mark);
         }
     }
