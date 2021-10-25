@@ -62,8 +62,9 @@
 
     let materialQty = (baseQuantity: Quantity): Quantity => baseQuantity;
 
+    export let facilityMaterialConsumptionModifier: number = -1;
     $: {
-        materialQty = (qty) => Math.max( runs, Math.ceil( qty * runs * (1-materialEfficiency/100) ) );
+        materialQty = (qty) => Math.max( runs, Math.ceil( qty * runs * (1-materialEfficiency/100) * (1+facilityMaterialConsumptionModifier/100) ) );
     }
 
     let manufacturingTime = (baseTime: DurationSeconds): DurationSeconds => baseTime;
@@ -174,6 +175,7 @@ Materials
     <dt>Total</dt>
     <dd>
         <MarketOrdersBar {extents} quantity={manufacturing.products[selectedProductId].quantity * runs} {totalCost} />
+        Cost per item {totalCost / (manufacturing.products[selectedProductId].quantity * runs)}
     </dd>
     {#each Object.keys(manufacturing.materials) as type_id}
         <dt>{$Universe.types[type_id].name} [{type_id}]</dt>
