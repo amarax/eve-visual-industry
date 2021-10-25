@@ -16,9 +16,9 @@ type System_Id = number;
 
 export type Quantity = number;
 
-type IskAmount = number;
+export type IskAmount = number;
 
-type Timestamp = number;
+export type Timestamp = number;
 
 export type MarketOrder = {
     duration: DurationDays,
