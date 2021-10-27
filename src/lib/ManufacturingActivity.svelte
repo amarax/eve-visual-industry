@@ -30,7 +30,7 @@
         }) );
     }
 
-    export let quantity: Quantity = 1;
+    export let quantity: Quantity = null;
 
     let runs: number = 1;
 
@@ -76,10 +76,17 @@
                 }
 
                 // Initialise runs to default to the amount required to produce the quantity
-                runs = Math.ceil( quantity / manufacturing.products[selectedProductId].quantity );
+                runs = quantity ? Math.ceil( quantity / manufacturing.products[selectedProductId].quantity ) : 1;
             }
         }
     }
+
+    // Currently it's safer to just have the runs defined by quantity,
+    // if not I'll forget it's a bug
+    $: if(quantity) {
+        runs = Math.ceil( quantity / manufacturing?.products[selectedProductId].quantity );
+    }
+    
 
 
     let materialQty = (baseQuantity: Quantity): Quantity => baseQuantity;
