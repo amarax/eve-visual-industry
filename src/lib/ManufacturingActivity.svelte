@@ -4,8 +4,7 @@
     import { DurationSeconds, getMarketType, MarketPrices } from "$lib/EveMarkets";
     import type { MarketType, Quantity } from "$lib/EveMarkets";
     import MarketOrdersBar from "./MarketOrdersBar.svelte";
-    import IndustryJob from "./IndustryJob";
-    import { FormatIskAmount } from "./Format";
+    import { FormatDuration, FormatIskAmount } from "./Format";
 
 
 
@@ -24,8 +23,6 @@
     function subscribeToTypeStore( type_id: Type_Id ) {
         relatedTypeStores.push( getMarketType(type_id).subscribe(value=>{
             relatedTypes[type_id] = value;
-
-            if(mainJob) mainJob.updateUnitPrice(type_id, value.orders.sell[0] && value.orders.sell[0].price);
         }) );
     }
 
@@ -46,7 +43,6 @@
     }
 
     let manufacturing: IndustryActivity = null;
-    let mainJob: IndustryJob = null;
     $: {
         let nextManufacturing = blueprint && blueprint.activities[MANUFACTURING_ACTIVITY_ID];
 
@@ -58,7 +54,6 @@
             relatedTypeStores = [];
             relatedTypes = {};
             selectedProductId = null;
-            mainJob = null;
 
             if(manufacturing) {
                 // Request for new materials
@@ -73,50 +68,10 @@
                 selectedProductId = parseInt( Object.keys(manufacturing.products)[0] );
 
                 let activity = blueprint.activities[MANUFACTURING_ACTIVITY_ID];
-                mainJob = new IndustryJob(
-                    {
-                        materialEfficiency: 2,
-                        timeEfficiency: 4,
-                        duration: activity.time
-                    },
-                    arrayToEntityCollection(
-                        Object.values( activity.materials )
-                            .map(material=>({
-                                type: $Universe.types[material.materialTypeID],
-
-                                quantity: material.quantity,
-
-                                indexPrice: $MarketPrices[material.materialTypeID].adjusted_price,
-                                unitCost: relatedTypes[material.materialTypeID].orders.sell[0] && relatedTypes[material.materialTypeID].orders.sell[0].price,
-                            })),
-                        material=>material.type.type_id
-                    ),
-                    {
-                        type: $Universe.types[selectedProductId],
-                        unitPrice: (relatedTypes[selectedProductId].orders.sell[0] && relatedTypes[selectedProductId].orders.sell[0].price) * (1 - brokerFeeRate - salesTaxRate),
-                        quantity: activity.products[selectedProductId].quantity,
-                    },
-                    {
-                        materialConsumptionModifier: -1,
-
-                        locationActivityCostIndex: 0.0373,
-                        taxRate: 0.5,
-                    },
-                    runs,
-                    {}
-                );
             }
         }
     }
 
-    $: {
-        if(mainJob) {
-            mainJob.runs = runs;
-            mainJob.facility.locationActivityCostIndex = systemCostIndex;
-            mainJob.activity.materialEfficiency = materialEfficiency;
-            mainJob.activity.timeEfficiency = timeEfficiency;
-        }
-    }
 
 
     let materialQty = (baseQuantity: Quantity): Quantity => baseQuantity;
@@ -126,10 +81,7 @@
         materialQty = (qty) => Math.max( runs, Math.ceil( qty * runs * (1-materialEfficiency/100) * (1+facilityMaterialConsumptionModifier/100) ) );
     }
 
-    let manufacturingTime = (baseTime: DurationSeconds): DurationSeconds => baseTime;
-    $: {
-        manufacturingTime = (base) => base * (1-timeEfficiency/100) * runs;
-    }
+    $: manufacturingTime = manufacturing.time * (1-timeEfficiency/100) * runs;
 
     function getBuySellInJita() {
         let jita_tradehub_location_id = 60003760;
@@ -218,15 +170,15 @@ Blueprint
 
 Facility
 <dl>
-    <label>System cost index <input bind:value={systemCostIndex} /></label>
+    <dt><label for="systemCostIndex">System cost index</label></dt> <dd><input id="systemCostIndex" bind:value={systemCostIndex} /></dd>
 </dl>
 
 Manufacturing
 <dl>
     <dt>Time</dt>
-    <dd>{manufacturingTime(manufacturing.time)} {mainJob && mainJob.duration}</dd>
+    <dd>{FormatDuration(manufacturingTime)}</dd>
     <dt>Job Cost</dt>
-    <dd>{FormatIskAmount(manufacturingJobCost)} {FormatIskAmount(mainJob && mainJob.jobCost)}</dd>
+    <dd>{FormatIskAmount(manufacturingJobCost)}</dd>
 </dl>
 
 
@@ -245,13 +197,11 @@ Products
 
             Unit Cost
             {totalCost/runs}
-            {FormatIskAmount(mainJob.totalCost/mainJob.runs)}
 
             <br/>
 
             Profit 
             {(relatedTypes[type_id].orders.sell[0] && relatedTypes[type_id].orders.sell[0].price)*(1-brokerFeeRate-salesTaxRate)*runs - totalCost} 
-            {FormatIskAmount(mainJob.profit)}
         </dd>
     {/each}
 </dl>

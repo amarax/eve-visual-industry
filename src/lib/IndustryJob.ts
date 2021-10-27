@@ -51,8 +51,9 @@ type CostItem = {
     requiredQuantity: Quantity,
 }
 
-function sum(array: Array<any>, accessor: (element: any)=>number) {
-    return array.reduce( (runningTotal, element)=> runningTotal + accessor(element), 0);
+function sum(array: Array<any>, accessor?: (element: any)=>number) {
+
+    return array.reduce( (runningTotal, element)=> runningTotal + accessor?accessor(element):element, 0);
 }
 
 
@@ -111,6 +112,7 @@ export default class IndustryJob {
         if(this.output.type.type_id === type_id) this.output.unitPrice = price;
     }
 }
+
 
 
 import { Universe } from "./EveData";
