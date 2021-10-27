@@ -5,6 +5,7 @@
     import type { MarketType, Quantity } from "$lib/EveMarkets";
     import MarketOrdersBar from "./MarketOrdersBar.svelte";
     import IndustryJob from "./IndustryJob";
+    import { FormatIskAmount } from "./Format";
 
 
 
@@ -23,6 +24,8 @@
     function subscribeToTypeStore( type_id: Type_Id ) {
         relatedTypeStores.push( getMarketType(type_id).subscribe(value=>{
             relatedTypes[type_id] = value;
+
+            if(mainJob) mainJob.updateUnitPrice(type_id, value.orders.sell[0] && value.orders.sell[0].price);
         }) );
     }
 
@@ -85,14 +88,12 @@
 
                                 indexPrice: $MarketPrices[material.materialTypeID].adjusted_price,
                                 unitCost: relatedTypes[material.materialTypeID].orders.sell[0] && relatedTypes[material.materialTypeID].orders.sell[0].price,
-
-                                from: relatedTypes[material.materialTypeID]
                             })),
                         material=>material.type.type_id
                     ),
                     {
                         type: $Universe.types[selectedProductId],
-                        unitPrice: relatedTypes[selectedProductId].orders.sell[0] && relatedTypes[selectedProductId].orders.sell[0].price,
+                        unitPrice: (relatedTypes[selectedProductId].orders.sell[0] && relatedTypes[selectedProductId].orders.sell[0].price) * (1 - brokerFeeRate - salesTaxRate),
                         quantity: activity.products[selectedProductId].quantity,
                     },
                     {
@@ -114,8 +115,6 @@
             mainJob.facility.locationActivityCostIndex = systemCostIndex;
             mainJob.activity.materialEfficiency = materialEfficiency;
             mainJob.activity.timeEfficiency = timeEfficiency;
-
-            console.log(mainJob.billOfMaterials);
         }
     }
 
@@ -150,8 +149,8 @@
             for(let type_id in manufacturing.materials) {
                 if(relatedTypes[type_id] && relatedTypes[type_id].orders.lastUpdated !== null) {
                     let materialQuantity = materialQty(manufacturing.materials[type_id].quantity);
-                    if(relatedTypes[type_id].orders.buy.length > 0) prices.push( materialQuantity * relatedTypes[type_id].orders.buy[0].price );
-                    if(relatedTypes[type_id].orders.sell.length > 0) prices.push( materialQuantity * relatedTypes[type_id].orders.sell[0].price );
+                    // if(relatedTypes[type_id].orders.buy.length > 0) prices.push( materialQuantity * relatedTypes[type_id].orders.buy[0].price );
+                    // if(relatedTypes[type_id].orders.sell.length > 0) prices.push( materialQuantity * relatedTypes[type_id].orders.sell[0].price );
 
                     if(relatedTypes[type_id].orders.sell.length > 0) totalCost += materialQuantity * relatedTypes[type_id].orders.sell[0].price;
                 }
@@ -163,6 +162,8 @@
                     if(relatedTypes[type_id].orders.sell.length > 0) prices.push( productQuantity * relatedTypes[type_id].orders.sell[0].price );
                 }
             }
+
+            totalCost += manufacturingJobCost;
 
             extents[1] = 1.1*Math.max(...prices, totalCost);
         }
@@ -186,6 +187,24 @@
     }
 </script>
 
+<style lang="scss">
+    dl {
+        display: grid;
+        grid-template-columns: 150px 1fr;
+    }
+
+    dt {
+
+        overflow-x: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    dd {
+        margin-inline-start: 10px;
+    }
+</style>
+
 {#if !blueprint}
 No blueprint selected yet
 {:else}
@@ -207,21 +226,32 @@ Manufacturing
     <dt>Time</dt>
     <dd>{manufacturingTime(manufacturing.time)} {mainJob && mainJob.duration}</dd>
     <dt>Job Cost</dt>
-    <dd>{manufacturingJobCost} {mainJob && mainJob.jobCost}</dd>
+    <dd>{FormatIskAmount(manufacturingJobCost)} {FormatIskAmount(mainJob && mainJob.jobCost)}</dd>
 </dl>
 
 
 Products
 <dl>
     {#each Object.keys(manufacturing.products) as type_id}
-        <dt>{$Universe.types[type_id].name} [{type_id}]</dt>
+        <dt title={`${$Universe.types[type_id].name} [${type_id}]`}>{$Universe.types[type_id].name}</dt>
         <dd>
             <MarketOrdersBar {extents} quantity={manufacturing.products[type_id].quantity * runs} 
                 highestBuyOrder={relatedTypes[type_id].orders.buy[0]} lowestSellOrder={relatedTypes[type_id].orders.sell[0]} 
                 buyOverheadRate={-salesTaxRate} sellOverheadRate={-brokerFeeRate-salesTaxRate}
                 {totalCost}
             />
-            Profit {(relatedTypes[type_id].orders.sell[0] && relatedTypes[type_id].orders.sell[0].price)*(1-brokerFeeRate-salesTaxRate)*runs - totalCost}
+            Unit price
+            {(relatedTypes[type_id].orders.sell[0] && relatedTypes[type_id].orders.sell[0].price)*(1-brokerFeeRate-salesTaxRate)}
+
+            Unit Cost
+            {totalCost/runs}
+            {FormatIskAmount(mainJob.totalCost/mainJob.runs)}
+
+            <br/>
+
+            Profit 
+            {(relatedTypes[type_id].orders.sell[0] && relatedTypes[type_id].orders.sell[0].price)*(1-brokerFeeRate-salesTaxRate)*runs - totalCost} 
+            {FormatIskAmount(mainJob.profit)}
         </dd>
     {/each}
 </dl>

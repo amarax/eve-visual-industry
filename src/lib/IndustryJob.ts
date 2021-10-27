@@ -101,6 +101,15 @@ export default class IndustryJob {
     get duration(): DurationSeconds {
         return this.activity.duration * (1-this.activity.timeEfficiency/100) * this.runs; // todo include skills
     }
+
+    get profit(): IskAmount {
+        return this.output.quantity * this.output.unitPrice * this.runs - this.totalCost;
+    }
+
+    updateUnitPrice(type_id: Type_Id, price: IskAmount) {
+        if(this.inputs[type_id]) this.inputs[type_id].unitCost = price;
+        if(this.output.type.type_id === type_id) this.output.unitPrice = price;
+    }
 }
 
 
