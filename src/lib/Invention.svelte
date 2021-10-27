@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { Universe, Industry, loadType, RAMActivity, EntityCollection } from "$lib/EveData";
+    import { Universe, Industry, loadType, GetBlueprintToManufacture } from "$lib/EveData";
     import { INVENTION_ACTIVITY_ID, REVERSE_ENGINEERING_ACTIVITY_ID, MANUFACTURING_ACTIVITY_ID } from '$lib/EveData';
     import type { Type, IndustryType, Type_Id } from '$lib/EveData';
 
@@ -61,8 +61,7 @@
     }
 
     $: {
-        selectedBlueprint = Object.values($Industry.types)
-            .find(type=>type.activities[MANUFACTURING_ACTIVITY_ID]&&type.activities[MANUFACTURING_ACTIVITY_ID].products[selectedTypeId]);
+        selectedBlueprint = GetBlueprintToManufacture($Industry, selectedTypeId);
     }
 </script>
 
@@ -72,7 +71,7 @@
 
 <TypeSelector bind:selectedTypeId {selectableTypes} />
 
-<p><ManufacturingActivity blueprint={selectedBlueprint} /></p>
+<p><ManufacturingActivity selectedProductId={selectedTypeId} /></p>
 
 
 <label>

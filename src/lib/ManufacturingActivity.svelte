@@ -1,19 +1,21 @@
 <script lang="ts">
-    import { Universe, MANUFACTURING_ACTIVITY_ID  } from "$lib/EveData";
+    import { Universe, Industry, GetBlueprintToManufacture  } from "$lib/EveData";
+    import { MANUFACTURING_ACTIVITY_ID  } from "$lib/EveData";
     import type { IndustryType, IndustryActivity, EntityCollection, Type_Id } from "$lib/EveData";
-    import { DurationSeconds, getMarketType, MarketPrices } from "$lib/EveMarkets";
-    import type { MarketType, Quantity } from "$lib/EveMarkets";
+    import { getMarketType, MarketPrices } from "$lib/EveMarkets";
+    import type { DurationSeconds, MarketType, Quantity } from "$lib/EveMarkets";
     import MarketOrdersBar from "./MarketOrdersBar.svelte";
     import { FormatDuration, FormatIskAmount, FormatIskChange } from "./Format";
+import { component_subscribe } from "svelte/internal";
 
 
 
-    export let blueprint: IndustryType = null;
+    $: blueprint = GetBlueprintToManufacture($Industry, selectedProductId);
 
     let relatedTypeStores = [];
     let relatedTypes: EntityCollection<MarketType> = {};
 
-    let selectedProductId: Type_Id = null;
+    export let selectedProductId: Type_Id = null;
 
 
     export let salesTaxRate = 0.036;
@@ -30,6 +32,10 @@
     export let materialEfficiency: number = 0;
     export let timeEfficiency: number = 0;
 
+    type ItemPickedList = {
+        [id: Type_Id]: boolean
+    }
+    export let manufacturedItems: ItemPickedList = {};
 
     function arrayToEntityCollection(array: Array<any>, indexAccessor: (item)=>number) : EntityCollection<any> {
         let collection = {};
@@ -53,7 +59,6 @@
             manufacturing = nextManufacturing;
             relatedTypeStores = [];
             relatedTypes = {};
-            selectedProductId = null;
 
             if(manufacturing) {
                 // Request for new materials
@@ -64,10 +69,6 @@
                 for(let type_id in manufacturing.products) {
                     subscribeToTypeStore( parseInt(type_id) );
                 }
-
-                selectedProductId = parseInt( Object.keys(manufacturing.products)[0] );
-
-                let activity = blueprint.activities[MANUFACTURING_ACTIVITY_ID];
             }
         }
     }
@@ -90,51 +91,57 @@
     }
 
     let totalCost = 0;
-    let extents = [0,1000]
     $: {
         if(manufacturing) {
-            let prices = [];
             totalCost = 0;
 
             for(let type_id in manufacturing.materials) {
                 if(relatedTypes[type_id] && relatedTypes[type_id].orders.lastUpdated !== null) {
                     let materialQuantity = materialQty(manufacturing.materials[type_id].quantity);
-                    // if(relatedTypes[type_id].orders.buy.length > 0) prices.push( materialQuantity * relatedTypes[type_id].orders.buy[0].price );
-                    // if(relatedTypes[type_id].orders.sell.length > 0) prices.push( materialQuantity * relatedTypes[type_id].orders.sell[0].price );
 
                     if(relatedTypes[type_id].orders.sell.length > 0) totalCost += materialQuantity * relatedTypes[type_id].orders.sell[0].price;
                 }
             }
-            for(let type_id in manufacturing.products) {
-                if(relatedTypes[type_id] && relatedTypes[type_id].orders.lastUpdated !== null) {
-                    let productQuantity = manufacturing.products[type_id].quantity * runs;
-                    if(relatedTypes[type_id].orders.buy.length > 0) prices.push( productQuantity * relatedTypes[type_id].orders.buy[0].price );
-                    if(relatedTypes[type_id].orders.sell.length > 0) prices.push( productQuantity * relatedTypes[type_id].orders.sell[0].price );
+        }
+    }
+
+    export let extents: Array<number> = null;
+    let _extents = [0,1000];
+    $: {
+        if(extents === null) {
+            if(manufacturing) {
+                let prices = [];
+
+                for(let type_id in manufacturing.products) {
+                    if(relatedTypes[type_id] && relatedTypes[type_id].orders.lastUpdated !== null) {
+                        let productQuantity = manufacturing.products[type_id].quantity * runs;
+                        if(relatedTypes[type_id].orders.buy.length > 0) prices.push( productQuantity * relatedTypes[type_id].orders.buy[0].price );
+                        if(relatedTypes[type_id].orders.sell.length > 0) prices.push( productQuantity * relatedTypes[type_id].orders.sell[0].price );
+                    }
                 }
+
+                totalCost += manufacturingJobCost;
+
+                _extents[1] = 1.1*Math.max(...prices, totalCost);
             }
-
-            totalCost += manufacturingJobCost;
-
-            extents[1] = 1.1*Math.max(...prices, totalCost);
+        } else {
+            _extents = extents;
         }
     }
 
     export let systemCostIndex = 0.03;
 
-    let manufacturingJobCost = 0;
+    let totalAdjustedCostPrice = 0;
     $: {
-        manufacturingJobCost = 0;
-        let totalAdjustedCostPrice = 0;
-
+        totalAdjustedCostPrice = 0;
         if(manufacturing) {
             for(let type_id in manufacturing.materials) {
-                totalAdjustedCostPrice += manufacturing.materials[type_id].quantity * ($MarketPrices[type_id].adjusted_price || $MarketPrices[type_id].average_price);
+                totalAdjustedCostPrice += manufacturing.materials[type_id].quantity * $MarketPrices[type_id].adjusted_price;
             }
-
-            manufacturingJobCost = totalAdjustedCostPrice * systemCostIndex;
-
         }
     }
+
+    $: manufacturingJobCost = totalAdjustedCostPrice * systemCostIndex;
 
     $: manufacturingTime = manufacturing && (manufacturing.time * (1-timeEfficiency/100) * runs);
 
@@ -143,6 +150,14 @@
     );
 
     $: profit = sellingPrice*runs - totalCost
+
+    export let unitCost = null;
+    $: {
+        unitCost = manufacturing ? totalCost/(manufacturing.products[selectedProductId].quantity * runs) : null;
+    }
+
+    export let compact = false;
+
 </script>
 
 <style lang="scss">
@@ -161,6 +176,35 @@
     dd {
         margin-inline-start: 10px;
     }
+
+
+    div.breakdown {
+        display: grid;
+        grid-template-columns: 1fr 80px 350px;
+
+        max-width: 700px;
+
+        .itemName {
+            overflow-x: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+
+        }
+
+        .qty {
+            text-align: right;
+            margin-right: 10px;
+        }
+
+        .subItem {
+            grid-column: span 3;
+
+            $divider: 1px solid #ccc;
+
+            border-top: $divider;
+            border-bottom: $divider;
+        }
+    }
 </style>
 
 {#if !blueprint}
@@ -174,6 +218,7 @@ Blueprint
     <label>TE <input type="range" bind:value={timeEfficiency} min={0} max={20} step={2} /> {timeEfficiency}</label>
 </p>
 
+{#if !compact}
 Facility
 <dl>
     <dt><label for="systemCostIndex">System cost index</label></dt> <dd><input id="systemCostIndex" bind:value={systemCostIndex} /></dd>
@@ -186,42 +231,51 @@ Manufacturing
     <dt>Job Cost</dt>
     <dd>{FormatIskAmount(manufacturingJobCost)}</dd>
 </dl>
+{/if}
 
-<dl>
+<div class="breakdown">
     {#each Object.keys(manufacturing.products) as type_id}
-        <dt title={`${$Universe.types[type_id].name} [${type_id}]`}>{$Universe.types[type_id].name}</dt>
-        <dd>
+        <div class="itemName" title={`${$Universe.types[type_id].name} [${type_id}]`}>{$Universe.types[type_id].name}</div>
+        <div class="qty">{manufacturing.products[type_id].quantity * runs}</div>
+        <div>
             Unit price
             {FormatIskAmount(sellingPrice)}
             Total Profit 
             {FormatIskChange(profit)} 
             <br/>
 
-            <MarketOrdersBar {extents} quantity={manufacturing.products[type_id].quantity * runs} 
+            <MarketOrdersBar extents={_extents} quantity={manufacturing.products[type_id].quantity * runs} 
                 highestBuyOrder={relatedTypes[type_id].orders.buy[0]} lowestSellOrder={relatedTypes[type_id].orders.sell[0]} 
                 buyOverheadRate={-salesTaxRate} sellOverheadRate={-brokerFeeRate-salesTaxRate}
                 {totalCost}
             />
             <br/>
 
-            Unit cost {FormatIskAmount(totalCost/runs)}
+            Unit cost {FormatIskAmount(unitCost)}
 
-        </dd>
+        </div>
     {/each}
-    <dt>Job cost</dt>
-    <dd>
-        <MarketOrdersBar height={20} {extents} quantity={manufacturing.products[selectedProductId].quantity * runs} totalCost={manufacturingJobCost} />
-    </dd>
+    <div>Job cost</div><div></div>
+    <div>
+        <MarketOrdersBar height={20} extents={_extents} quantity={manufacturing.products[selectedProductId].quantity * runs} totalCost={manufacturingJobCost} />
+    </div>
     {#each Object.keys(manufacturing.materials) as type_id}
-        <dt>{$Universe.types[type_id].name} [{type_id}]</dt>
-        <dd>
-            <MarketOrdersBar height={20} {extents} quantity={materialQty(manufacturing.materials[type_id].quantity)} 
-                highestBuyOrder={relatedTypes[type_id].orders.buy[0]} lowestSellOrder={relatedTypes[type_id].orders.sell[0]} 
-                buyOverheadRate={brokerFeeRate}
-            />
-            {materialQty(manufacturing.materials[type_id].quantity)}
-        </dd>
+        {#if !manufacturedItems[type_id]}
+            <div class="itemName"><input type="checkbox" bind:checked={manufacturedItems[type_id]} disabled={GetBlueprintToManufacture($Industry, parseInt(type_id)) == null} /> {$Universe.types[type_id].name} [{type_id}]</div>
+            <div class="qty">{materialQty(manufacturing.materials[type_id].quantity)}</div>
+            <div>
+                <MarketOrdersBar height={20} extents={_extents} quantity={materialQty(manufacturing.materials[type_id].quantity)} 
+                    highestBuyOrder={relatedTypes[type_id].orders.buy[0]} lowestSellOrder={relatedTypes[type_id].orders.sell[0]} 
+                    buyOverheadRate={brokerFeeRate}
+                />
+            </div>
+        {:else}
+            <div class="subItem">
+                <div class="itemName"><input type="checkbox" bind:checked={manufacturedItems[type_id]} disabled={GetBlueprintToManufacture($Industry, parseInt(type_id)) == null} /> {$Universe.types[type_id].name} [{type_id}]</div>
+                <svelte:self selectedProductId={type_id} runs={materialQty(manufacturing.materials[type_id].quantity)} {manufacturedItems} compact extents={_extents} />
+            </div>
+        {/if}
     {/each}
-</dl>
+</div>
 
 {/if}

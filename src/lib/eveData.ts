@@ -558,3 +558,8 @@ function setupIndustry( set:(value:any)=>void ) {
 }
 
 export const Industry: Readable<IndustryStore> = readable(null, setupIndustry);
+
+export function GetBlueprintToManufacture(store: IndustryStore, type_id: Type_Id): IndustryType {
+    return Object.values(store.types)
+        .find(type=>type.activities[MANUFACTURING_ACTIVITY_ID]&&type.activities[MANUFACTURING_ACTIVITY_ID].products[type_id]);
+}
