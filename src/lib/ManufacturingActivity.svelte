@@ -51,7 +51,7 @@
 
     let manufacturing: IndustryActivity = null;
     $: {
-        let nextManufacturing = blueprint && blueprint.activities[MANUFACTURING_ACTIVITY_ID];
+        let nextManufacturing = blueprint?.activities[MANUFACTURING_ACTIVITY_ID];
 
         if(nextManufacturing != manufacturing) {
             // Unsubscribe from current material stores
@@ -112,7 +112,7 @@
 
                 totalCost += materialQuantity * (
                     manufacturedUnitCostPrices[type_id] || 
-                    (relatedTypes[type_id].orders.sell[0] && relatedTypes[type_id].orders.sell[0].price) ||
+                    relatedTypes[type_id].orders.sell[0]?.price ||
                     0
                 );
             }
@@ -162,11 +162,9 @@
 
     $: manufacturingJobCost = totalAdjustedCostPrice * systemCostIndex;
 
-    $: manufacturingTime = manufacturing && (manufacturing.time * (1-timeEfficiency/100) * runs);
+    $: manufacturingTime = manufacturing?.time * (1-timeEfficiency/100) * runs;
 
-    $: sellingPrice = relatedTypes[selectedProductId] && (
-        (relatedTypes[selectedProductId].orders.sell[0] && relatedTypes[selectedProductId].orders.sell[0].price)*(1-brokerFeeRate-salesTaxRate)
-    );
+    $: sellingPrice = relatedTypes[selectedProductId]?.orders.sell[0]?.price*(1-brokerFeeRate-salesTaxRate);
 
     $: profit = sellingPrice*runs - totalCost
 
