@@ -29,7 +29,6 @@
     export let quantity: Quantity = 1;
 
     let runs: number = 1;
-    $: runs = manufacturing ? Math.ceil( quantity / manufacturing.products[selectedProductId].quantity ) : 1;
 
     export let materialEfficiency: number = 0;
     export let timeEfficiency: number = 0;
@@ -71,6 +70,9 @@
                 for(let type_id in manufacturing.products) {
                     subscribeToTypeStore( parseInt(type_id) );
                 }
+
+                // Initialise runs to default to the amount required to produce the quantity
+                runs = Math.ceil( quantity / manufacturing.products[selectedProductId].quantity );
             }
         }
     }
