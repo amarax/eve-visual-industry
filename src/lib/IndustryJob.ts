@@ -80,9 +80,7 @@ export default class IndustryJob {
     }
 
     get billOfMaterials(): Array<{input: Input, quantity: Quantity}> {
-        let bom = [];
-
-        Object.values(this.inputs).map( (input: Input)=>({
+        let bom = Object.values(this.inputs).map( (input: Input)=>({
             input, 
             quantity: Math.max( this.runs, Math.ceil( input.quantity * this.runs * (1-this.activity.materialEfficiency/100) * (1+this.facility.materialConsumptionModifier/100) ) ) 
         }) );
@@ -93,7 +91,7 @@ export default class IndustryJob {
     get jobCost(): IskAmount {
         let totalCostIndexPrice = sum( Object.values(this.inputs), input=>input.quantity*input.indexPrice );
 
-        return totalCostIndexPrice * (this.activity.costIndexModifier || 1) * this.facility.locationActivityCostIndex;
+        return totalCostIndexPrice * (this.activity.costIndexModifier || 1) * this.facility.locationActivityCostIndex * this.runs;
     }
 
     get totalCost(): IskAmount {
@@ -101,11 +99,16 @@ export default class IndustryJob {
     }
 
     get duration(): DurationSeconds {
-        return this.activity.duration * (1-this.activity.timeEfficiency/100); // todo include skills
+        return this.activity.duration * (1-this.activity.timeEfficiency/100) * this.runs; // todo include skills
     }
 }
 
 
+import { Universe } from "./EveData";
+
 // Todo include helper functions to select a blueprint its manufacturing activity from a requested product
+export function CreateManufacturingJobFromProduct(): IndustryJob {
+    return null;    
+}
 
 // Todo helper function to generate PI chain

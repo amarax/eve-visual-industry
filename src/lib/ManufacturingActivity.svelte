@@ -4,6 +4,7 @@
     import { DurationSeconds, getMarketType, MarketPrices } from "$lib/EveMarkets";
     import type { MarketType, Quantity } from "$lib/EveMarkets";
     import MarketOrdersBar from "./MarketOrdersBar.svelte";
+    import IndustryJob from "./IndustryJob";
 
 
 
@@ -30,8 +31,19 @@
     export let timeEfficiency: number = 0;
 
 
+    function arrayToEntityCollection(array: Array<any>, indexAccessor: (item)=>number) : EntityCollection<any> {
+        let collection = {};
+
+        for(let item of array) {
+            let index = indexAccessor(item);
+            if(index) collection[index] = item;
+        }
+
+        return collection;
+    }
 
     let manufacturing: IndustryActivity = null;
+    let mainJob: IndustryJob = null;
     $: {
         let nextManufacturing = blueprint && blueprint.activities[MANUFACTURING_ACTIVITY_ID];
 
@@ -43,6 +55,7 @@
             relatedTypeStores = [];
             relatedTypes = {};
             selectedProductId = null;
+            mainJob = null;
 
             if(manufacturing) {
                 // Request for new materials
@@ -55,7 +68,54 @@
                 }
 
                 selectedProductId = parseInt( Object.keys(manufacturing.products)[0] );
+
+                let activity = blueprint.activities[MANUFACTURING_ACTIVITY_ID];
+                mainJob = new IndustryJob(
+                    {
+                        materialEfficiency: 2,
+                        timeEfficiency: 4,
+                        duration: activity.time
+                    },
+                    arrayToEntityCollection(
+                        Object.values( activity.materials )
+                            .map(material=>({
+                                type: $Universe.types[material.materialTypeID],
+
+                                quantity: material.quantity,
+
+                                indexPrice: $MarketPrices[material.materialTypeID].adjusted_price,
+                                unitCost: relatedTypes[material.materialTypeID].orders.sell[0] && relatedTypes[material.materialTypeID].orders.sell[0].price,
+
+                                from: relatedTypes[material.materialTypeID]
+                            })),
+                        material=>material.type.type_id
+                    ),
+                    {
+                        type: $Universe.types[selectedProductId],
+                        unitPrice: relatedTypes[selectedProductId].orders.sell[0] && relatedTypes[selectedProductId].orders.sell[0].price,
+                        quantity: activity.products[selectedProductId].quantity,
+                    },
+                    {
+                        materialConsumptionModifier: -1,
+
+                        locationActivityCostIndex: 0.0373,
+                        taxRate: 0.5,
+                    },
+                    runs,
+                    {}
+                );
             }
+        }
+    }
+
+    $: {
+        if(mainJob) {
+            mainJob.runs = runs;
+            mainJob.facility.locationActivityCostIndex = systemCostIndex;
+            mainJob.activity.materialEfficiency = materialEfficiency;
+            mainJob.activity.timeEfficiency = timeEfficiency;
+
+            console.log(mainJob.billOfMaterials);
         }
     }
 
@@ -69,7 +129,7 @@
 
     let manufacturingTime = (baseTime: DurationSeconds): DurationSeconds => baseTime;
     $: {
-        manufacturingTime = (base) => base * (1-timeEfficiency/100);
+        manufacturingTime = (base) => base * (1-timeEfficiency/100) * runs;
     }
 
     function getBuySellInJita() {
@@ -83,12 +143,9 @@
     let totalCost = 0;
     let extents = [0,1000]
     $: {
-        totalCost = 0;
-
         if(manufacturing) {
             let prices = [];
-
-            totalCost += manufacturingJobCost;
+            totalCost = 0;
 
             for(let type_id in manufacturing.materials) {
                 if(relatedTypes[type_id] && relatedTypes[type_id].orders.lastUpdated !== null) {
@@ -108,7 +165,6 @@
             }
 
             extents[1] = 1.1*Math.max(...prices, totalCost);
-
         }
     }
 
@@ -149,9 +205,9 @@ Facility
 Manufacturing
 <dl>
     <dt>Time</dt>
-    <dd>{manufacturingTime(manufacturing.time)}</dd>
+    <dd>{manufacturingTime(manufacturing.time)} {mainJob && mainJob.duration}</dd>
     <dt>Job Cost</dt>
-    <dd>{manufacturingJobCost}</dd>
+    <dd>{manufacturingJobCost} {mainJob && mainJob.jobCost}</dd>
 </dl>
 
 
