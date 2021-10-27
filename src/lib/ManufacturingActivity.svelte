@@ -26,7 +26,11 @@
         }) );
     }
 
-    export let runs: number = 1;
+    export let quantity: Quantity = 1;
+
+    let runs: number = 1;
+    $: runs = manufacturing ? Math.ceil( quantity / manufacturing.products[selectedProductId].quantity ) : 1;
+
     export let materialEfficiency: number = 0;
     export let timeEfficiency: number = 0;
 
@@ -81,11 +85,17 @@
     }
 
     function getBuySellInJita() {
-        let jita_tradehub_location_id = 60003760;
-        let jita_system_id = 30000142;
+        const jita_tradehub_location_id = 60003760;
+        const jita_system_id = 30000142;
 
-        let perimeter_system_id = 30000144;
-        let tq_trading_location_id = 1028858195912;
+        const perimeter_system_id = 30000144;
+        const tq_trading_location_id = 1028858195912;
+    }
+
+    function getLowestSellPrice(type_id: Type_Id) {
+        if(relatedTypes[type_id].orders.lastUpdated !== null) {
+
+        }
     }
 
     let manufacturedUnitCostPrices: EntityCollection<IskAmount> = {};
@@ -123,12 +133,10 @@
             if(manufacturing) {
                 let prices = [];
 
-                for(let type_id in manufacturing.products) {
-                    if(relatedTypes[type_id] && relatedTypes[type_id].orders.lastUpdated !== null) {
-                        let productQuantity = manufacturing.products[type_id].quantity * runs;
-                        if(relatedTypes[type_id].orders.buy.length > 0) prices.push( productQuantity * relatedTypes[type_id].orders.buy[0].price );
-                        if(relatedTypes[type_id].orders.sell.length > 0) prices.push( productQuantity * relatedTypes[type_id].orders.sell[0].price );
-                    }
+                if(relatedTypes[selectedProductId].orders.lastUpdated !== null) {
+                    let productQuantity = manufacturing.products[selectedProductId].quantity * runs;
+                    if(relatedTypes[selectedProductId].orders.buy.length > 0) prices.push( productQuantity * relatedTypes[selectedProductId].orders.buy[0].price );
+                    if(relatedTypes[selectedProductId].orders.sell.length > 0) prices.push( productQuantity * relatedTypes[selectedProductId].orders.sell[0].price );
                 }
 
                 _extents[1] = 1.1*Math.max(...prices, totalCost);
@@ -173,6 +181,8 @@
     dl {
         display: grid;
         grid-template-columns: 150px 1fr;
+
+        margin-top: 0px;
     }
 
     dt {
@@ -189,9 +199,9 @@
 
     div.breakdown {
         display: grid;
-        grid-template-columns: 1fr 80px 350px;
+        grid-template-columns: 1fr 80px 500px;
 
-        max-width: 700px;
+        max-width: 800px;
 
         .itemName {
             overflow-x: hidden;
@@ -291,8 +301,10 @@ Manufacturing
                 <div class="itemName">
                     <label><input type="checkbox" bind:checked={manufacturedItems[type_id]} disabled={GetBlueprintToManufacture($Industry, parseInt(type_id)) == null} /> {$Universe.types[type_id].name} [{type_id}]</label>
                 </div>
-                <svelte:self selectedProductId={type_id} runs={materialQty(manufacturing.materials[type_id].quantity)} {manufacturedItems} bind:unitCost={manufacturedUnitCostPrices[type_id]} 
+                <svelte:self selectedProductId={type_id} quantity={materialQty(manufacturing.materials[type_id].quantity)} {manufacturedItems}
+                    bind:unitCost={manufacturedUnitCostPrices[type_id]} 
                     {systemCostIndex} {facilityMaterialConsumptionModifier}
+                    materialEfficiency={10} timeEfficiency={20}
                     compact extents={_extents} />
             </div>
         {/if}

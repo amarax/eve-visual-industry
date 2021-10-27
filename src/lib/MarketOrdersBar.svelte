@@ -1,5 +1,6 @@
 <script lang="ts">
     import type { MarketOrder } from "./EveMarkets";
+    import { FormatIskAmount } from "./Format";
 
 
 
@@ -21,12 +22,8 @@
 
     export let quantity: number = 1;
 
-    let scale = (value: number): number => {return 1}
-    
-    $:{
-        scale = (value) => {
-            return 0 + width*(value-extents[0])/(extents[1]-extents[0]);
-        }
+    $: scale = (value: number) => {
+        return 0 + width*(value-extents[0])/(extents[1]-extents[0]);
     }
 
     let validExtents = false;
@@ -40,6 +37,7 @@
             scaleMarks.push(mark);
         }
     }
+
 </script>
 
 <svg style="background: #ccc" {width} {height} viewBox={`0 0 ${width} ${height}`} xmlns="http://www.w3.org/2000/svg">
