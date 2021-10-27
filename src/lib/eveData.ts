@@ -1,4 +1,4 @@
-import { readable } from "svelte/store";
+import { derived, readable } from "svelte/store";
 import type { Readable } from "svelte/store";
 
 // import Papa from "https://cdnjs.cloudflare.com/ajax/libs/PapaParse/4.6.2/papaparse.min.js";
@@ -561,5 +561,34 @@ export const Industry: Readable<IndustryStore> = readable(null, setupIndustry);
 
 export function GetBlueprintToManufacture(store: IndustryStore, type_id: Type_Id): IndustryType {
     return Object.values(store.types)
-        .find(type=>type.activities[MANUFACTURING_ACTIVITY_ID]&&type.activities[MANUFACTURING_ACTIVITY_ID].products[type_id]);
+        .find(type=>type.activities[MANUFACTURING_ACTIVITY_ID]?.products[type_id]);
+}
+
+export function GetInventableBlueprint(store: IndustryStore, type_id: Type_Id): IndustryType {
+    return Object.values(store.types)
+        .find(type=>type.activities[INVENTION_ACTIVITY_ID]?.products[type_id]);
+}
+
+
+export const Decryptors: Readable< EntityCollection<Type> > = derived(Universe, ($Universe, set)=>{
+    LoadDecryptorTypes( $Universe )
+        .then( decryptorTypes=>set(decryptorTypes) )
+
+    return ()=>{};
+}, {});
+
+export async function LoadDecryptorTypes(universe: UniverseStore): Promise< EntityCollection<Type> > {
+    const DECRYPTOR_MARKET_GROUP_ID = 1873;
+    let type_ids = Object.keys(universe.types).filter(type_id=>universe.types[type_id].market_group_id == DECRYPTOR_MARKET_GROUP_ID);
+
+    let decryptorTypes = {};
+    try {
+        for(let type_id of type_ids) {
+            decryptorTypes[type_id] = await loadFromESI(`/universe/types/${type_id}/`);
+        }
+    } catch(error) {
+        console.error(error);
+    }
+
+    return decryptorTypes;
 }

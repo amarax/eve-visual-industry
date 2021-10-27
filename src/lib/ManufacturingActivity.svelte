@@ -1,15 +1,18 @@
 <script lang="ts">
-    import { Universe, Industry, GetBlueprintToManufacture  } from "$lib/EveData";
+    import { Universe, Industry, GetBlueprintToManufacture, GetInventableBlueprint  } from "$lib/EveData";
     import { MANUFACTURING_ACTIVITY_ID  } from "$lib/EveData";
     import type { IndustryType, IndustryActivity, EntityCollection, Type_Id } from "$lib/EveData";
     import { getMarketType, IskAmount, MarketPrices } from "$lib/EveMarkets";
     import type { DurationSeconds, MarketType, Quantity } from "$lib/EveMarkets";
     import MarketOrdersBar from "./MarketOrdersBar.svelte";
     import { FormatDuration, FormatIskAmount, FormatIskChange } from "./Format";
+import InventionActivity from "./InventionActivity.svelte";
 
 
 
     $: blueprint = GetBlueprintToManufacture($Industry, selectedProductId);
+
+    $: inventable = GetInventableBlueprint($Industry, blueprint?.type_id);
 
     let relatedTypeStores = [];
     let relatedTypes: EntityCollection<MarketType> = {};
@@ -175,6 +178,8 @@
 
     export let compact = false;
 
+    let inventing = false;
+
 </script>
 
 <style lang="scss">
@@ -239,8 +244,18 @@ No blueprint selected yet
 <div class="combinedInput">Runs <input type="range" bind:value={runs} min={1} max={blueprint?blueprint.maxProductionLimit+9 : 20} /> <input type="text" bind:value={runs} /></div>
 <p>
     Blueprint <br/>
-    <label>ME <input type="range" bind:value={materialEfficiency} min={0} max={10} /> {materialEfficiency}</label>
-    <label>TE <input type="range" bind:value={timeEfficiency} min={0} max={20} step={2} /> {timeEfficiency}</label>
+
+    {#if inventable}
+        <label><input type="checkbox" bind:checked={inventing} /> Invent</label>
+
+        {#if inventing}
+            <InventionActivity />
+        {/if}
+    {/if}
+    <br/>
+
+    <label>ME <input type="range" bind:value={materialEfficiency} min={0} max={10} disabled={inventing} /> {materialEfficiency}</label>
+    <label>TE <input type="range" bind:value={timeEfficiency} min={0} max={20} step={2} disabled={inventing} /> {timeEfficiency}</label>
 </p>
 
 {#if !compact}
