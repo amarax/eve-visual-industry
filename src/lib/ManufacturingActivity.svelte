@@ -6,11 +6,12 @@
     import type { DurationSeconds, MarketType, Quantity } from "$lib/EveMarkets";
     import MarketOrdersBar from "./MarketOrdersBar.svelte";
     import { FormatDuration, FormatIskAmount, FormatIskChange } from "./Format";
-import InventionActivity from "./InventionActivity.svelte";
+    import InventionActivity from "./InventionActivity.svelte";
 
 
 
     $: blueprint = GetBlueprintToManufacture($Industry, selectedProductId);
+    let blueprintCostPerRun: IskAmount = 0;
 
     $: inventable = GetInventableBlueprint($Industry, blueprint?.type_id);
 
@@ -81,7 +82,6 @@ import InventionActivity from "./InventionActivity.svelte";
     }
 
 
-
     let materialQty = (baseQuantity: Quantity): Quantity => baseQuantity;
 
     export let facilityMaterialConsumptionModifier: number = -1;
@@ -121,6 +121,7 @@ import InventionActivity from "./InventionActivity.svelte";
             }
 
             totalCost += manufacturingJobCost;
+            totalCost += blueprintCostPerRun * runs;
         }
     }
 
@@ -233,7 +234,8 @@ import InventionActivity from "./InventionActivity.svelte";
     }
 
     .combinedInput input[type='text'] {
-        width: 20px;
+        width: 30px;
+        text-align: right;
     }
 </style>
 
@@ -243,7 +245,7 @@ No blueprint selected yet
 
 <div class="combinedInput">Runs <input type="range" bind:value={runs} min={1} max={blueprint?blueprint.maxProductionLimit+9 : 20} /> <input type="text" bind:value={runs} /></div>
 <p>
-    Blueprint <br/>
+    <b>Blueprint</b> <br/>
 
     {#if inventable}
         <label><input type="checkbox" bind:checked={inventing} /> Invent</label>
@@ -251,20 +253,23 @@ No blueprint selected yet
         {#if inventing}
             <InventionActivity />
         {/if}
+        <br/>
     {/if}
-    <br/>
 
     <label>ME <input type="range" bind:value={materialEfficiency} min={0} max={10} disabled={inventing} /> {materialEfficiency}</label>
     <label>TE <input type="range" bind:value={timeEfficiency} min={0} max={20} step={2} disabled={inventing} /> {timeEfficiency}</label>
+    <br/>
+    
+    <label>Cost per run <input type="text" bind:value={blueprintCostPerRun} /></label>
 </p>
 
 {#if !compact}
-Facility
+<b>Facility</b>
 <dl>
     <dt><label for="systemCostIndex">System cost index</label></dt> <dd><input id="systemCostIndex" bind:value={systemCostIndex} /></dd>
 </dl>
 
-Manufacturing
+<b>Manufacturing</b>
 <dl>
     <dt>Time</dt>
     <dd title={`${manufacturingTime}s`}>{FormatDuration(manufacturingTime)}</dd>
