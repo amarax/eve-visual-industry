@@ -8,6 +8,13 @@ export const FormatIskAmount = new Intl.NumberFormat(defaultLocale, {
     minimumFractionDigits: 2,
 }).format
 
+export const FormatIskChange = new Intl.NumberFormat(defaultLocale, {
+    useGrouping: true,
+    maximumFractionDigits: 2,
+    minimumFractionDigits: 2,
+    signDisplay: 'always',
+}).format
+
 
 let formatDurationPart = new Intl.NumberFormat(defaultLocale, {minimumIntegerDigits:2}).format;
 export function FormatDuration(duration: DurationSeconds) {

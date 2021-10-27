@@ -4,7 +4,7 @@
     import { DurationSeconds, getMarketType, MarketPrices } from "$lib/EveMarkets";
     import type { MarketType, Quantity } from "$lib/EveMarkets";
     import MarketOrdersBar from "./MarketOrdersBar.svelte";
-    import { FormatDuration, FormatIskAmount } from "./Format";
+    import { FormatDuration, FormatIskAmount, FormatIskChange } from "./Format";
 
 
 
@@ -81,8 +81,6 @@
         materialQty = (qty) => Math.max( runs, Math.ceil( qty * runs * (1-materialEfficiency/100) * (1+facilityMaterialConsumptionModifier/100) ) );
     }
 
-    $: manufacturingTime = manufacturing.time * (1-timeEfficiency/100) * runs;
-
     function getBuySellInJita() {
         let jita_tradehub_location_id = 60003760;
         let jita_system_id = 30000142;
@@ -137,6 +135,14 @@
 
         }
     }
+
+    $: manufacturingTime = manufacturing && (manufacturing.time * (1-timeEfficiency/100) * runs);
+
+    $: sellingPrice = relatedTypes[selectedProductId] && (
+        (relatedTypes[selectedProductId].orders.sell[0] && relatedTypes[selectedProductId].orders.sell[0].price)*(1-brokerFeeRate-salesTaxRate)
+    );
+
+    $: profit = sellingPrice*runs - totalCost
 </script>
 
 <style lang="scss">
@@ -176,42 +182,35 @@ Facility
 Manufacturing
 <dl>
     <dt>Time</dt>
-    <dd>{FormatDuration(manufacturingTime)}</dd>
+    <dd title={`${manufacturingTime}s`}>{FormatDuration(manufacturingTime)}</dd>
     <dt>Job Cost</dt>
     <dd>{FormatIskAmount(manufacturingJobCost)}</dd>
 </dl>
 
-
-Products
 <dl>
     {#each Object.keys(manufacturing.products) as type_id}
         <dt title={`${$Universe.types[type_id].name} [${type_id}]`}>{$Universe.types[type_id].name}</dt>
         <dd>
+            Unit price
+            {FormatIskAmount(sellingPrice)}
+            Total Profit 
+            {FormatIskChange(profit)} 
+            <br/>
+
             <MarketOrdersBar {extents} quantity={manufacturing.products[type_id].quantity * runs} 
                 highestBuyOrder={relatedTypes[type_id].orders.buy[0]} lowestSellOrder={relatedTypes[type_id].orders.sell[0]} 
                 buyOverheadRate={-salesTaxRate} sellOverheadRate={-brokerFeeRate-salesTaxRate}
                 {totalCost}
             />
-            Unit price
-            {(relatedTypes[type_id].orders.sell[0] && relatedTypes[type_id].orders.sell[0].price)*(1-brokerFeeRate-salesTaxRate)}
-
-            Unit Cost
-            {totalCost/runs}
-
             <br/>
 
-            Profit 
-            {(relatedTypes[type_id].orders.sell[0] && relatedTypes[type_id].orders.sell[0].price)*(1-brokerFeeRate-salesTaxRate)*runs - totalCost} 
+            Unit cost {FormatIskAmount(totalCost/runs)}
+
         </dd>
     {/each}
-</dl>
-
-Materials
-<dl>
-    <dt>Total</dt>
+    <dt>Job cost</dt>
     <dd>
-        <MarketOrdersBar {extents} quantity={manufacturing.products[selectedProductId].quantity * runs} {totalCost} />
-        Cost per item {totalCost / (manufacturing.products[selectedProductId].quantity * runs)}
+        <MarketOrdersBar height={20} {extents} quantity={manufacturing.products[selectedProductId].quantity * runs} totalCost={manufacturingJobCost} />
     </dd>
     {#each Object.keys(manufacturing.materials) as type_id}
         <dt>{$Universe.types[type_id].name} [{type_id}]</dt>
