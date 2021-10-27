@@ -2,11 +2,10 @@
     import { Universe, Industry, GetBlueprintToManufacture  } from "$lib/EveData";
     import { MANUFACTURING_ACTIVITY_ID  } from "$lib/EveData";
     import type { IndustryType, IndustryActivity, EntityCollection, Type_Id } from "$lib/EveData";
-    import { getMarketType, MarketPrices } from "$lib/EveMarkets";
+    import { getMarketType, IskAmount, MarketPrices } from "$lib/EveMarkets";
     import type { DurationSeconds, MarketType, Quantity } from "$lib/EveMarkets";
     import MarketOrdersBar from "./MarketOrdersBar.svelte";
     import { FormatDuration, FormatIskAmount, FormatIskChange } from "./Format";
-import { component_subscribe } from "svelte/internal";
 
 
 
@@ -20,7 +19,6 @@ import { component_subscribe } from "svelte/internal";
 
     export let salesTaxRate = 0.036;
     export let brokerFeeRate = 0.0151114234532; // Aqua Silentium's broker fee
-
 
     function subscribeToTypeStore( type_id: Type_Id ) {
         relatedTypeStores.push( getMarketType(type_id).subscribe(value=>{
@@ -90,18 +88,31 @@ import { component_subscribe } from "svelte/internal";
         let tq_trading_location_id = 1028858195912;
     }
 
+    let manufacturedUnitCostPrices: EntityCollection<IskAmount> = {};
+
     let totalCost = 0;
     $: {
+        totalCost = 0;
         if(manufacturing) {
-            totalCost = 0;
 
             for(let type_id in manufacturing.materials) {
-                if(relatedTypes[type_id] && relatedTypes[type_id].orders.lastUpdated !== null) {
-                    let materialQuantity = materialQty(manufacturing.materials[type_id].quantity);
+                let materialQuantity = materialQty(manufacturing.materials[type_id].quantity);
 
-                    if(relatedTypes[type_id].orders.sell.length > 0) totalCost += materialQuantity * relatedTypes[type_id].orders.sell[0].price;
-                }
+                totalCost += materialQuantity * (
+                    manufacturedUnitCostPrices[type_id] || 
+                    (relatedTypes[type_id].orders.sell[0] && relatedTypes[type_id].orders.sell[0].price) ||
+                    0
+                );
             }
+
+            totalCost += manufacturingJobCost;
+        }
+    }
+
+    $: {
+        // Reset items that are not marked as manufactured
+        for(let type_id in manufacturedUnitCostPrices) {
+            if(!manufacturedItems[type_id]) manufacturedUnitCostPrices[type_id] = undefined;
         }
     }
 
@@ -119,8 +130,6 @@ import { component_subscribe } from "svelte/internal";
                         if(relatedTypes[type_id].orders.sell.length > 0) prices.push( productQuantity * relatedTypes[type_id].orders.sell[0].price );
                     }
                 }
-
-                totalCost += manufacturingJobCost;
 
                 _extents[1] = 1.1*Math.max(...prices, totalCost);
             }
@@ -282,7 +291,9 @@ Manufacturing
                 <div class="itemName">
                     <label><input type="checkbox" bind:checked={manufacturedItems[type_id]} disabled={GetBlueprintToManufacture($Industry, parseInt(type_id)) == null} /> {$Universe.types[type_id].name} [{type_id}]</label>
                 </div>
-                <svelte:self selectedProductId={type_id} runs={materialQty(manufacturing.materials[type_id].quantity)} {manufacturedItems} compact extents={_extents} />
+                <svelte:self selectedProductId={type_id} runs={materialQty(manufacturing.materials[type_id].quantity)} {manufacturedItems} bind:unitCost={manufacturedUnitCostPrices[type_id]} 
+                    {systemCostIndex} {facilityMaterialConsumptionModifier}
+                    compact extents={_extents} />
             </div>
         {/if}
     {/each}
