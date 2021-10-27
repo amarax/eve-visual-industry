@@ -203,7 +203,13 @@ import { component_subscribe } from "svelte/internal";
 
             border-top: $divider;
             border-bottom: $divider;
+
+            margin-bottom: 4px;
         }
+    }
+
+    .combinedInput input[type='text'] {
+        width: 20px;
     }
 </style>
 
@@ -211,9 +217,9 @@ import { component_subscribe } from "svelte/internal";
 No blueprint selected yet
 {:else}
 
-Blueprint
+<div class="combinedInput">Runs <input type="range" bind:value={runs} min={1} max={blueprint?blueprint.maxProductionLimit+9 : 20} /> <input type="text" bind:value={runs} /></div>
 <p>
-    <label>Runs <input type="range" bind:value={runs} min={1} max={blueprint?blueprint.maxProductionLimit+9 : 20} /> {runs}</label>
+    Blueprint <br/>
     <label>ME <input type="range" bind:value={materialEfficiency} min={0} max={10} /> {materialEfficiency}</label>
     <label>TE <input type="range" bind:value={timeEfficiency} min={0} max={20} step={2} /> {timeEfficiency}</label>
 </p>
@@ -261,7 +267,9 @@ Manufacturing
     </div>
     {#each Object.keys(manufacturing.materials) as type_id}
         {#if !manufacturedItems[type_id]}
-            <div class="itemName"><input type="checkbox" bind:checked={manufacturedItems[type_id]} disabled={GetBlueprintToManufacture($Industry, parseInt(type_id)) == null} /> {$Universe.types[type_id].name} [{type_id}]</div>
+            <div class="itemName">
+                <label><input type="checkbox" bind:checked={manufacturedItems[type_id]} disabled={GetBlueprintToManufacture($Industry, parseInt(type_id)) == null} /> {$Universe.types[type_id].name}</label>
+            </div>
             <div class="qty">{materialQty(manufacturing.materials[type_id].quantity)}</div>
             <div>
                 <MarketOrdersBar height={20} extents={_extents} quantity={materialQty(manufacturing.materials[type_id].quantity)} 
@@ -271,7 +279,9 @@ Manufacturing
             </div>
         {:else}
             <div class="subItem">
-                <div class="itemName"><input type="checkbox" bind:checked={manufacturedItems[type_id]} disabled={GetBlueprintToManufacture($Industry, parseInt(type_id)) == null} /> {$Universe.types[type_id].name} [{type_id}]</div>
+                <div class="itemName">
+                    <label><input type="checkbox" bind:checked={manufacturedItems[type_id]} disabled={GetBlueprintToManufacture($Industry, parseInt(type_id)) == null} /> {$Universe.types[type_id].name} [{type_id}]</label>
+                </div>
                 <svelte:self selectedProductId={type_id} runs={materialQty(manufacturing.materials[type_id].quantity)} {manufacturedItems} compact extents={_extents} />
             </div>
         {/if}
