@@ -12,13 +12,12 @@
     let inputIndustryTypes: Array<IndustryType> = [];
     $: inputIndustryTypes = Object.values( $Industry.types ).filter(type=>type.activities[INVENTION_ACTIVITY_ID]?.products[blueprintToInvent?.type_id])
 
-    $: inventionActivity = inputIndustryTypes[0]?.activities[INVENTION_ACTIVITY_ID];
-
     let selectedIndustryType = inputIndustryTypes[0];
-
     $: {
         if(inputIndustryTypes.length === 1) selectedIndustryType = inputIndustryTypes[0];
     }
+
+    $: inventionActivity = selectedIndustryType?.activities[INVENTION_ACTIVITY_ID];
 
     function isBlueprint(type_id: Type_Id): boolean {
         return $Universe.categories[9].groups[$Universe.types[type_id]?.group_id] != undefined;
@@ -74,9 +73,11 @@
     let breakdownItems: Array<Type_Id> = [];
     $: {
         breakdownItems = [];
-        if(selectedIndustryType && !isBlueprint(selectedIndustryType.type_id)) breakdownItems.push(selectedIndustryType.type_id);
-        breakdownItems.push( ...Object.keys(inventionActivity.materials).map(string=>parseInt(string)) );
-        if(selectedDecryptor) breakdownItems.push(selectedDecryptor);
+        if(inventionActivity) {
+            if(selectedIndustryType && !isBlueprint(selectedIndustryType.type_id)) breakdownItems.push(selectedIndustryType.type_id);
+            breakdownItems.push( ...Object.keys(inventionActivity.materials).map(string=>parseInt(string)) );
+            if(selectedDecryptor) breakdownItems.push(selectedDecryptor);
+        }
     }
 
 
@@ -91,9 +92,11 @@
     let totalCost = 0;
     $: {
         totalCost = 0;
-        totalCost += selectedIndustryTypeCost;
-        totalCost += sum( Object.values(inventionActivity.materials), material=>relatedTypes[material.materialTypeID].orders.sell[0]?.price*material.quantity );
-        if(selectedDecryptor) totalCost += relatedTypes[selectedDecryptor].orders.sell[0]?.price;
+        if(inventionActivity) {
+            totalCost += selectedIndustryTypeCost;
+            totalCost += sum( Object.values(inventionActivity.materials), material=>relatedTypes[material.materialTypeID].orders.sell[0]?.price*material.quantity );
+            if(selectedDecryptor) totalCost += relatedTypes[selectedDecryptor].orders.sell[0]?.price;
+        }
     }
 
     let inventionProbability: number = 0.3;
@@ -138,12 +141,19 @@
     }
 
     export let productRuns: number = 1;
-    $: productRuns = inventionActivity.products[blueprintToInvent.type_id].quantity + decrpytorRunModifier;
+    $: {
+        productRuns = inventionActivity?.products[blueprintToInvent.type_id].quantity + decrpytorRunModifier;
+        if(isNaN(productRuns)) productRuns = 1;
+    }
+
 
     $: expectedRuns = productRuns * inventionProbability;
 
     export let expectedCostPerRun: IskAmount = 0;
-    $: expectedCostPerRun = totalCost / expectedRuns;
+    $: {
+        expectedCostPerRun = totalCost / expectedRuns;
+        if(isNaN(expectedCostPerRun)) expectedCostPerRun = 0;
+    }
 
     export let extents: Array<IskAmount> = null;
     let _extents = [0,1000000];
@@ -230,6 +240,10 @@
                 <br/>
             </div>
         {/each}
+        {#if !selectedDecryptor}
+            <div class="itemName">No decryptor</div>
+            <div style={`height:${24}px`}></div>
+        {/if}
     </div>
 
     Total Invention Cost {FormatIskAmount(totalCost)} Chance of success {inventionProbability*100}% <br/>

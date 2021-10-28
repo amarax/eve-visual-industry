@@ -194,8 +194,6 @@
             runs = inventedRuns;
         }
     }
-
-    $: console.log(blueprint?.maxProductionLimit);
 </script>
 
 <style lang="scss">
@@ -313,7 +311,7 @@ No blueprint selected yet
             />
             <br/>
 
-            Unit cost {FormatIskAmount(unitCost)}
+            Unit cost {FormatIskAmount(unitCost)} Total cost {FormatIskAmount(totalCost)}
 
         </div>
     {/each}
