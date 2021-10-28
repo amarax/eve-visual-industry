@@ -14,7 +14,7 @@
 
     let selectedIndustryType = inputIndustryTypes[0];
     $: {
-        if(inputIndustryTypes.length === 1) selectedIndustryType = inputIndustryTypes[0];
+        if(inputIndustryTypes.length >= 1 && inputIndustryTypes.indexOf(selectedIndustryType) === -1) selectedIndustryType = inputIndustryTypes[0];
     }
 
     $: inventionActivity = selectedIndustryType?.activities[INVENTION_ACTIVITY_ID];
@@ -142,7 +142,7 @@
 
     export let productRuns: number = 1;
     $: {
-        productRuns = inventionActivity?.products[blueprintToInvent.type_id].quantity + decrpytorRunModifier;
+        productRuns = inventionActivity?.products[blueprintToInvent.type_id]?.quantity + decrpytorRunModifier;
         if(isNaN(productRuns)) productRuns = 1;
     }
 
