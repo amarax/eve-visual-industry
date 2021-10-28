@@ -111,11 +111,6 @@
     let decryptorMEModifier: number;
     let decryptorTEModifier: number;
     $: {
-        decrpytorRunModifier = 0;
-        decryptorProbabilityModifier = 1;
-        decryptorMEModifier = 0;
-        decryptorTEModifier = 0;
-
         if(selectedDecryptor) {
             loadType(selectedDecryptor).then(type=>{
                 decrpytorRunModifier = type.dogma_attributes.find(attribute=>attribute.attribute_id==DECRYPTOR_RUN_MODIFIER_ATTRIBUTE_ID).value;
@@ -124,7 +119,11 @@
                 decryptorTEModifier = type.dogma_attributes.find(attribute=>attribute.attribute_id==DECRYPTOR_TE_MODIFIER_ATTRIBUTE_ID).value;
 
             })
-
+        } else {
+            decrpytorRunModifier = 0;
+            decryptorProbabilityModifier = 1;
+            decryptorMEModifier = 0;
+            decryptorTEModifier = 0;
         }
     }
 
@@ -231,7 +230,7 @@
         {/each}
     </div>
 
-    Total Invention Cost {FormatIskAmount(totalCost)} <br/>
+    Total Invention Cost {FormatIskAmount(totalCost)} Chance of success {inventionProbability*100}% <br/>
     Expected Runs {expectedRuns}  Expected cost per run {FormatIskAmount(expectedCostPerRun)}
     
 </div>
