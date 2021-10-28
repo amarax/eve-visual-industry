@@ -16,9 +16,9 @@ type System_Id = number;
 
 export type Quantity = number;
 
-type IskAmount = number;
+export type IskAmount = number;
 
-type Timestamp = number;
+export type Timestamp = number;
 
 export type MarketOrder = {
     duration: DurationDays,
@@ -44,8 +44,6 @@ export class MarketType {
     };
 
     type_id: Type_Id;
-    adjusted_price: IskAmount;
-    average_price: IskAmount;
 
     constructor(type_id: Type_Id) {
         this.orders = {
@@ -53,8 +51,6 @@ export class MarketType {
             sell: [],
             lastUpdated: null,
         }
-        this.adjusted_price = null;
-        this.average_price = null;
 
         this.type_id = type_id;
     }

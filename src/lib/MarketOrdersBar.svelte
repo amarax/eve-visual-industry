@@ -1,11 +1,12 @@
 <script lang="ts">
     import type { MarketOrder } from "./EveMarkets";
+    import { FormatIskAmount } from "./Format";
 
 
 
 
     export let height = 30;
-    export let width = 300;
+    export let width = 400;
 
     export let extents: Array<number> = [0,1000];
 
@@ -21,12 +22,8 @@
 
     export let quantity: number = 1;
 
-    let scale = (value: number): number => {return 1}
-    
-    $:{
-        scale = (value) => {
-            return 0 + width*(value-extents[0])/(extents[1]-extents[0]);
-        }
+    $: scale = (value: number) => {
+        return 0 + width*(value-extents[0])/(extents[1]-extents[0]);
     }
 
     let validExtents = false;
@@ -34,16 +31,18 @@
     $: {
         validExtents = extents[1] > extents[0];
 
+        scaleMarks = [];
         let step = 10;
         for(let mark = 1000000; mark < extents[1]; mark*=step) {
             scaleMarks.push(mark);
         }
     }
+
 </script>
 
-<svg style="background: #ccc" {width} {height} viewBox={`0 0 ${300} ${height}`} xmlns="http://www.w3.org/2000/svg">
+<svg style="background: #ccc" {width} {height} viewBox={`0 0 ${width} ${height}`} xmlns="http://www.w3.org/2000/svg">
     {#if validExtents}
-        {#each scaleMarks as mark}
+        {#each scaleMarks as mark, i}
             <rect class="mark" x={scale(mark)} fill="#bbb" stroke="none" width={1} height={height} />
         {/each}
 
