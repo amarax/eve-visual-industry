@@ -20,6 +20,11 @@ export type Type = {
     name: string;
 
     group_id: number;
+
+    dogma_attributes?: Array<{
+        attribute_id: number,
+        value: number
+    }>
 }
 
 export type MarketGroup_Id = number;

@@ -1,9 +1,10 @@
 <script lang="ts">
-    import { Decryptors, Industry, INVENTION_ACTIVITY_ID, Type, Universe } from "./EveData";
+    import { Decryptors, Industry, INVENTION_ACTIVITY_ID, loadType, Type, Universe } from "./EveData";
     import type { EntityCollection, IndustryType, Type_Id } from "./EveData";
     import { getMarketType, IskAmount, MarketType } from "./EveMarkets";
-import MarketOrdersBar from "./MarketOrdersBar.svelte";
-import { sum } from "./Utilities";
+    import MarketOrdersBar from "./MarketOrdersBar.svelte";
+    import { sum } from "./Utilities";
+    import { FormatIskAmount } from "./Format";
 
     export let blueprintToInvent: IndustryType = null;
     
@@ -87,14 +88,43 @@ import { sum } from "./Utilities";
         }
     }
 
-    export let extents: Array<IskAmount> = null;
-    let _extents = [0,1000000];
+    let totalCost = 0;
     $: {
-        let totalCost = 0;
+        totalCost = 0;
         totalCost += selectedIndustryTypeCost;
         totalCost += sum( Object.values(inventionActivity.materials), material=>relatedTypes[material.materialTypeID].orders.sell[0]?.price*material.quantity );
         if(selectedDecryptor) totalCost += relatedTypes[selectedDecryptor].orders.sell[0]?.price;
+    }
 
+    let inventionProbability = 0.3;
+    //$: inventionProbability = inventionActivity.probability * (1 + (skill1Level + skill2Level)/30 + encryptionSkillLevel/40);
+
+    let baseME = 2;
+    let baseTE = 4;
+
+
+    const RUN_MODIFIER_ATTRIBUTE_ID = 1124;
+
+    let decrpytorRunModifier: number;
+    $: {
+        decrpytorRunModifier = 0;
+        if(selectedDecryptor) {
+            loadType(selectedDecryptor).then(type=>{
+                decrpytorRunModifier = type.dogma_attributes.find(attribute=>attribute.attribute_id==RUN_MODIFIER_ATTRIBUTE_ID).value;
+            })
+
+        }
+    }
+
+
+    $: expectedRuns = inventionActivity.products[blueprintToInvent.type_id].quantity * inventionProbability + decrpytorRunModifier;
+
+    export let expectedCostPerRun: IskAmount = 0;
+    $: expectedCostPerRun = totalCost / expectedRuns;
+
+    export let extents: Array<IskAmount> = null;
+    let _extents = [0,1000000];
+    $:{
         _extents = extents || [0,totalCost*1.1];
     }
 
@@ -135,6 +165,7 @@ import { sum } from "./Utilities";
             <option value={decryptorType.type_id}>{decryptorType.name}</option>
         {/each}
     </select>
+    Runs +{decrpytorRunModifier} ME + TE +
     <br/>
 
     <label>
@@ -176,6 +207,9 @@ import { sum } from "./Utilities";
                 <br/>
             </div>
         {/each}
-
     </div>
+
+    Total Invention Cost {FormatIskAmount(totalCost)} <br/>
+    Expected Runs {expectedRuns}  Expected cost per run {FormatIskAmount(expectedCostPerRun)}
+    
 </div>
