@@ -137,8 +137,10 @@
         productTE = baseTE + decryptorTEModifier;
     }
 
+    export let productRuns: number = 1;
+    $: productRuns = inventionActivity.products[blueprintToInvent.type_id].quantity + decrpytorRunModifier;
 
-    $: expectedRuns = inventionActivity.products[blueprintToInvent.type_id].quantity * inventionProbability + decrpytorRunModifier;
+    $: expectedRuns = productRuns * inventionProbability;
 
     export let expectedCostPerRun: IskAmount = 0;
     $: expectedCostPerRun = totalCost / expectedRuns;

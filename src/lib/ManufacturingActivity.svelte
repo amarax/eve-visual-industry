@@ -187,7 +187,15 @@
     export let compact = false;
 
     let inventing = false;
+    let inventedRuns: number = 10;
 
+    $: {
+        if(inventing) {
+            runs = inventedRuns;
+        }
+    }
+
+    $: console.log(blueprint?.maxProductionLimit);
 </script>
 
 <style lang="scss">
@@ -250,7 +258,7 @@
 No blueprint selected yet
 {:else}
 
-<div class="combinedInput">Runs <input type="range" bind:value={runs} min={1} max={blueprint?blueprint.maxProductionLimit+9 : 20} /> <input type="text" bind:value={runs} /></div>
+<div class="combinedInput">Runs <input type="range" bind:value={runs} min={1} max={inventing ? inventedRuns : blueprint?.maxProductionLimit} /> <input type="text" bind:value={runs} /></div>
 <p>
     <b>Blueprint</b> <br/>
 
@@ -259,7 +267,7 @@ No blueprint selected yet
 
         {#if inventing}
             <InventionActivity blueprintToInvent={blueprint} extents={_extents} 
-                bind:expectedCostPerRun={blueprintCostPerRun} bind:productME={materialEfficiency} bind:productTE={timeEfficiency}
+                bind:expectedCostPerRun={blueprintCostPerRun} bind:productME={materialEfficiency} bind:productTE={timeEfficiency} bind:productRuns={inventedRuns}
             />
         {/if}
         <br/>
