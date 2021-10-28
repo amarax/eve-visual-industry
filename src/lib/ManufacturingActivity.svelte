@@ -171,7 +171,7 @@
         }
     }
 
-    $: manufacturingJobCost = totalAdjustedCostPrice * systemCostIndex;
+    $: manufacturingJobCost = totalAdjustedCostPrice * systemCostIndex * runs;
 
     $: manufacturingTime = manufacturing?.time * (1-timeEfficiency/100) * runs;
 
