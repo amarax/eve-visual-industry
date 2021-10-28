@@ -51,10 +51,7 @@ type CostItem = {
     requiredQuantity: Quantity,
 }
 
-function sum(array: Array<any>, accessor?: (element: any)=>number) {
 
-    return array.reduce( (runningTotal, element)=> runningTotal + accessor?accessor(element):element, 0);
-}
 
 
 // For now this will be a purely functional object that is a central place for all calculations related to industry jobs
@@ -116,6 +113,7 @@ export default class IndustryJob {
 
 
 import { Universe } from "./EveData";
+import { sum } from "./Utilities";
 
 // Todo include helper functions to select a blueprint its manufacturing activity from a requested product
 export function CreateManufacturingJobFromProduct(): IndustryJob {

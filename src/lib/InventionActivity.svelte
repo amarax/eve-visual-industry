@@ -1,15 +1,17 @@
 <script lang="ts">
-    import { Decryptors, Industry, INVENTION_ACTIVITY_ID, Universe } from "./EveData";
+    import { Decryptors, Industry, INVENTION_ACTIVITY_ID, Type, Universe } from "./EveData";
     import type { EntityCollection, IndustryType, Type_Id } from "./EveData";
-    import { getMarketType, MarketType } from "./EveMarkets";
+    import { getMarketType, IskAmount, MarketType } from "./EveMarkets";
+import MarketOrdersBar from "./MarketOrdersBar.svelte";
+import { sum } from "./Utilities";
 
     export let blueprintToInvent: IndustryType = null;
     
 
     let inputIndustryTypes: Array<IndustryType> = [];
-    $: inputIndustryTypes = Object.values( $Industry.types ).filter(type=>type.activities[INVENTION_ACTIVITY_ID]?.products[blueprintToInvent.type_id])
+    $: inputIndustryTypes = Object.values( $Industry.types ).filter(type=>type.activities[INVENTION_ACTIVITY_ID]?.products[blueprintToInvent?.type_id])
 
-    $: inventionActivity = inputIndustryTypes[0].activities[INVENTION_ACTIVITY_ID];
+    $: inventionActivity = inputIndustryTypes[0]?.activities[INVENTION_ACTIVITY_ID];
 
     let selectedIndustryType = inputIndustryTypes[0];
 
@@ -17,10 +19,8 @@
         if(inputIndustryTypes.length === 1) selectedIndustryType = inputIndustryTypes[0];
     }
 
-    $: console.log($Universe.types[selectedIndustryType.type_id]);
-
     function isBlueprint(type_id: Type_Id): boolean {
-        return $Universe.categories[9].groups[$Universe.types[type_id].group_id] != undefined;
+        return $Universe.categories[9].groups[$Universe.types[type_id]?.group_id] != undefined;
     }
 
     let _relatedTypeStores: Array<Function> = [];   // Unsubscribe functions
@@ -29,21 +29,34 @@
         if(inventionActivity) {
             _relatedTypeStores.forEach(unsubscribe=>unsubscribe());
 
+            _relatedTypeStores = [];
+
             Object.values(inventionActivity.materials).forEach(material=>{
-                _relatedTypeStores.push( getMarketType(material.materialTypeID).subscribe(
+                let unsubscribe = getMarketType(material.materialTypeID).subscribe(
                     value=>relatedTypes[value.type_id] = value
-                ) );
+                );
+                if(unsubscribe) _relatedTypeStores.push( unsubscribe );
             })
 
-            if(!isBlueprint(selectedIndustryType.type_id)) {
-                _relatedTypeStores.push( getMarketType(selectedIndustryType.type_id).subscribe(
+            if(selectedIndustryType && !isBlueprint(selectedIndustryType.type_id)) {
+                let unsubscribe = getMarketType(selectedIndustryType.type_id).subscribe(
                     value=>relatedTypes[value.type_id] = value
-                ) );
+                );
+                if(unsubscribe) _relatedTypeStores.push( unsubscribe );
+            }
+
+            if(selectedDecryptor) {
+                let unsubscribe = getMarketType(selectedDecryptor).subscribe(
+                    value=>relatedTypes[value.type_id] = value
+                );
+                if(unsubscribe) _relatedTypeStores.push( unsubscribe );
             }
         }
     }
 
 
+
+    export let brokerFeeRate = 0.0151114234532; // Aqua Silentium's broker fee
 
 
     let scienceSkills = [];
@@ -55,8 +68,59 @@
         }
     }
 
+    let selectedDecryptor: Type_Id;
+
+    let breakdownItems: Array<Type_Id> = [];
+    $: {
+        breakdownItems = [];
+        if(selectedIndustryType && !isBlueprint(selectedIndustryType.type_id)) breakdownItems.push(selectedIndustryType.type_id);
+        breakdownItems.push( ...Object.keys(inventionActivity.materials).map(string=>parseInt(string)) );
+        if(selectedDecryptor) breakdownItems.push(selectedDecryptor);
+    }
+
+
+    let selectedIndustryTypeCost = 0;
+    $: { 
+        selectedIndustryTypeCost = 0;
+        if(selectedIndustryType && !isBlueprint(selectedIndustryType.type_id)) {
+            selectedIndustryTypeCost = relatedTypes[selectedIndustryType.type_id].orders.sell[0]?.price;
+        }
+    }
+
+    export let extents: Array<IskAmount> = null;
+    let _extents = [0,1000000];
+    $: {
+        let totalCost = 0;
+        totalCost += selectedIndustryTypeCost;
+        totalCost += sum( Object.values(inventionActivity.materials), material=>relatedTypes[material.materialTypeID].orders.sell[0]?.price*material.quantity );
+        if(selectedDecryptor) totalCost += relatedTypes[selectedDecryptor].orders.sell[0]?.price;
+
+        _extents = extents || [0,totalCost*1.1];
+    }
 
 </script>
+
+<style lang="scss">
+    div.breakdown {
+        display: grid;
+        grid-template-columns: 1fr 80px 500px;
+
+        max-width: 800px;
+
+        .itemName {
+            overflow-x: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+
+        }
+
+        .qty {
+            text-align: right;
+            margin-right: 10px;
+        }
+
+    }
+</style>
 
 <div>
     <select bind:value={selectedIndustryType}>
@@ -65,8 +129,8 @@
         {/each}
     </select>
 
-    <select>
-        <option>No decryptor</option>
+    <select bind:value={selectedDecryptor}>
+        <option value={null}>No decryptor</option>
         {#each Object.values($Decryptors) as decryptorType }
             <option value={decryptorType.type_id}>{decryptorType.name}</option>
         {/each}
@@ -99,4 +163,19 @@
         </select>
         <input type="range" min={0} max={5} />
     </label>
+
+    <div class="breakdown">
+        {#each breakdownItems as type_id}
+            <div class="itemName" title={`${$Universe.types[type_id].name} [${type_id}]`}>{$Universe.types[type_id].name}</div>
+            <div class="qty">{inventionActivity.materials[type_id]?.quantity || 1}</div>
+            <div>
+                <MarketOrdersBar height={20} extents={_extents} quantity={inventionActivity.materials[type_id]?.quantity || 1} 
+                    highestBuyOrder={relatedTypes[type_id].orders.buy[0]} lowestSellOrder={relatedTypes[type_id].orders.sell[0]} 
+                    buyOverheadRate={-brokerFeeRate}
+                />
+                <br/>
+            </div>
+        {/each}
+
+    </div>
 </div>

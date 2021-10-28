@@ -134,7 +134,6 @@ async function loadOrders(type: Type_Id, region: Region_Id = 10000002, store: Ma
 export function getMarketType(type: Type_Id, region: Region_Id = 10000002) {
     if(Markets.regions[region].types[type] === undefined) {
         Markets.regions[region].types[type] = writable(new MarketType(type), (set)=>{
-            return ()=>{};
         });
     }
 
