@@ -96,24 +96,46 @@
         if(selectedDecryptor) totalCost += relatedTypes[selectedDecryptor].orders.sell[0]?.price;
     }
 
-    let inventionProbability = 0.3;
-    //$: inventionProbability = inventionActivity.probability * (1 + (skill1Level + skill2Level)/30 + encryptionSkillLevel/40);
+    let inventionProbability: number = 0.3;
+    let skill1Level = 3, skill2Level =3, encryptionSkillLevel =3;
+    $: inventionProbability = inventionActivity?.products[blueprintToInvent.type_id]?.probability * (1 + (skill1Level + skill2Level)/30 + encryptionSkillLevel/40) * decryptorProbabilityModifier;
+
+    const DECRYPTOR_RUN_MODIFIER_ATTRIBUTE_ID = 1124;
+    const DECRYPTOR_PROBABILITY_MODIFIER_ATTRIBUTE_ID = 1112;
+    const DECRYPTOR_ME_MODIFIER_ATTRIBUTE_ID = 1113;
+    const DECRYPTOR_TE_MODIFIER_ATTRIBUTE_ID = 1114;
+
+
+    let decrpytorRunModifier: number;
+    let decryptorProbabilityModifier: number;
+    let decryptorMEModifier: number;
+    let decryptorTEModifier: number;
+    $: {
+        decrpytorRunModifier = 0;
+        decryptorProbabilityModifier = 1;
+        decryptorMEModifier = 0;
+        decryptorTEModifier = 0;
+
+        if(selectedDecryptor) {
+            loadType(selectedDecryptor).then(type=>{
+                decrpytorRunModifier = type.dogma_attributes.find(attribute=>attribute.attribute_id==DECRYPTOR_RUN_MODIFIER_ATTRIBUTE_ID).value;
+                decryptorProbabilityModifier = type.dogma_attributes.find(attribute=>attribute.attribute_id==DECRYPTOR_PROBABILITY_MODIFIER_ATTRIBUTE_ID).value;
+                decryptorMEModifier = type.dogma_attributes.find(attribute=>attribute.attribute_id==DECRYPTOR_ME_MODIFIER_ATTRIBUTE_ID).value;
+                decryptorTEModifier = type.dogma_attributes.find(attribute=>attribute.attribute_id==DECRYPTOR_TE_MODIFIER_ATTRIBUTE_ID).value;
+
+            })
+
+        }
+    }
 
     let baseME = 2;
     let baseTE = 4;
 
-
-    const RUN_MODIFIER_ATTRIBUTE_ID = 1124;
-
-    let decrpytorRunModifier: number;
+    export let productME: number = baseME;
+    export let productTE: number = baseTE;
     $: {
-        decrpytorRunModifier = 0;
-        if(selectedDecryptor) {
-            loadType(selectedDecryptor).then(type=>{
-                decrpytorRunModifier = type.dogma_attributes.find(attribute=>attribute.attribute_id==RUN_MODIFIER_ATTRIBUTE_ID).value;
-            })
-
-        }
+        productME = baseME + decryptorMEModifier;
+        productTE = baseTE + decryptorTEModifier;
     }
 
 
@@ -165,7 +187,7 @@
             <option value={decryptorType.type_id}>{decryptorType.name}</option>
         {/each}
     </select>
-    Runs +{decrpytorRunModifier} ME + TE +
+    Runs +{decrpytorRunModifier} ME {decryptorMEModifier} TE {decryptorTEModifier} Probability {100-decryptorProbabilityModifier*100}%
     <br/>
 
     <label>
@@ -174,7 +196,7 @@
                 <option value={id}>{name}</option>
             {/each}
         </select>
-        <input type="range" min={0} max={5} />
+        <input bind:value={skill1Level} type="range" min={0} max={5} />
     </label>
     <br />
     <label>
@@ -183,7 +205,7 @@
                 <option value={id}>{name}</option>
             {/each}
         </select>
-        <input type="range" min={0} max={5} />
+        <input bind:value={skill2Level} type="range" min={0} max={5} />
     </label>
     <br />
     <label>
@@ -192,7 +214,7 @@
                 <option value={id}>{name}</option>
             {/each}
         </select>
-        <input type="range" min={0} max={5} />
+        <input bind:value={encryptionSkillLevel} type="range" min={0} max={5} />
     </label>
 
     <div class="breakdown">

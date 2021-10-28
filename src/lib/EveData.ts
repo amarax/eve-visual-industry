@@ -543,6 +543,21 @@ function setupIndustry( set:(value:any)=>void ) {
                 };
             });
 
+            return loadFromSDE("/data/industryActivityProbabilities.csv");
+        })
+        .then((data:Array<{
+            typeID: Type_Id,
+            activityID: Activity_Id,
+            productTypeID: Type_Id, 
+            probability: number
+        }>)=>{
+            data.forEach(activityProbability=>{
+                if(activityProbability.typeID === null) return;
+
+                let activity = industry.types[activityProbability.typeID].activities[activityProbability.activityID];
+                activity.products[activityProbability.productTypeID].probability = activityProbability.probability;
+            })
+
             return loadFromSDE("/data/industryBlueprints.csv");
         })
         .then((data:Array<{

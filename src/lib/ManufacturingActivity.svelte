@@ -258,7 +258,9 @@ No blueprint selected yet
         <label><input type="checkbox" bind:checked={inventing} /> Invent</label>
 
         {#if inventing}
-            <InventionActivity blueprintToInvent={blueprint} extents={_extents} />
+            <InventionActivity blueprintToInvent={blueprint} extents={_extents} 
+                bind:expectedCostPerRun={blueprintCostPerRun} bind:productME={materialEfficiency} bind:productTE={timeEfficiency}
+            />
         {/if}
         <br/>
     {/if}
