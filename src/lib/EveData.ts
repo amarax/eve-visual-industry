@@ -18,6 +18,8 @@ export type Type_Id = number;
 export type Type = {
     type_id: Type_Id;
     name: string;
+
+    group_id: number;
 }
 
 export type MarketGroup_Id = number;

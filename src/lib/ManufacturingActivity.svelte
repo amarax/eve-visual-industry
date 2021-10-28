@@ -258,7 +258,7 @@ No blueprint selected yet
         <label><input type="checkbox" bind:checked={inventing} /> Invent</label>
 
         {#if inventing}
-            <InventionActivity />
+            <InventionActivity blueprintToInvent={blueprint} />
         {/if}
         <br/>
     {/if}
