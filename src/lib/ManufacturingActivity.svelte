@@ -76,8 +76,8 @@
                 }
 
                 // Initialise runs to default to the amount required to produce the quantity
-                if(inventing)
-                    runs = quantity ? Math.ceil( quantity / manufacturing.products[selectedProductId].quantity ) : 1;
+                if(quantity)
+                    runs = Math.ceil( quantity / manufacturing.products[selectedProductId].quantity );
             }
         }
     }
