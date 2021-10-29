@@ -76,7 +76,8 @@
                 }
 
                 // Initialise runs to default to the amount required to produce the quantity
-                runs = quantity ? Math.ceil( quantity / manufacturing.products[selectedProductId].quantity ) : 1;
+                if(inventing)
+                    runs = quantity ? Math.ceil( quantity / manufacturing.products[selectedProductId].quantity ) : 1;
             }
         }
     }
@@ -188,6 +189,10 @@
 
     let inventing = false;
     let inventedRuns: number = 10;
+
+    $: {
+        if(!inventable) inventing = false;
+    }
 
     $: {
         if(inventing) {
