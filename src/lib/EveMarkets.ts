@@ -1,5 +1,5 @@
 import { get, readable, writable } from "svelte/store"
-import { loadFromESI } from "$lib/EveData";
+import { LoadFromESI } from "$lib/EveData";
 
 import type { Readable, Writable } from "svelte/store";
 import type { EntityCollection, Type_Id } from "$lib/EveData";
@@ -74,7 +74,7 @@ export const Markets: Markets = {
         10000002: {types:{}},
     }, 
     prices: readable({}, (set)=>{
-        loadFromESI( `/markets/prices/?datasource=tranquility` )
+        LoadFromESI( `/markets/prices/?datasource=tranquility` )
             .then((prices: Array<MarketPrices>)=>{
                 let types = {}
 
@@ -111,14 +111,14 @@ async function loadOrders(type: Type_Id, region: Region_Id = 10000002, store: Ma
     if(marketType.orders.lastUpdated === null || marketType.orders.lastUpdated <= new Date().getTime() - 5*60*1000 /*5 minutes*/ )
     try {
 
-        let buyOrders: Array<MarketOrder> = await loadFromESI( `/markets/${region}/orders/?order_type=buy&page=1&type_id=${type}` );
+        let buyOrders: Array<MarketOrder> = await LoadFromESI( `/markets/${region}/orders/?order_type=buy&page=1&type_id=${type}` );
         marketType = get(store);
         buyOrders.sort((a,b)=>b.price-a.price);  // Descending order
         marketType.orders.buy = buyOrders;
 
         store.set(marketType);
 
-        let sellOrders: Array<MarketOrder> = await loadFromESI( `/markets/${region}/orders/?order_type=sell&page=1&type_id=${type}` );
+        let sellOrders: Array<MarketOrder> = await LoadFromESI( `/markets/${region}/orders/?order_type=sell&page=1&type_id=${type}` );
         marketType = get(store);
         sellOrders.sort((a,b)=>a.price-b.price);    // Ascending order
         marketType.orders.sell = sellOrders;

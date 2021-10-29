@@ -1,5 +1,5 @@
 import { derived, readable } from "svelte/store";
-import { LoadFromEveSwaggerInterface, LoadFromStaticDataExport, Universe } from "./EveData";
+import { LoadFromESI, LoadFromSDE, Universe } from "./EveData";
 import type { Readable } from "svelte/store";
 import type { EntityCollection, Type, Type_Id, UniverseStore } from "./EveData";
 
@@ -52,11 +52,11 @@ function setupIndustry( set:(value:any)=>void ) {
 
     }
 
-    LoadFromStaticDataExport("/data/ramActivities.csv")
+    LoadFromSDE("/data/ramActivities.csv")
         .then((data: Array<RAMActivity>)=>{
             data.forEach(activity=>industry.activities[activity.activityID]=activity);
 
-            return LoadFromStaticDataExport("/data/industryActivity.csv");
+            return LoadFromSDE("/data/industryActivity.csv");
         })
         .then((data: Array<{
             type_id:Type_Id,
@@ -81,7 +81,7 @@ function setupIndustry( set:(value:any)=>void ) {
 
             });
 
-            return LoadFromStaticDataExport("/data/industryActivityMaterials.csv");
+            return LoadFromSDE("/data/industryActivityMaterials.csv");
         })
         .then((data: Array<{
             typeID: Type_Id,
@@ -105,7 +105,7 @@ function setupIndustry( set:(value:any)=>void ) {
                 }
             })
 
-            return LoadFromStaticDataExport("/data/industryActivityProducts.csv");
+            return LoadFromSDE("/data/industryActivityProducts.csv");
         })
         .then((data:Array<{
             type_id: Type_Id,
@@ -123,7 +123,7 @@ function setupIndustry( set:(value:any)=>void ) {
                 };
             });
 
-            return LoadFromStaticDataExport("/data/industryActivityProbabilities.csv");
+            return LoadFromSDE("/data/industryActivityProbabilities.csv");
         })
         .then((data:Array<{
             typeID: Type_Id,
@@ -138,7 +138,7 @@ function setupIndustry( set:(value:any)=>void ) {
                 activity.products[activityProbability.productTypeID].probability = activityProbability.probability;
             })
 
-            return LoadFromStaticDataExport("/data/industryBlueprints.csv");
+            return LoadFromSDE("/data/industryBlueprints.csv");
         })
         .then((data:Array<{
             type_id:Type_Id, 
@@ -186,7 +186,7 @@ export async function LoadDecryptorTypes(universe: UniverseStore): Promise< Enti
     let decryptorTypes = {};
     try {
         for(let type_id of type_ids) {
-            decryptorTypes[type_id] = await LoadFromEveSwaggerInterface(`/universe/types/${type_id}/`);
+            decryptorTypes[type_id] = await LoadFromESI(`/universe/types/${type_id}/`);
         }
     } catch(error) {
         console.error(error);

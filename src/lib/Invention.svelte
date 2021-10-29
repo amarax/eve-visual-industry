@@ -1,7 +1,10 @@
 <script lang="ts">
-    import { Universe, Industry, loadType, GetBlueprintToManufacture } from "$lib/EveData";
-    import { INVENTION_ACTIVITY_ID, REVERSE_ENGINEERING_ACTIVITY_ID, MANUFACTURING_ACTIVITY_ID } from '$lib/EveData';
-    import type { Type, IndustryType, Type_Id } from '$lib/EveData';
+    import { Universe, loadType } from "$lib/EveData";
+    import { Industry, GetBlueprintToManufacture } from "$lib/EveIndustry";
+
+    import { INVENTION_ACTIVITY_ID, REVERSE_ENGINEERING_ACTIVITY_ID, MANUFACTURING_ACTIVITY_ID } from '$lib/EveIndustry';
+    import type { Type, Type_Id } from '$lib/EveData';
+    import type { IndustryType } from '$lib/EveIndustry';
 
     import TypeSelector from '$lib/TypeSelector.svelte';
     import ManufacturingActivity from "./ManufacturingActivity.svelte";

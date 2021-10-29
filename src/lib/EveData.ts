@@ -42,10 +42,10 @@ export interface EntityCollection<Entity> {
 }
 
 
-export async function LoadFromEveSwaggerInterface( route:string, options?:ESIOptions ) {
+export async function LoadFromESI( route:string, options?:ESIOptions ) {
     let endpoint = `https://esi.evetech.net/${(options&&options.dev)?"dev":"latest"}${route}`;
 
-    const response = await window.fetch(
+    const response = await fetch(
         endpoint,
         {
             method: 'GET',
@@ -68,12 +68,12 @@ export async function LoadFromEveSwaggerInterface( route:string, options?:ESIOpt
 async function loadMarketsGroupsESI() {
     console.log("Loading market groups from ESI...");
 
-    let data = await LoadFromEveSwaggerInterface(`/markets/groups/`);
+    let data = await LoadFromESI(`/markets/groups/`);
 
     const groups = {};
 
     for(let group_id of data) {
-        let group = await LoadFromEveSwaggerInterface(`/markets/groups/${group_id}/`);
+        let group = await LoadFromESI(`/markets/groups/${group_id}/`);
 
         if(group.published) {
             groups[group_id] = group;
@@ -89,17 +89,17 @@ async function loadMarketsGroupsESI() {
 async function loadCategoriesESI() {
     console.log("Loading categories from ESI...");
 
-    let data = await LoadFromEveSwaggerInterface(`/universe/categories/`);
+    let data = await LoadFromESI(`/universe/categories/`);
 
     const categories = {};
 
     for(let category_id of data) {
-        let category = await LoadFromEveSwaggerInterface(`/universe/categories/${category_id}/`);
+        let category = await LoadFromESI(`/universe/categories/${category_id}/`);
         if(category.published) {
             const groups = {};
 
             for(let group_id of category.groups) {
-                let group = await LoadFromEveSwaggerInterface(`/universe/groups/${group_id}/`);
+                let group = await LoadFromESI(`/universe/groups/${group_id}/`);
 
                 if(group.published) {
                     groups[group_id] = group;
@@ -136,7 +136,7 @@ async function loadMarketTypesESI(marketGroups) {
     // setTimeout(reportProgress, 1000);
 
     for(let type_id in types) {
-        // types[type_id] = await LoadFromEveSwaggerInterface(`/universe/types/${type_id}/`);
+        // types[type_id] = await LoadFromESI(`/universe/types/${type_id}/`);
 
         progress++;
     }
@@ -158,7 +158,7 @@ async function loadTypesESI(type_ids:Array<string>) {
 
     let types = {};
     for(let type_id of type_ids) {
-        types[type_id] = await LoadFromEveSwaggerInterface(`/universe/types/${type_id}/`);
+        types[type_id] = await LoadFromESI(`/universe/types/${type_id}/`);
 
         progress++;
     }
@@ -170,7 +170,7 @@ async function loadTypesESI(type_ids:Array<string>) {
 async function loadCategoriesStatic() {
     if(!browser) return Promise.reject("Doesn't work on server");
 
-    const response = await window.fetch(
+    const response = await fetch(
         "/data/categories.json",
         {
             method: 'GET',
@@ -192,7 +192,7 @@ async function loadCategoriesStatic() {
 async function loadMarketsStatic() {
     let raw;
     try {
-        raw = await LoadFromStaticDataExport("/data/invMarketGroups.csv");
+        raw = await LoadFromSDE("/data/invMarketGroups.csv");
     } catch (error) {
         console.error(error);        
     }
@@ -229,7 +229,7 @@ async function loadMarketsStatic() {
     return data;
 }
 
-export function LoadFromStaticDataExport( route: string ):Promise<Object> {
+export function LoadFromSDE( route: string ):Promise<Object> {
 
     let parseOptions = (resolve) => ({
         header: true,
@@ -338,7 +338,7 @@ function setupUniverse( set:(value:any)=>void ) {
 
 export async function loadType(type_id:number):Promise<Type> {
     try {
-        let type = await LoadFromEveSwaggerInterface(`/universe/types/${type_id}/`);
+        let type = await LoadFromESI(`/universe/types/${type_id}/`);
 
         _types[type_id] = type;
 
@@ -386,7 +386,7 @@ async function loadDogmaFromESI() {
 
     let progressTimeout;
     try {
-        let attribute_ids:Array<number> = await LoadFromEveSwaggerInterface("/dogma/attributes/");
+        let attribute_ids:Array<number> = await LoadFromESI("/dogma/attributes/");
 
         let total = attribute_ids.length;
         let progress = 0;
@@ -400,7 +400,7 @@ async function loadDogmaFromESI() {
         progressTimeout = setTimeout(reportProgress, 1000);
 
         for(let attribute_id of attribute_ids) {
-            dogma.attributes[attribute_id] = await LoadFromEveSwaggerInterface(`/dogma/attributes/${attribute_id}/`);
+            dogma.attributes[attribute_id] = await LoadFromESI(`/dogma/attributes/${attribute_id}/`);
 
             progress++;
         }
