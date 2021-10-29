@@ -1,6 +1,10 @@
 <script lang="ts">
-    import { Decryptors, Industry, INVENTION_ACTIVITY_ID, loadType, Type, Universe } from "./EveData";
-    import type { EntityCollection, IndustryType, Type_Id } from "./EveData";
+    import { loadType, Universe } from "./EveData";
+    import { Decryptors, Industry, INVENTION_ACTIVITY_ID,  } from "./EveIndustry";
+    
+    import type { EntityCollection, Type_Id } from "./EveData";
+    import type { IndustryType } from "./EveIndustry";
+
     import { getMarketType, IskAmount, MarketType } from "./EveMarkets";
     import MarketOrdersBar from "./MarketOrdersBar.svelte";
     import { sum } from "./Utilities";

@@ -42,7 +42,7 @@ export interface EntityCollection<Entity> {
 }
 
 
-export async function loadFromESI( route:string, options?:ESIOptions ) {
+export async function LoadFromEveSwaggerInterface( route:string, options?:ESIOptions ) {
     let endpoint = `https://esi.evetech.net/${(options&&options.dev)?"dev":"latest"}${route}`;
 
     const response = await window.fetch(
@@ -68,12 +68,12 @@ export async function loadFromESI( route:string, options?:ESIOptions ) {
 async function loadMarketsGroupsESI() {
     console.log("Loading market groups from ESI...");
 
-    let data = await loadFromESI(`/markets/groups/`);
+    let data = await LoadFromEveSwaggerInterface(`/markets/groups/`);
 
     const groups = {};
 
     for(let group_id of data) {
-        let group = await loadFromESI(`/markets/groups/${group_id}/`);
+        let group = await LoadFromEveSwaggerInterface(`/markets/groups/${group_id}/`);
 
         if(group.published) {
             groups[group_id] = group;
@@ -89,17 +89,17 @@ async function loadMarketsGroupsESI() {
 async function loadCategoriesESI() {
     console.log("Loading categories from ESI...");
 
-    let data = await loadFromESI(`/universe/categories/`);
+    let data = await LoadFromEveSwaggerInterface(`/universe/categories/`);
 
     const categories = {};
 
     for(let category_id of data) {
-        let category = await loadFromESI(`/universe/categories/${category_id}/`);
+        let category = await LoadFromEveSwaggerInterface(`/universe/categories/${category_id}/`);
         if(category.published) {
             const groups = {};
 
             for(let group_id of category.groups) {
-                let group = await loadFromESI(`/universe/groups/${group_id}/`);
+                let group = await LoadFromEveSwaggerInterface(`/universe/groups/${group_id}/`);
 
                 if(group.published) {
                     groups[group_id] = group;
@@ -136,7 +136,7 @@ async function loadMarketTypesESI(marketGroups) {
     // setTimeout(reportProgress, 1000);
 
     for(let type_id in types) {
-        // types[type_id] = await loadFromESI(`/universe/types/${type_id}/`);
+        // types[type_id] = await LoadFromEveSwaggerInterface(`/universe/types/${type_id}/`);
 
         progress++;
     }
@@ -158,7 +158,7 @@ async function loadTypesESI(type_ids:Array<string>) {
 
     let types = {};
     for(let type_id of type_ids) {
-        types[type_id] = await loadFromESI(`/universe/types/${type_id}/`);
+        types[type_id] = await LoadFromEveSwaggerInterface(`/universe/types/${type_id}/`);
 
         progress++;
     }
@@ -192,7 +192,7 @@ async function loadCategoriesStatic() {
 async function loadMarketsStatic() {
     let raw;
     try {
-        raw = await loadFromSDE("/data/invMarketGroups.csv");
+        raw = await LoadFromStaticDataExport("/data/invMarketGroups.csv");
     } catch (error) {
         console.error(error);        
     }
@@ -229,7 +229,7 @@ async function loadMarketsStatic() {
     return data;
 }
 
-function loadFromSDE( route: string ):Promise<Object> {
+export function LoadFromStaticDataExport( route: string ):Promise<Object> {
 
     let parseOptions = (resolve) => ({
         header: true,
@@ -338,7 +338,7 @@ function setupUniverse( set:(value:any)=>void ) {
 
 export async function loadType(type_id:number):Promise<Type> {
     try {
-        let type = await loadFromESI(`/universe/types/${type_id}/`);
+        let type = await LoadFromEveSwaggerInterface(`/universe/types/${type_id}/`);
 
         _types[type_id] = type;
 
@@ -348,7 +348,7 @@ export async function loadType(type_id:number):Promise<Type> {
     }
 }
 
-type UniverseStore = {
+export type UniverseStore = {
     categories: any,
     types: EntityCollection<Type>, 
     markets: {
@@ -386,7 +386,7 @@ async function loadDogmaFromESI() {
 
     let progressTimeout;
     try {
-        let attribute_ids:Array<number> = await loadFromESI("/dogma/attributes/");
+        let attribute_ids:Array<number> = await LoadFromEveSwaggerInterface("/dogma/attributes/");
 
         let total = attribute_ids.length;
         let progress = 0;
@@ -400,7 +400,7 @@ async function loadDogmaFromESI() {
         progressTimeout = setTimeout(reportProgress, 1000);
 
         for(let attribute_id of attribute_ids) {
-            dogma.attributes[attribute_id] = await loadFromESI(`/dogma/attributes/${attribute_id}/`);
+            dogma.attributes[attribute_id] = await LoadFromEveSwaggerInterface(`/dogma/attributes/${attribute_id}/`);
 
             progress++;
         }
@@ -422,195 +422,3 @@ function setupDogma( set:(value:any)=>void ) {
     return () => {}
 }
 
-
-export type Activity_Id = number;
-
-export type RAMActivity = {
-    activityID:Activity_Id,
-    activityName:string,
-    iconNo:number,
-    description:string,
-    published:boolean
-};
-
-export type IndustryType = {
-    type_id: Type_Id,
-    activities: EntityCollection<IndustryActivity>,
-    maxProductionLimit?: number,
-}
-
-export type IndustryActivity = { 
-    activity: RAMActivity,
-    time: number,
-    materials: EntityCollection<{
-        materialTypeID: Type_Id,
-        quantity: number,
-    }>,
-    products: EntityCollection<{
-        type_id: Type_Id,
-        quantity: number,
-        probability?: number,
-    }>
-}
-
-export type IndustryStore = {
-    activities:EntityCollection<RAMActivity>, 
-    types:EntityCollection<IndustryType>
-}
-
-
-export const MANUFACTURING_ACTIVITY_ID = 1;
-export const INVENTION_ACTIVITY_ID = 8;
-export const REVERSE_ENGINEERING_ACTIVITY_ID = 7;
-
-
-
-function setupIndustry( set:(value:any)=>void ) {
-    let industry: IndustryStore = {
-        activities: {},
-        types: {},
-
-    }
-
-    loadFromSDE("/data/ramActivities.csv")
-        .then((data: Array<RAMActivity>)=>{
-            data.forEach(activity=>industry.activities[activity.activityID]=activity);
-
-            return loadFromSDE("/data/industryActivity.csv");
-        })
-        .then((data: Array<{
-            type_id:Type_Id,
-            activityID:Activity_Id,
-            time:number
-        }>)=>{
-            data.forEach(typeActivity=>{
-                if(typeActivity.type_id === null) return;
-
-                let type = industry.types[typeActivity.type_id];
-                if(type === undefined) {
-                    type = {type_id:typeActivity.type_id, activities:{}};
-                    industry.types[typeActivity.type_id] = type;
-                }
-                
-                type.activities[typeActivity.activityID] = {
-                    activity: industry.activities[typeActivity.activityID],
-                    time: typeActivity.time,
-                    materials: {},
-                    products: {},
-                }
-
-            });
-
-            return loadFromSDE("/data/industryActivityMaterials.csv");
-        })
-        .then((data: Array<{
-            typeID: Type_Id,
-            activityID: Activity_Id,
-            materialTypeID: Type_Id,
-            quantity: number
-        }>)=>{
-            data.forEach(typeActivityMaterial=>{
-                if(typeActivityMaterial.typeID === null) return;
-
-                let type = industry.types[typeActivityMaterial.typeID];
-
-                console.assert(type !== undefined, typeActivityMaterial);
-
-                let materials = type.activities[typeActivityMaterial.activityID].materials;
-                console.assert(materials instanceof Object);
-
-                materials[typeActivityMaterial.materialTypeID] = {
-                    materialTypeID: typeActivityMaterial.materialTypeID,
-                    quantity: typeActivityMaterial.quantity
-                }
-            })
-
-            return loadFromSDE("/data/industryActivityProducts.csv");
-        })
-        .then((data:Array<{
-            type_id: Type_Id,
-            activityID: Activity_Id,
-            productTypeID: Type_Id,
-            quantity: number
-        }>)=>{
-            data.forEach(activityProduct=>{
-                if(activityProduct.type_id === null) return;
-
-                let activity = industry.types[activityProduct.type_id].activities[activityProduct.activityID];
-                activity.products[activityProduct.productTypeID] = {
-                    type_id: activityProduct.productTypeID,
-                    quantity: activityProduct.quantity
-                };
-            });
-
-            return loadFromSDE("/data/industryActivityProbabilities.csv");
-        })
-        .then((data:Array<{
-            typeID: Type_Id,
-            activityID: Activity_Id,
-            productTypeID: Type_Id, 
-            probability: number
-        }>)=>{
-            data.forEach(activityProbability=>{
-                if(activityProbability.typeID === null) return;
-
-                let activity = industry.types[activityProbability.typeID].activities[activityProbability.activityID];
-                activity.products[activityProbability.productTypeID].probability = activityProbability.probability;
-            })
-
-            return loadFromSDE("/data/industryBlueprints.csv");
-        })
-        .then((data:Array<{
-            type_id:Type_Id, 
-            maxProductionLimit:number
-        }>)=>{
-            //TODO check if industry type exists
-
-            data.forEach(blueprint=>industry.types[blueprint.type_id].maxProductionLimit = blueprint.maxProductionLimit);
-
-            set(industry);
-        })
-        .catch(reason=>console.error(reason));
-
-    // Initialise to empty
-    set(industry);
-
-
-    return () => {}
-}
-
-export const Industry: Readable<IndustryStore> = readable(null, setupIndustry);
-
-export function GetBlueprintToManufacture(store: IndustryStore, type_id: Type_Id): IndustryType {
-    return Object.values(store.types)
-        .find(type=>type.activities[MANUFACTURING_ACTIVITY_ID]?.products[type_id]);
-}
-
-export function GetInventableBlueprint(store: IndustryStore, type_id: Type_Id): IndustryType {
-    return Object.values(store.types)
-        .find(type=>type.activities[INVENTION_ACTIVITY_ID]?.products[type_id]);
-}
-
-
-export const Decryptors: Readable< EntityCollection<Type> > = derived(Universe, ($Universe, set)=>{
-    LoadDecryptorTypes( $Universe )
-        .then( decryptorTypes=>set(decryptorTypes) )
-
-    return ()=>{};
-}, {});
-
-export async function LoadDecryptorTypes(universe: UniverseStore): Promise< EntityCollection<Type> > {
-    const DECRYPTOR_MARKET_GROUP_ID = 1873;
-    let type_ids = Object.keys(universe.types).filter(type_id=>universe.types[type_id].market_group_id == DECRYPTOR_MARKET_GROUP_ID);
-
-    let decryptorTypes = {};
-    try {
-        for(let type_id of type_ids) {
-            decryptorTypes[type_id] = await loadFromESI(`/universe/types/${type_id}/`);
-        }
-    } catch(error) {
-        console.error(error);
-    }
-
-    return decryptorTypes;
-}

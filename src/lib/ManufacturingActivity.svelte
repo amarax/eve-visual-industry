@@ -1,9 +1,12 @@
 <script lang="ts">
-    import { Universe, Industry, GetBlueprintToManufacture, GetInventableBlueprint  } from "$lib/EveData";
-    import { MANUFACTURING_ACTIVITY_ID  } from "$lib/EveData";
-    import type { IndustryType, IndustryActivity, EntityCollection, Type_Id } from "$lib/EveData";
+    import { Universe } from "$lib/EveData";
+    import { MANUFACTURING_ACTIVITY_ID, Industry, GetBlueprintToManufacture, GetInventableBlueprint } from "$lib/EveIndustry";
     import { getMarketType, IskAmount, MarketPrices } from "$lib/EveMarkets";
-    import type { DurationSeconds, MarketType, Quantity } from "$lib/EveMarkets";
+
+    import type { EntityCollection, Type_Id } from "$lib/EveData";
+    import type { IndustryActivity } from "$lib/EveIndustry";
+    import type { MarketType, Quantity } from "$lib/EveMarkets";
+
     import MarketOrdersBar from "./MarketOrdersBar.svelte";
     import { FormatDuration, FormatIskAmount, FormatIskChange } from "./Format";
     import InventionActivity from "./InventionActivity.svelte";
@@ -22,7 +25,7 @@
 
 
     export let salesTaxRate = 0.036;
-    export let brokerFeeRate = 0.0151114234532; // Aqua Silentium's broker fee
+    export let brokerFeeRate = 0.0113709973928; // Selene's broker fee
 
     function subscribeToTypeStore( type_id: Type_Id ) {
         relatedTypeStores.push( getMarketType(type_id).subscribe(value=>{
@@ -240,16 +243,18 @@
             margin-right: 10px;
         }
 
-        .subItem {
-            grid-column: span 3;
+    }
 
-            $divider: 1px solid #ccc;
+    .subItem {
+        grid-column: span 3;
 
-            border-top: $divider;
-            border-bottom: $divider;
+        $divider: 1px solid #ccc;
 
-            margin-bottom: 4px;
-        }
+        border-top: $divider;
+        border-bottom: $divider;
+
+        margin-bottom: 4px;
+        margin-left:24px;
     }
 
     .combinedInput input[type='text'] {
@@ -267,14 +272,15 @@ No blueprint selected yet
     <b>Blueprint</b> <br/>
 
     {#if inventable}
-        <label><input type="checkbox" bind:checked={inventing} /> Invent</label>
+        <label><input type="checkbox" bind:checked={inventing} /> Invent</label>        <br/>
 
         {#if inventing}
-            <InventionActivity blueprintToInvent={blueprint} extents={_extents} 
-                bind:expectedCostPerRun={blueprintCostPerRun} bind:productME={materialEfficiency} bind:productTE={timeEfficiency} bind:productRuns={inventedRuns}
-            />
+            <div class="subItem">
+                <InventionActivity blueprintToInvent={blueprint} extents={_extents} 
+                    bind:expectedCostPerRun={blueprintCostPerRun} bind:productME={materialEfficiency} bind:productTE={timeEfficiency} bind:productRuns={inventedRuns}
+                />
+            </div>
         {/if}
-        <br/>
     {/if}
 
     <label>ME <input type="range" bind:value={materialEfficiency} min={0} max={10} disabled={inventing} /> {materialEfficiency}</label>
@@ -327,7 +333,10 @@ No blueprint selected yet
     </div>
     {#each Object.keys(manufacturing.materials) as type_id}
         <div class="itemName">
-            <label><input type="checkbox" bind:checked={manufacturedItems[type_id]} disabled={GetBlueprintToManufacture($Industry, parseInt(type_id)) == null} /> {$Universe.types[type_id].name}</label>
+            <label>
+                <input type="checkbox" bind:checked={manufacturedItems[type_id]} disabled={GetBlueprintToManufacture($Industry, parseInt(type_id)) == null} /> 
+                <span title={`${$Universe.types[type_id].name} [${type_id}]`}>{$Universe.types[type_id].name}</span>
+            </label>
         </div>
         <div class="qty">{materialQty(manufacturing.materials[type_id].quantity)}</div>
         <div>
