@@ -85,7 +85,7 @@
     // Currently it's safer to just have the runs defined by quantity,
     // if not I'll forget it's a bug
     $: if(quantity) {
-        runs = Math.ceil( quantity / manufacturing?.products[selectedProductId].quantity );
+        //runs = Math.ceil( quantity / manufacturing?.products[selectedProductId].quantity );
     }
     
 
@@ -199,6 +199,7 @@
             runs = inventedRuns;
         }
     }
+
 </script>
 
 <style lang="scss">
@@ -325,27 +326,24 @@ No blueprint selected yet
         <MarketOrdersBar height={20} extents={_extents} quantity={manufacturing.products[selectedProductId].quantity * runs} totalCost={manufacturingJobCost} />
     </div>
     {#each Object.keys(manufacturing.materials) as type_id}
-        {#if !manufacturedItems[type_id]}
-            <div class="itemName">
-                <label><input type="checkbox" bind:checked={manufacturedItems[type_id]} disabled={GetBlueprintToManufacture($Industry, parseInt(type_id)) == null} /> {$Universe.types[type_id].name}</label>
-            </div>
-            <div class="qty">{materialQty(manufacturing.materials[type_id].quantity)}</div>
-            <div>
-                <MarketOrdersBar height={20} extents={_extents} quantity={materialQty(manufacturing.materials[type_id].quantity)} 
-                    highestBuyOrder={relatedTypes[type_id].orders.buy[0]} lowestSellOrder={relatedTypes[type_id].orders.sell[0]} 
-                    buyOverheadRate={brokerFeeRate}
-                />
-            </div>
-        {:else}
+        <div class="itemName">
+            <label><input type="checkbox" bind:checked={manufacturedItems[type_id]} disabled={GetBlueprintToManufacture($Industry, parseInt(type_id)) == null} /> {$Universe.types[type_id].name}</label>
+        </div>
+        <div class="qty">{materialQty(manufacturing.materials[type_id].quantity)}</div>
+        <div>
+            <MarketOrdersBar height={20} extents={_extents} quantity={materialQty(manufacturing.materials[type_id].quantity)} 
+                highestBuyOrder={relatedTypes[type_id].orders.buy[0]} lowestSellOrder={relatedTypes[type_id].orders.sell[0]} 
+                buyOverheadRate={brokerFeeRate}
+                totalCost={manufacturedUnitCostPrices[type_id] ? manufacturedUnitCostPrices[type_id]*materialQty(manufacturing.materials[type_id].quantity) : null}
+            />
+        </div>
+        {#if manufacturedItems[type_id]}
             <div class="subItem">
-                <div class="itemName">
-                    <label><input type="checkbox" bind:checked={manufacturedItems[type_id]} disabled={GetBlueprintToManufacture($Industry, parseInt(type_id)) == null} /> {$Universe.types[type_id].name} [{type_id}]</label>
-                </div>
                 <svelte:self selectedProductId={type_id} quantity={materialQty(manufacturing.materials[type_id].quantity)} {manufacturedItems}
                     bind:unitCost={manufacturedUnitCostPrices[type_id]} 
                     {systemCostIndex} {facilityMaterialConsumptionModifier}
                     materialEfficiency={10} timeEfficiency={20}
-                    compact extents={_extents} />
+                    compact />
             </div>
         {/if}
     {/each}
