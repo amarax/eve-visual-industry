@@ -1,14 +1,14 @@
 <script lang="ts">
     import { loadType, Universe } from "./EveData";
-    import { Decryptors, Industry, INVENTION_ACTIVITY_ID,  } from "./EveIndustry";
+    import { Decryptors, Industry, INVENTION_ACTIVITY_ID, MANUFACTURING_ACTIVITY_ID,  } from "./EveIndustry";
     
     import type { EntityCollection, Type_Id } from "./EveData";
     import type { IndustryType } from "./EveIndustry";
 
-    import { getMarketType, IskAmount, MarketType } from "./EveMarkets";
+    import { getMarketType, IskAmount, MarketPrices, MarketType } from "./EveMarkets";
     import MarketOrdersBar from "./MarketOrdersBar.svelte";
     import { sum } from "./Utilities";
-    import { FormatIskAmount } from "./Format";
+    import { FormatDuration, FormatIskAmount } from "./Format";
     
     import { Characters, CharacterSkills } from "./EveCharacter";
     import type { ESIStore } from "./ESIStore";
@@ -18,9 +18,6 @@
 
     
     let characterSkills: ESIStore<CharacterSkills>;
-    $: {
-    }
-    
 
 
     export let blueprintToInvent: IndustryType = null;
@@ -105,6 +102,20 @@
         }
     }
 
+    let totalAdjustedCostPrice : IskAmount;
+    $: {
+        totalAdjustedCostPrice = 0;
+        let manufacturing = blueprintToInvent.activities[MANUFACTURING_ACTIVITY_ID];
+        for(let type_id in manufacturing.materials) {
+            totalAdjustedCostPrice += manufacturing.materials[type_id].quantity * $MarketPrices[type_id].adjusted_price;
+        }
+    }
+
+    let systemCostIndex = 0.06;
+    let jobCostModifier = -0.03
+    let facilityTax = 0.005;
+    $: jobCost = totalAdjustedCostPrice * systemCostIndex * 0.02 * (1+jobCostModifier) * (1+facilityTax);
+
     let totalCost = 0;
     $: {
         totalCost = 0;
@@ -112,8 +123,14 @@
             totalCost += selectedIndustryTypeCost;
             totalCost += sum( Object.values(inventionActivity.materials), material=>relatedTypes[material.materialTypeID].orders.sell[0]?.price*material.quantity );
             if(selectedDecryptor) totalCost += relatedTypes[selectedDecryptor].orders.sell[0]?.price;
+            totalCost += jobCost;
         }
     }
+
+    let facilityModifier = -0.15;
+    const ADVANCED_INDUSTRY_SKILL_ID = 3388;
+    $: jobDuration = inventionActivity.time * (1+facilityModifier) * (1 - 0.03*($characterSkills?.skills.find(skill=>skill.skill_id===ADVANCED_INDUSTRY_SKILL_ID)?.active_skill_level||0) )
+
 
     let skill1, skill2, encryptionSkill;
     let skill1Level = 3, skill2Level =3, encryptionSkillLevel =3;
@@ -177,7 +194,6 @@
                 decryptorProbabilityModifier = type.dogma_attributes.find(attribute=>attribute.attribute_id==DECRYPTOR_PROBABILITY_MODIFIER_ATTRIBUTE_ID).value;
                 decryptorMEModifier = type.dogma_attributes.find(attribute=>attribute.attribute_id==DECRYPTOR_ME_MODIFIER_ATTRIBUTE_ID).value;
                 decryptorTEModifier = type.dogma_attributes.find(attribute=>attribute.attribute_id==DECRYPTOR_TE_MODIFIER_ATTRIBUTE_ID).value;
-
             })
         } else {
             decrpytorRunModifier = 0;
@@ -218,6 +234,8 @@
         _extents = extents || [0,totalCost*1.1];
     }
 
+
+
 </script>
 
 <style lang="scss">
@@ -239,6 +257,9 @@
             margin-right: 10px;
         }
 
+
+        margin-top: 16px;
+        margin-bottom: 16px;
     }
 </style>
 
@@ -255,7 +276,7 @@
             <option value={decryptorType.type_id}>{decryptorType.name}</option>
         {/each}
     </select>
-    Runs +{decrpytorRunModifier} ME {decryptorMEModifier} TE {decryptorTEModifier} Probability {100-decryptorProbabilityModifier*100}%
+    Runs +{decrpytorRunModifier} ME {decryptorMEModifier} TE {decryptorTEModifier} Probability {decryptorProbabilityModifier*100-100}%
     <br/>
 
     <label>
@@ -272,6 +293,8 @@
         {encryptionSkill?.name}
         <input bind:value={encryptionSkillLevel} type="range" min={0} max={5} />
     </label>
+
+    <p>System cost index <input type="text" bind:value={systemCostIndex} /></p>
 
     <div class="breakdown">
         {#each breakdownItems as type_id}
@@ -291,7 +314,12 @@
         {/if}
     </div>
 
-    Total Invention Cost {FormatIskAmount(totalCost)} Chance of success {inventionProbability*100}% <br/>
-    Expected Runs {expectedRuns}  Expected cost per run {FormatIskAmount(expectedCostPerRun)}
-    
+    Invention job cost: {FormatIskAmount(jobCost)} {FormatIskAmount(totalAdjustedCostPrice*0.02)} <br/>
+    Invention job duration: {FormatDuration(jobDuration)}
+
+    <p>
+        Invention Cost per run: <b>{FormatIskAmount(totalCost)}</b> Chance of success: <b>{inventionProbability*100}%</b> <br/>
+        Expected invention attempts to get >=90% chance to get >=1 successes: {Math.ceil(Math.log(1-0.9)/Math.log(1-inventionProbability))} <br/>
+        Expected Runs: {expectedRuns}  Expected cost per run: {FormatIskAmount(expectedCostPerRun)}
+    </p>
 </div>
