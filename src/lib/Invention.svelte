@@ -52,6 +52,8 @@
     }
 
     $: selectedBlueprint = GetBlueprintToManufacture($Industry, selectedTypeId);
+
+    export let selectedCharacterId;
 </script>
 
 {#if !INVENTION_ACTIVITY_ID === null}
@@ -60,6 +62,6 @@
 
 <TypeSelector bind:selectedTypeId {selectableTypes} />
 
-<p><ManufacturingActivity selectedProductId={selectedTypeId} /></p>
+<p><ManufacturingActivity selectedProductId={selectedTypeId} {selectedCharacterId} /></p>
 
 

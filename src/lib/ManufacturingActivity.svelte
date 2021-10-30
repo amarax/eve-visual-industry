@@ -203,6 +203,7 @@
         }
     }
 
+    export let selectedCharacterId;
 </script>
 
 <style lang="scss">
@@ -276,7 +277,7 @@ No blueprint selected yet
 
         {#if inventing}
             <div class="subItem">
-                <InventionActivity blueprintToInvent={blueprint} extents={_extents} 
+                <InventionActivity {selectedCharacterId} blueprintToInvent={blueprint} extents={_extents} 
                     bind:expectedCostPerRun={blueprintCostPerRun} bind:productME={materialEfficiency} bind:productTE={timeEfficiency} bind:productRuns={inventedRuns}
                 />
             </div>

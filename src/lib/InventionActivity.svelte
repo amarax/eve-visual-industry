@@ -9,9 +9,22 @@
     import MarketOrdersBar from "./MarketOrdersBar.svelte";
     import { sum } from "./Utilities";
     import { FormatIskAmount } from "./Format";
+    
+    import { CharacterSkills } from "./EveCharacter";
+
+
+    export let selectedCharacterId = null;
+
+    
+    let characterSkillsStore;
+    $: {
+        if(characterSkillsStore !== CharacterSkills[selectedCharacterId])
+            characterSkillsStore = CharacterSkills[selectedCharacterId];
+    }
+    
+
 
     export let blueprintToInvent: IndustryType = null;
-    
 
     let inputIndustryTypes: Array<IndustryType> = [];
     $: inputIndustryTypes = Object.values( $Industry.types ).filter(type=>type.activities[INVENTION_ACTIVITY_ID]?.products[blueprintToInvent?.type_id])
