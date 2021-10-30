@@ -1,6 +1,6 @@
 <script lang="ts">
     import { Universe } from "$lib/EveData";
-    import { MANUFACTURING_ACTIVITY_ID, Industry, GetBlueprintToManufacture, GetInventableBlueprint } from "$lib/EveIndustry";
+    import { MANUFACTURING_ACTIVITY_ID, Industry, GetBlueprintToManufacture, GetInventableBlueprint, ADVANCED_INDUSTRY_SKILL_ID } from "$lib/EveIndustry";
     import { getMarketType, IskAmount, MarketPrices } from "$lib/EveMarkets";
 
     import type { EntityCollection, Type_Id } from "$lib/EveData";
@@ -10,6 +10,8 @@
     import MarketOrdersBar from "./MarketOrdersBar.svelte";
     import { FormatDuration, FormatIskAmount, FormatIskChange } from "./Format";
     import InventionActivity from "./InventionActivity.svelte";
+import { IndustryDogmaAttributes } from "./EveDogma";
+import { CharacterSkills } from "./EveCharacter";
 
 
 
@@ -175,9 +177,27 @@
         }
     }
 
-    $: manufacturingJobCost = totalAdjustedCostPrice * systemCostIndex * runs;
+    let jobCostModifier = -0.03;
+    let facilityTax = 0.005;
+    $: manufacturingJobCost = totalAdjustedCostPrice * systemCostIndex * (1+jobCostModifier) * (1+facilityTax) * runs;
 
-    $: manufacturingTime = manufacturing?.time * (1-timeEfficiency/100) * runs;
+    $: characterSkills = CharacterSkills[selectedCharacterId];
+
+    // TODO list all contributing skills
+    $: skillTimeModifier = manufacturing ? [...Object.values(manufacturing.requiredSkills).map(s=>s.type_id), ADVANCED_INDUSTRY_SKILL_ID]
+        .reduce((modifier: number, skill_id)=>{
+            if($IndustryDogmaAttributes.types[skill_id] === undefined) {return modifier;}   // Skill does not contribute to modifier
+
+            let contributingSkill = $Universe.types[skill_id];
+
+            let factor = $IndustryDogmaAttributes.types[skill_id][440]?.value ?? $IndustryDogmaAttributes.types[skill_id][1982]?.value ??  $IndustryDogmaAttributes.types[skill_id][1961]?.value ?? 0;
+            factor *= $characterSkills?.skills.find(s=>s.skill_id==skill_id)?.active_skill_level ?? 0;
+
+            return modifier*(1+factor*0.01)
+        },1) : 1
+
+    let jobDurationModifier = -0.15
+    $: manufacturingTime = manufacturing?.time * (1-timeEfficiency/100) * skillTimeModifier * (1+jobDurationModifier) * runs;
 
     $: sellingPrice = relatedTypes[selectedProductId]?.orders.sell[0]?.price*(1-brokerFeeRate-salesTaxRate);
 
@@ -353,6 +373,7 @@ No blueprint selected yet
                     bind:unitCost={manufacturedUnitCostPrices[type_id]} 
                     {systemCostIndex} {facilityMaterialConsumptionModifier}
                     materialEfficiency={10} timeEfficiency={20}
+                    {selectedCharacterId}
                     compact />
             </div>
         {/if}

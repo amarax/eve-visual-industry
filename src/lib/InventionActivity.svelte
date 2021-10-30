@@ -1,6 +1,6 @@
 <script lang="ts">
     import { loadType, Universe } from "./EveData";
-    import { Decryptors, Industry, INVENTION_ACTIVITY_ID, MANUFACTURING_ACTIVITY_ID,  } from "./EveIndustry";
+    import { ADVANCED_INDUSTRY_SKILL_ID, Decryptors, Industry, INVENTION_ACTIVITY_ID, MANUFACTURING_ACTIVITY_ID,  } from "./EveIndustry";
     
     import type { EntityCollection, Type_Id } from "./EveData";
     import type { IndustryType } from "./EveIndustry";
@@ -128,7 +128,6 @@
     }
 
     let facilityModifier = -0.15;
-    const ADVANCED_INDUSTRY_SKILL_ID = 3388;
     $: jobDuration = inventionActivity.time * (1+facilityModifier) * (1 - 0.03*($characterSkills?.skills.find(skill=>skill.skill_id===ADVANCED_INDUSTRY_SKILL_ID)?.active_skill_level||0) )
 
 

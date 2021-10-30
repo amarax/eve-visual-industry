@@ -211,3 +211,6 @@ export async function LoadDecryptorTypes(universe: UniverseStore): Promise< Enti
 
     return decryptorTypes;
 }
+
+
+export const ADVANCED_INDUSTRY_SKILL_ID: Type_Id = 3388;
