@@ -2,6 +2,8 @@ import { derived, readable } from "svelte/store";
 import { LoadFromESI, LoadFromSDE, Universe } from "./EveData";
 import type { Readable } from "svelte/store";
 import type { EntityCollection, Type, Type_Id, UniverseStore } from "./EveData";
+import CreateESIStore  from "./ESIStore";
+import type { ESIStore } from "./ESIStore";
 
 export type Activity_Id = number;
 
@@ -214,3 +216,15 @@ export async function LoadDecryptorTypes(universe: UniverseStore): Promise< Enti
 
 
 export const ADVANCED_INDUSTRY_SKILL_ID: Type_Id = 3388;
+
+
+type IndustrySystem = {
+    cost_indices: Array<
+      {
+        activity: "manufacturing"|"researching_time_efficiency"|"researching_material_efficiency"|"copying"|"invention"|"reaction"
+        cost_index: number
+      }>,
+    solar_system_id: number
+  }
+
+export const IndustrySystems: ESIStore<Array<IndustrySystem>> = CreateESIStore("/industry/systems/")

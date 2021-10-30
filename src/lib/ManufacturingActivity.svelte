@@ -1,6 +1,6 @@
 <script lang="ts">
-    import { Universe } from "$lib/EveData";
-    import { MANUFACTURING_ACTIVITY_ID, Industry, GetBlueprintToManufacture, GetInventableBlueprint, ADVANCED_INDUSTRY_SKILL_ID } from "$lib/EveIndustry";
+    import { EveLocation, GetLocationStore, Location_Id, Universe } from "$lib/EveData";
+    import { MANUFACTURING_ACTIVITY_ID, Industry, GetBlueprintToManufacture, GetInventableBlueprint, ADVANCED_INDUSTRY_SKILL_ID, IndustrySystems } from "$lib/EveIndustry";
     import { getMarketType, IskAmount, MarketPrices } from "$lib/EveMarkets";
 
     import type { EntityCollection, Type_Id } from "$lib/EveData";
@@ -10,8 +10,10 @@
     import MarketOrdersBar from "./MarketOrdersBar.svelte";
     import { FormatDuration, FormatIskAmount, FormatIskChange } from "./Format";
     import InventionActivity from "./InventionActivity.svelte";
-import { IndustryDogmaAttributes } from "./EveDogma";
-import { CharacterSkills } from "./EveCharacter";
+    import { IndustryDogmaAttributes } from "./EveDogma";
+    import { CharacterSkills } from "./EveCharacter";
+    import LocationSelector from "./LocationSelector.svelte";
+    import type { ESIStore } from "./ESIStore";
 
 
 
@@ -95,11 +97,23 @@ import { CharacterSkills } from "./EveCharacter";
     
 
 
-    let materialQty = (baseQuantity: Quantity): Quantity => baseQuantity;
+    let selectedLocationId: Location_Id = null;
 
-    export let facilityMaterialConsumptionModifier: number = -1;
+    let systemCostIndex = 0.01;
+    let selectedLocation: ESIStore<EveLocation> = null;
     $: {
-        materialQty = (qty) => Math.max( runs, Math.ceil( qty * runs * (1-materialEfficiency/100) * (1+facilityMaterialConsumptionModifier/100) ) );
+        if(selectedLocationId) selectedLocation = GetLocationStore(selectedLocationId);
+        if($selectedLocation) {
+            systemCostIndex = $IndustrySystems.find(system=>system.solar_system_id === ($selectedLocation.solar_system_id ?? $selectedLocation.system_id)).cost_indices.find(value=>value.activity=="manufacturing").cost_index;
+        } else {
+            systemCostIndex = 0.01;
+        }
+    }
+
+
+    let materialQty = (baseQuantity: Quantity): Quantity => baseQuantity;
+    $: {
+        materialQty = (qty) => Math.max( runs, Math.ceil( qty * runs * (1-materialEfficiency/100) * (1+($selectedLocation?.modifiers?.materialConsumptionModifier ?? 0)/100)) );
     }
 
     function getBuySellInJita() {
@@ -165,8 +179,6 @@ import { CharacterSkills } from "./EveCharacter";
         }
     }
 
-    export let systemCostIndex = 0.03;
-
     let totalAdjustedCostPrice = 0;
     $: {
         totalAdjustedCostPrice = 0;
@@ -177,9 +189,8 @@ import { CharacterSkills } from "./EveCharacter";
         }
     }
 
-    let jobCostModifier = -0.03;
-    let facilityTax = 0.005;
-    $: manufacturingJobCost = totalAdjustedCostPrice * systemCostIndex * (1+jobCostModifier) * (1+facilityTax) * runs;
+
+    $: manufacturingJobCost = totalAdjustedCostPrice * systemCostIndex * (1+($selectedLocation?.modifiers?.jobCostModifier ?? 0)/100) * (1+($selectedLocation?.modifiers?.facilityTax ?? 0)/100) * runs;
 
     $: characterSkills = CharacterSkills[selectedCharacterId];
 
@@ -196,8 +207,7 @@ import { CharacterSkills } from "./EveCharacter";
             return modifier*(1+factor*0.01)
         },1) : 1
 
-    let jobDurationModifier = -0.15
-    $: manufacturingTime = manufacturing?.time * (1-timeEfficiency/100) * skillTimeModifier * (1+jobDurationModifier) * runs;
+    $: manufacturingTime = manufacturing?.time * (1-timeEfficiency/100) * skillTimeModifier * (1+($selectedLocation?.modifiers?.jobDurationModifier ?? 0)/100) * runs;
 
     $: sellingPrice = relatedTypes[selectedProductId]?.orders.sell[0]?.price*(1-brokerFeeRate-salesTaxRate);
 
@@ -313,8 +323,9 @@ No blueprint selected yet
 
 {#if !compact}
 <b>Facility</b>
+<LocationSelector bind:value={selectedLocationId} />
 <dl>
-    <dt><label for="systemCostIndex">System cost index</label></dt> <dd><input id="systemCostIndex" bind:value={systemCostIndex} /></dd>
+    <dt>System cost index</dt> <dd>{systemCostIndex}</dd>
 </dl>
 
 <b>Manufacturing</b>
@@ -371,7 +382,6 @@ No blueprint selected yet
             <div class="subItem">
                 <svelte:self selectedProductId={type_id} quantity={materialQty(manufacturing.materials[type_id].quantity)} {manufacturedItems}
                     bind:unitCost={manufacturedUnitCostPrices[type_id]} 
-                    {systemCostIndex} {facilityMaterialConsumptionModifier}
                     materialEfficiency={10} timeEfficiency={20}
                     {selectedCharacterId}
                     compact />

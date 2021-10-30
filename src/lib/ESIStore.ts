@@ -54,7 +54,10 @@ export function CreateESIStoreFromCache( route:string, onLoaded?:(value)=>void )
 
         fetch(`/esi-cache${route}index.json`)
             .then(response=>{
-                return response.json();
+                if(response.ok)
+                    return response.json();
+                else
+                    return Promise.reject("Fetch failed");
             })
             .then((value)=>{
                 onLoaded && onLoaded(value);

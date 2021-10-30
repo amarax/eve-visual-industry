@@ -5,6 +5,8 @@ import type { Readable } from "svelte/store";
 
 import { browser } from "$app/env";
 import Papa from "papaparse";
+import CreateESIStore, { CreateESIStoreFromCache } from "./ESIStore";
+import type { ESIStore } from "./ESIStore";
 
 interface ESIOptions {
     dev?: any,
@@ -14,6 +16,8 @@ interface ESIOptions {
 
 export type Type_Id = number;
 
+
+export type Location_Id = number;
 
 export type Type = {
     type_id: Type_Id;
@@ -328,3 +332,45 @@ function setupDogma( set:(value:any)=>void ) {
     return () => {}
 }
 
+
+export interface EveLocation {
+    name: string,
+    system_id?: number,
+    solar_system_id?: number,
+
+    modifiers?: {
+        jobDurationModifier: number,
+        materialConsumptionModifier: number,
+        jobCostModifier: number,
+        facilityTax: number
+    }
+}
+
+let Locations = {};
+
+export function GetLocationStore(location_id: Location_Id): ESIStore<EveLocation> {
+    if(Locations[location_id] === undefined) {
+        if(60000000 <= location_id && location_id < 70000000) { // this is a station
+            Locations[location_id] = CreateESIStore( `/universe/stations/${location_id}/` )
+        } else {
+            Locations[location_id] = CreateESIStoreFromCache( `/universe/structures/${location_id}/`, (value: EveLocation)=>{
+                fetch( `/esi-cache/universe/structures/${location_id}/modifiers.json` )
+                    .then(response=>{
+                        if(response.status == 404) {
+                            return Promise.reject("Modifiers not available")
+                        }
+
+                        return response.json()
+                    })
+                    .then(modifiers=>value.modifiers=modifiers)
+                    .catch(reason=>{
+                        if(reason != "Modifiers not available")
+                            console.error(reason);
+                    })
+            } );
+    
+        }
+    }
+
+    return Locations[location_id];
+}
