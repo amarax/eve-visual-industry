@@ -21,6 +21,8 @@ export default function CreateESIStore( route:string ): ESIStore<any> {
     }
 
     function load(set) {
+        if(store.status === ESIStoreStatus.loaded) return;
+
         LoadFromESI(route)
             .then((value)=>{
                 store.status=ESIStoreStatus.loaded;
@@ -41,18 +43,21 @@ export default function CreateESIStore( route:string ): ESIStore<any> {
     return store;
 }
 
-export function CreateESIStoreFromCache( route:string ): ESIStore<any> {
+export function CreateESIStoreFromCache( route:string, onLoaded?:(value)=>void ): ESIStore<any> {
     let store = {
         status: ESIStoreStatus.loading,
         subscribe: null,
     }
 
     function load(set) {
+        if(store.status === ESIStoreStatus.loaded) return;
+
         fetch(`/esi-cache${route}index.json`)
             .then(response=>{
                 return response.json();
             })
             .then((value)=>{
+                onLoaded && onLoaded(value);
                 store.status=ESIStoreStatus.loaded;
                 set(value);
             })
