@@ -121,7 +121,7 @@
         let characterChanged = false;
         if(characterSkills !== CharacterSkills[selectedCharacterId]) {
             characterSkills = CharacterSkills[selectedCharacterId];
-            characterChanged = true;
+            characterChanged = true;    // Hidden bug over here where if the contents of the skills change, this isn't triggered
         }
 
 
