@@ -169,6 +169,7 @@ async function loadTypesStatic(marketGroups:EntityCollection<MarketGroup>) {
         Papa.parse("/data/types.csv", {
             download: true,
             header: true,
+            dynamicTyping: true,
             complete: async (results, file) => {
                 let types:EntityCollection<Type> = {};
 

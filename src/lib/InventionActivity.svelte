@@ -10,16 +10,15 @@
     import { sum } from "./Utilities";
     import { FormatIskAmount } from "./Format";
     
-    import { CharacterSkills } from "./EveCharacter";
+    import { Characters, CharacterSkills } from "./EveCharacter";
+    import type { ESIStore } from "./ESIStore";
 
 
     export let selectedCharacterId = null;
 
     
-    let characterSkillsStore;
+    let characterSkills: ESIStore<CharacterSkills>;
     $: {
-        if(characterSkillsStore !== CharacterSkills[selectedCharacterId])
-            characterSkillsStore = CharacterSkills[selectedCharacterId];
     }
     
 
@@ -116,8 +115,49 @@
         }
     }
 
-    let inventionProbability: number = 0.3;
+    let skill1, skill2, encryptionSkill;
     let skill1Level = 3, skill2Level =3, encryptionSkillLevel =3;
+    $: {
+        let characterChanged = false;
+        if(characterSkills !== CharacterSkills[selectedCharacterId]) {
+            characterSkills = CharacterSkills[selectedCharacterId];
+            characterChanged = true;
+        }
+
+
+        function getSkillLevel(skill_id: Type_Id): number {
+            return $characterSkills?.skills.find(skill=>skill.skill_id===skill_id)?.active_skill_level || 0;
+        }
+
+        // if the skills didn't change then don't update the skill level
+
+        let skill1Found = false;
+        for(let skill of Object.values(inventionActivity?.requiredSkills)) {
+            let skillType = $Universe.types[skill.type_id];
+            if(skillType.name.indexOf("Encryption") >=0) {
+                if(characterChanged || encryptionSkill?.type_id !== skillType.type_id) {
+                    encryptionSkill = skillType;
+                    encryptionSkillLevel = getSkillLevel(encryptionSkill.type_id);
+                }
+                continue;
+            }
+            if(!skill1Found) {
+                if(characterChanged || skill1?.type_id !== skillType.type_id) {
+                    skill1 = skillType;
+                    skill1Level = getSkillLevel(skill1.type_id);
+                }
+
+                skill1Found = true;
+            } else {
+                if(characterChanged || skill2?.type_id !== skillType.type_id) {
+                    skill2 = skillType;
+                    skill2Level = getSkillLevel(skill2.type_id);
+                }
+            }
+        }
+    }
+
+    let inventionProbability: number = 0.3;
     $: inventionProbability = inventionActivity?.products[blueprintToInvent.type_id]?.probability * (1 + (skill1Level + skill2Level)/30 + encryptionSkillLevel/40) * decryptorProbabilityModifier;
 
     const DECRYPTOR_RUN_MODIFIER_ATTRIBUTE_ID = 1124;
@@ -219,29 +259,17 @@
     <br/>
 
     <label>
-        <select>
-            {#each scienceSkills as {id,name} }
-                <option value={id}>{name}</option>
-            {/each}
-        </select>
+        {skill1?.name} 
         <input bind:value={skill1Level} type="range" min={0} max={5} />
     </label>
     <br />
     <label>
-        <select>
-            {#each scienceSkills as {id,name} }
-                <option value={id}>{name}</option>
-            {/each}
-        </select>
+        {skill2?.name}
         <input bind:value={skill2Level} type="range" min={0} max={5} />
     </label>
     <br />
     <label>
-        <select>
-            {#each encryptionSkills as {id,name} }
-                <option value={id}>{name}</option>
-            {/each}
-        </select>
+        {encryptionSkill?.name}
         <input bind:value={encryptionSkillLevel} type="range" min={0} max={5} />
     </label>
 

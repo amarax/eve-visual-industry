@@ -30,7 +30,11 @@ export type IndustryActivity = {
         type_id: Type_Id,
         quantity: number,
         probability?: number,
-    }>
+    }>,
+    requiredSkills?: EntityCollection<{
+        type_id: Type_Id,
+        level: number,
+    }>,
 }
 
 export type IndustryStore = {
@@ -55,9 +59,8 @@ function setupIndustry( set:(value:any)=>void ) {
     LoadFromSDE("/data/ramActivities.csv")
         .then((data: Array<RAMActivity>)=>{
             data.forEach(activity=>industry.activities[activity.activityID]=activity);
-
-            return LoadFromSDE("/data/industryActivity.csv");
         })
+        .then(()=>LoadFromSDE("/data/industryActivity.csv"))
         .then((data: Array<{
             type_id:Type_Id,
             activityID:Activity_Id,
@@ -80,9 +83,8 @@ function setupIndustry( set:(value:any)=>void ) {
                 }
 
             });
-
-            return LoadFromSDE("/data/industryActivityMaterials.csv");
         })
+        .then(()=>LoadFromSDE("/data/industryActivityMaterials.csv"))
         .then((data: Array<{
             typeID: Type_Id,
             activityID: Activity_Id,
@@ -104,9 +106,8 @@ function setupIndustry( set:(value:any)=>void ) {
                     quantity: typeActivityMaterial.quantity
                 }
             })
-
-            return LoadFromSDE("/data/industryActivityProducts.csv");
         })
+        .then(()=>LoadFromSDE("/data/industryActivityProducts.csv"))
         .then((data:Array<{
             type_id: Type_Id,
             activityID: Activity_Id,
@@ -122,9 +123,8 @@ function setupIndustry( set:(value:any)=>void ) {
                     quantity: activityProduct.quantity
                 };
             });
-
-            return LoadFromSDE("/data/industryActivityProbabilities.csv");
         })
+        .then(()=>LoadFromSDE("/data/industryActivityProbabilities.csv"))
         .then((data:Array<{
             typeID: Type_Id,
             activityID: Activity_Id,
@@ -137,9 +137,26 @@ function setupIndustry( set:(value:any)=>void ) {
                 let activity = industry.types[activityProbability.typeID].activities[activityProbability.activityID];
                 activity.products[activityProbability.productTypeID].probability = activityProbability.probability;
             })
-
-            return LoadFromSDE("/data/industryBlueprints.csv");
         })
+        .then(()=>LoadFromSDE("/data/industryActivitySkills.csv"))
+        .then((data:Array<{
+            typeID: Type_Id,
+            activityID: Activity_Id,
+            skillID: Type_Id,
+            level: number
+        }>)=>{
+            data.forEach(activitySkill=>{
+                if(activitySkill.typeID === null) return;
+
+                let activity = industry.types[activitySkill.typeID].activities[activitySkill.activityID];
+                if(activity.requiredSkills === undefined) activity.requiredSkills = {};
+                activity.requiredSkills[activitySkill.skillID] = {
+                    type_id: activitySkill.skillID,
+                    level: activitySkill.level
+                };
+            })
+        })
+        .then(()=>LoadFromSDE("/data/industryBlueprints.csv"))
         .then((data:Array<{
             type_id:Type_Id, 
             maxProductionLimit:number
