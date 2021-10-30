@@ -42,11 +42,11 @@ export interface EntityCollection<Entity> {
 }
 
 
-export async function LoadFromESI( route:string, options?:ESIOptions ) {
-    let endpoint = `https://esi.evetech.net/${(options&&options.dev)?"dev":"latest"}${route}`;
+export async function LoadFromESI( route:string|URL, options?:ESIOptions ) {
+    let endpoint = new URL(`https://esi.evetech.net/${(options&&options.dev)?"dev":"latest"}${route}`);
 
     const response = await fetch(
-        endpoint,
+        endpoint.toString(),
         {
             method: 'GET',
             headers: {
@@ -58,6 +58,14 @@ export async function LoadFromESI( route:string, options?:ESIOptions ) {
     const data = await response.json();
 
     if( response.ok ) {
+        let maxPages = response.headers.get("X-Pages");
+        if(maxPages) {
+            if(parseInt(maxPages)>1)
+                console.log("More pages were available but not retrieved",endpoint.toString())
+
+            // TODO get all the pages
+        }
+
         return data;
     }
 

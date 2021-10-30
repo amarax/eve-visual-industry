@@ -111,21 +111,14 @@ async function loadOrders(type: Type_Id, region: Region_Id = 10000002, store: Ma
     if(marketType.orders.lastUpdated === null || marketType.orders.lastUpdated <= new Date().getTime() - 5*60*1000 /*5 minutes*/ )
     try {
 
-        let buyOrders: Array<MarketOrder> = await LoadFromESI( `/markets/${region}/orders/?order_type=buy&page=1&type_id=${type}` );
+        let orders: Array<MarketOrder> = await LoadFromESI( `/markets/${region}/orders/?order_type=all&type_id=${type}` );
         marketType = get(store);
-        buyOrders.sort((a,b)=>b.price-a.price);  // Descending order
-        marketType.orders.buy = buyOrders;
-
-        store.set(marketType);
-
-        let sellOrders: Array<MarketOrder> = await LoadFromESI( `/markets/${region}/orders/?order_type=sell&page=1&type_id=${type}` );
-        marketType = get(store);
-        sellOrders.sort((a,b)=>a.price-b.price);    // Ascending order
-        marketType.orders.sell = sellOrders;
-
-        store.set(marketType);
-
+        marketType.orders.buy = orders.filter(order=>order.is_buy_order).sort((a,b)=>b.price-a.price);  // Descending order
+        marketType.orders.sell = orders.filter(order=>!order.is_buy_order).sort((a,b)=>a.price-b.price);    // Ascending order
         marketType.orders.lastUpdated = new Date().getTime();
+
+        store.set(marketType);
+
     } catch(error) {
         console.log(error);
     }
