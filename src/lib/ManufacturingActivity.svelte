@@ -188,7 +188,7 @@ import { CharacterSkills } from "./EveCharacter";
         .reduce((modifier: number, skill_id)=>{
             if($IndustryDogmaAttributes.types[skill_id] === undefined) {return modifier;}   // Skill does not contribute to modifier
 
-            let contributingSkill = $Universe.types[skill_id];
+            // let contributingSkill = $Universe.types[skill_id];
 
             let factor = $IndustryDogmaAttributes.types[skill_id][440]?.value ?? $IndustryDogmaAttributes.types[skill_id][1982]?.value ??  $IndustryDogmaAttributes.types[skill_id][1961]?.value ?? 0;
             factor *= $characterSkills?.skills.find(s=>s.skill_id==skill_id)?.active_skill_level ?? 0;
