@@ -1,0 +1,2240 @@
+{
+  "871931693": {
+    "skills": [
+      {
+        "active_skill_level": 4,
+        "skill_id": 28164,
+        "skillpoints_in_skill": 135765,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 20494,
+        "skillpoints_in_skill": 512000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 20495,
+        "skillpoints_in_skill": 512000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 30552,
+        "skillpoints_in_skill": 45255,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 12305,
+        "skillpoints_in_skill": 256000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3417,
+        "skillpoints_in_skill": 256000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 20314,
+        "skillpoints_in_skill": 512000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3419,
+        "skillpoints_in_skill": 768000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 3,
+        "skill_id": 11441,
+        "skillpoints_in_skill": 40000,
+        "trained_skill_level": 3
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 23594,
+        "skillpoints_in_skill": 1280000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 3,
+        "skill_id": 19719,
+        "skillpoints_in_skill": 48000,
+        "trained_skill_level": 3
+      },
+      {
+        "active_skill_level": 1,
+        "skill_id": 23087,
+        "skillpoints_in_skill": 1250,
+        "trained_skill_level": 1
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 24624,
+        "skillpoints_in_skill": 362039,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 3,
+        "skill_id": 24625,
+        "skillpoints_in_skill": 122694,
+        "trained_skill_level": 3
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 23606,
+        "skillpoints_in_skill": 256000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3423,
+        "skillpoints_in_skill": 512000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3424,
+        "skillpoints_in_skill": 512000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 23618,
+        "skillpoints_in_skill": 1280000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 21059,
+        "skillpoints_in_skill": 512000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3446,
+        "skillpoints_in_skill": 512000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 12365,
+        "skillpoints_in_skill": 90510,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 12366,
+        "skillpoints_in_skill": 90510,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 1,
+        "skill_id": 49743,
+        "skillpoints_in_skill": 1500,
+        "trained_skill_level": 1
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 23121,
+        "skillpoints_in_skill": 226275,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 3,
+        "skill_id": 33078,
+        "skillpoints_in_skill": 24000,
+        "trained_skill_level": 3
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 3427,
+        "skillpoints_in_skill": 90510,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 1,
+        "skill_id": 52308,
+        "skillpoints_in_skill": 1000,
+        "trained_skill_level": 1
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 23566,
+        "skillpoints_in_skill": 226275,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 2,
+        "skill_id": 34390,
+        "skillpoints_in_skill": 4243,
+        "trained_skill_level": 2
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3429,
+        "skillpoints_in_skill": 256000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 11584,
+        "skillpoints_in_skill": 135765,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 21603,
+        "skillpoints_in_skill": 1280000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 2406,
+        "skillpoints_in_skill": 768000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 2,
+        "skill_id": 30538,
+        "skillpoints_in_skill": 1415,
+        "trained_skill_level": 2
+      },
+      {
+        "active_skill_level": 3,
+        "skill_id": 3184,
+        "skillpoints_in_skill": 32000,
+        "trained_skill_level": 3
+      },
+      {
+        "active_skill_level": 0,
+        "skill_id": 25718,
+        "skillpoints_in_skill": 0,
+        "trained_skill_level": 0
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 33399,
+        "skillpoints_in_skill": 90510,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 2495,
+        "skillpoints_in_skill": 1024000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 3,
+        "skill_id": 30651,
+        "skillpoints_in_skill": 40000,
+        "trained_skill_level": 3
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3435,
+        "skillpoints_in_skill": 768000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3350,
+        "skillpoints_in_skill": 512000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 25739,
+        "skillpoints_in_skill": 2048000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 3,
+        "skill_id": 26252,
+        "skillpoints_in_skill": 16000,
+        "trained_skill_level": 3
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 26253,
+        "skillpoints_in_skill": 135765,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 26254,
+        "skillpoints_in_skill": 135765,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 26255,
+        "skillpoints_in_skill": 135765,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 26256,
+        "skillpoints_in_skill": 135765,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 26257,
+        "skillpoints_in_skill": 135765,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 26258,
+        "skillpoints_in_skill": 135765,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 26259,
+        "skillpoints_in_skill": 135765,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 26260,
+        "skillpoints_in_skill": 135765,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 26261,
+        "skillpoints_in_skill": 135765,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3551,
+        "skillpoints_in_skill": 256000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 12441,
+        "skillpoints_in_skill": 512000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 12442,
+        "skillpoints_in_skill": 1024000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 16069,
+        "skillpoints_in_skill": 150332,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3453,
+        "skillpoints_in_skill": 512000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 3441,
+        "skillpoints_in_skill": 226275,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 3,
+        "skill_id": 11433,
+        "skillpoints_in_skill": 40000,
+        "trained_skill_level": 3
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 11207,
+        "skillpoints_in_skill": 1536000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 24241,
+        "skillpoints_in_skill": 256000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 24242,
+        "skillpoints_in_skill": 45255,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 3443,
+        "skillpoints_in_skill": 45255,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 11446,
+        "skillpoints_in_skill": 226275,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 3,
+        "skill_id": 11448,
+        "skillpoints_in_skill": 40000,
+        "trained_skill_level": 3
+      },
+      {
+        "active_skill_level": 3,
+        "skill_id": 11449,
+        "skillpoints_in_skill": 40000,
+        "trained_skill_level": 3
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 11450,
+        "skillpoints_in_skill": 226275,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 11451,
+        "skillpoints_in_skill": 1280000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 11452,
+        "skillpoints_in_skill": 1280000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 11453,
+        "skillpoints_in_skill": 226275,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 3,
+        "skill_id": 11454,
+        "skillpoints_in_skill": 40000,
+        "trained_skill_level": 3
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 11455,
+        "skillpoints_in_skill": 1280000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3416,
+        "skillpoints_in_skill": 256000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3387,
+        "skillpoints_in_skill": 512000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 2,
+        "skill_id": 12484,
+        "skillpoints_in_skill": 7072,
+        "trained_skill_level": 2
+      },
+      {
+        "active_skill_level": 2,
+        "skill_id": 12485,
+        "skillpoints_in_skill": 7072,
+        "trained_skill_level": 2
+      },
+      {
+        "active_skill_level": 2,
+        "skill_id": 12486,
+        "skillpoints_in_skill": 7072,
+        "trained_skill_level": 2
+      },
+      {
+        "active_skill_level": 2,
+        "skill_id": 12487,
+        "skillpoints_in_skill": 7072,
+        "trained_skill_level": 2
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 25719,
+        "skillpoints_in_skill": 135765,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 1,
+        "skill_id": 24268,
+        "skillpoints_in_skill": 750,
+        "trained_skill_level": 1
+      },
+      {
+        "active_skill_level": 2,
+        "skill_id": 24270,
+        "skillpoints_in_skill": 4243,
+        "trained_skill_level": 2
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 16591,
+        "skillpoints_in_skill": 271530,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 28880,
+        "skillpoints_in_skill": 768000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 16594,
+        "skillpoints_in_skill": 135765,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 16595,
+        "skillpoints_in_skill": 45255,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 16597,
+        "skillpoints_in_skill": 135765,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 16598,
+        "skillpoints_in_skill": 135765,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3449,
+        "skillpoints_in_skill": 256000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 28879,
+        "skillpoints_in_skill": 512000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3300,
+        "skillpoints_in_skill": 256000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 3301,
+        "skillpoints_in_skill": 45255,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 3302,
+        "skillpoints_in_skill": 45255,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 3,
+        "skill_id": 32999,
+        "skillpoints_in_skill": 16000,
+        "trained_skill_level": 3
+      },
+      {
+        "active_skill_level": 3,
+        "skill_id": 33000,
+        "skillpoints_in_skill": 16000,
+        "trained_skill_level": 3
+      },
+      {
+        "active_skill_level": 3,
+        "skill_id": 33001,
+        "skillpoints_in_skill": 16000,
+        "trained_skill_level": 3
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 3306,
+        "skillpoints_in_skill": 135765,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 1,
+        "skill_id": 3307,
+        "skillpoints_in_skill": 1250,
+        "trained_skill_level": 1
+      },
+      {
+        "active_skill_level": 1,
+        "skill_id": 3308,
+        "skillpoints_in_skill": 1250,
+        "trained_skill_level": 1
+      },
+      {
+        "active_skill_level": 1,
+        "skill_id": 3309,
+        "skillpoints_in_skill": 1250,
+        "trained_skill_level": 1
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3310,
+        "skillpoints_in_skill": 512000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 1,
+        "skill_id": 37615,
+        "skillpoints_in_skill": 1500,
+        "trained_skill_level": 1
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3312,
+        "skillpoints_in_skill": 512000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 3,
+        "skill_id": 20209,
+        "skillpoints_in_skill": 24000,
+        "trained_skill_level": 3
+      },
+      {
+        "active_skill_level": 0,
+        "skill_id": 20210,
+        "skillpoints_in_skill": 0,
+        "trained_skill_level": 0
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 3315,
+        "skillpoints_in_skill": 181020,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3316,
+        "skillpoints_in_skill": 512000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 3317,
+        "skillpoints_in_skill": 226275,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3318,
+        "skillpoints_in_skill": 512000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3319,
+        "skillpoints_in_skill": 256000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3320,
+        "skillpoints_in_skill": 256000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 3321,
+        "skillpoints_in_skill": 90510,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 3322,
+        "skillpoints_in_skill": 135765,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 1,
+        "skill_id": 3323,
+        "skillpoints_in_skill": 500,
+        "trained_skill_level": 1
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3324,
+        "skillpoints_in_skill": 768000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3325,
+        "skillpoints_in_skill": 1024000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 3326,
+        "skillpoints_in_skill": 226275,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3327,
+        "skillpoints_in_skill": 256000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3328,
+        "skillpoints_in_skill": 512000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3329,
+        "skillpoints_in_skill": 512000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3330,
+        "skillpoints_in_skill": 512000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3331,
+        "skillpoints_in_skill": 512000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3332,
+        "skillpoints_in_skill": 1280000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3333,
+        "skillpoints_in_skill": 1280000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3334,
+        "skillpoints_in_skill": 1280000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 2,
+        "skill_id": 25863,
+        "skillpoints_in_skill": 22834,
+        "trained_skill_level": 2
+      },
+      {
+        "active_skill_level": 3,
+        "skill_id": 3342,
+        "skillpoints_in_skill": 32000,
+        "trained_skill_level": 3
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3343,
+        "skillpoints_in_skill": 1024000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3348,
+        "skillpoints_in_skill": 256000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3349,
+        "skillpoints_in_skill": 512000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 22806,
+        "skillpoints_in_skill": 90510,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 22807,
+        "skillpoints_in_skill": 90510,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 22808,
+        "skillpoints_in_skill": 90510,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 22809,
+        "skillpoints_in_skill": 90510,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3354,
+        "skillpoints_in_skill": 1536000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3355,
+        "skillpoints_in_skill": 256000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3356,
+        "skillpoints_in_skill": 512000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 1,
+        "skill_id": 3357,
+        "skillpoints_in_skill": 250,
+        "trained_skill_level": 1
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 21790,
+        "skillpoints_in_skill": 226275,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 1,
+        "skill_id": 21791,
+        "skillpoints_in_skill": 1250,
+        "trained_skill_level": 1
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3351,
+        "skillpoints_in_skill": 1280000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 1,
+        "skill_id": 11569,
+        "skillpoints_in_skill": 1250,
+        "trained_skill_level": 1
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 11566,
+        "skillpoints_in_skill": 90510,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 19759,
+        "skillpoints_in_skill": 1024000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 19760,
+        "skillpoints_in_skill": 768000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 19761,
+        "skillpoints_in_skill": 1280000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3380,
+        "skillpoints_in_skill": 256000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 11574,
+        "skillpoints_in_skill": 362039,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 19767,
+        "skillpoints_in_skill": 1280000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 11572,
+        "skillpoints_in_skill": 1280000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 1,
+        "skill_id": 3386,
+        "skillpoints_in_skill": 250,
+        "trained_skill_level": 1
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 11579,
+        "skillpoints_in_skill": 1260479,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 12092,
+        "skillpoints_in_skill": 181020,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 12093,
+        "skillpoints_in_skill": 1024000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3352,
+        "skillpoints_in_skill": 1280000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 12095,
+        "skillpoints_in_skill": 224202,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3335,
+        "skillpoints_in_skill": 1280000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3393,
+        "skillpoints_in_skill": 256000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3394,
+        "skillpoints_in_skill": 512000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 3395,
+        "skillpoints_in_skill": 90510,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 30532,
+        "skillpoints_in_skill": 45255,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 19766,
+        "skillpoints_in_skill": 1280000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 33094,
+        "skillpoints_in_skill": 512000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 33095,
+        "skillpoints_in_skill": 1536000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 33096,
+        "skillpoints_in_skill": 1536000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 2,
+        "skill_id": 30537,
+        "skillpoints_in_skill": 1415,
+        "trained_skill_level": 2
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3402,
+        "skillpoints_in_skill": 256000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3403,
+        "skillpoints_in_skill": 256000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 30540,
+        "skillpoints_in_skill": 45255,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 3,
+        "skill_id": 3405,
+        "skillpoints_in_skill": 8000,
+        "trained_skill_level": 3
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3406,
+        "skillpoints_in_skill": 256000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 3,
+        "skill_id": 3408,
+        "skillpoints_in_skill": 32000,
+        "trained_skill_level": 3
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 3409,
+        "skillpoints_in_skill": 135765,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 30546,
+        "skillpoints_in_skill": 45255,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3411,
+        "skillpoints_in_skill": 768000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3412,
+        "skillpoints_in_skill": 768000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3413,
+        "skillpoints_in_skill": 256000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 2,
+        "skill_id": 30550,
+        "skillpoints_in_skill": 1415,
+        "trained_skill_level": 2
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 30551,
+        "skillpoints_in_skill": 45255,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 20312,
+        "skillpoints_in_skill": 1280000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 2,
+        "skill_id": 30553,
+        "skillpoints_in_skill": 1415,
+        "trained_skill_level": 2
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 30554,
+        "skillpoints_in_skill": 45255,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 20315,
+        "skillpoints_in_skill": 226275,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 3420,
+        "skillpoints_in_skill": 181020,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 3421,
+        "skillpoints_in_skill": 90510,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3422,
+        "skillpoints_in_skill": 512000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 1,
+        "skill_id": 34533,
+        "skillpoints_in_skill": 750,
+        "trained_skill_level": 1
+      },
+      {
+        "active_skill_level": 3,
+        "skill_id": 35680,
+        "skillpoints_in_skill": 24000,
+        "trained_skill_level": 3
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3425,
+        "skillpoints_in_skill": 512000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3426,
+        "skillpoints_in_skill": 256000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 2403,
+        "skillpoints_in_skill": 226275,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3428,
+        "skillpoints_in_skill": 512000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 1,
+        "skill_id": 35685,
+        "skillpoints_in_skill": 750,
+        "trained_skill_level": 1
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 3430,
+        "skillpoints_in_skill": 135765,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3431,
+        "skillpoints_in_skill": 256000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3432,
+        "skillpoints_in_skill": 512000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 3388,
+        "skillpoints_in_skill": 135765,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 3434,
+        "skillpoints_in_skill": 135765,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 3303,
+        "skillpoints_in_skill": 45255,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3436,
+        "skillpoints_in_skill": 256000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3437,
+        "skillpoints_in_skill": 256000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3439,
+        "skillpoints_in_skill": 768000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 1,
+        "skill_id": 3440,
+        "skillpoints_in_skill": 1000,
+        "trained_skill_level": 1
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 3304,
+        "skillpoints_in_skill": 135765,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3442,
+        "skillpoints_in_skill": 1280000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 1,
+        "skill_id": 25235,
+        "skillpoints_in_skill": 250,
+        "trained_skill_level": 1
+      },
+      {
+        "active_skill_level": 1,
+        "skill_id": 3444,
+        "skillpoints_in_skill": 500,
+        "trained_skill_level": 1
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3418,
+        "skillpoints_in_skill": 768000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 22761,
+        "skillpoints_in_skill": 1536000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 1,
+        "skill_id": 4411,
+        "skillpoints_in_skill": 1250,
+        "trained_skill_level": 1
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3450,
+        "skillpoints_in_skill": 256000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3451,
+        "skillpoints_in_skill": 512000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3452,
+        "skillpoints_in_skill": 1024000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 3,
+        "skill_id": 33002,
+        "skillpoints_in_skill": 16000,
+        "trained_skill_level": 3
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 3454,
+        "skillpoints_in_skill": 226275,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3455,
+        "skillpoints_in_skill": 256000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 30547,
+        "skillpoints_in_skill": 45255,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 12096,
+        "skillpoints_in_skill": 271530,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 1,
+        "skill_id": 40328,
+        "skillpoints_in_skill": 1000,
+        "trained_skill_level": 1
+      },
+      {
+        "active_skill_level": 1,
+        "skill_id": 12098,
+        "skillpoints_in_skill": 1250,
+        "trained_skill_level": 1
+      },
+      {
+        "active_skill_level": 3,
+        "skill_id": 23950,
+        "skillpoints_in_skill": 64000,
+        "trained_skill_level": 3
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 12179,
+        "skillpoints_in_skill": 2048000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 16622,
+        "skillpoints_in_skill": 768000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 33092,
+        "skillpoints_in_skill": 512000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3311,
+        "skillpoints_in_skill": 512000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 33093,
+        "skillpoints_in_skill": 512000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 33699,
+        "skillpoints_in_skill": 512000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3359,
+        "skillpoints_in_skill": 768000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 28073,
+        "skillpoints_in_skill": 1024000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 3433,
+        "skillpoints_in_skill": 135765,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 27902,
+        "skillpoints_in_skill": 90510,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 3,
+        "skill_id": 20211,
+        "skillpoints_in_skill": 40000,
+        "trained_skill_level": 3
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 33097,
+        "skillpoints_in_skill": 1536000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 2,
+        "skill_id": 30650,
+        "skillpoints_in_skill": 7072,
+        "trained_skill_level": 2
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 3305,
+        "skillpoints_in_skill": 135765,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 2,
+        "skill_id": 30652,
+        "skillpoints_in_skill": 7072,
+        "trained_skill_level": 2
+      },
+      {
+        "active_skill_level": 2,
+        "skill_id": 30653,
+        "skillpoints_in_skill": 7072,
+        "trained_skill_level": 2
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 20213,
+        "skillpoints_in_skill": 362039,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 21718,
+        "skillpoints_in_skill": 135765,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 30539,
+        "skillpoints_in_skill": 45255,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 3,
+        "skill_id": 28615,
+        "skillpoints_in_skill": 32000,
+        "trained_skill_level": 3
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 25810,
+        "skillpoints_in_skill": 1280000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 2505,
+        "skillpoints_in_skill": 1024000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 33098,
+        "skillpoints_in_skill": 1536000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 19921,
+        "skillpoints_in_skill": 135765,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 19922,
+        "skillpoints_in_skill": 1280000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 3,
+        "skill_id": 49742,
+        "skillpoints_in_skill": 16000,
+        "trained_skill_level": 3
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 21071,
+        "skillpoints_in_skill": 512000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 12367,
+        "skillpoints_in_skill": 90510,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 13278,
+        "skillpoints_in_skill": 135765,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 13279,
+        "skillpoints_in_skill": 45255,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 30544,
+        "skillpoints_in_skill": 45255,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 3,
+        "skill_id": 47867,
+        "skillpoints_in_skill": 16000,
+        "trained_skill_level": 3
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 25811,
+        "skillpoints_in_skill": 226275,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 30545,
+        "skillpoints_in_skill": 256000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 3,
+        "skill_id": 47868,
+        "skillpoints_in_skill": 40000,
+        "trained_skill_level": 3
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 33091,
+        "skillpoints_in_skill": 512000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3392,
+        "skillpoints_in_skill": 256000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 3,
+        "skill_id": 3447,
+        "skillpoints_in_skill": 24000,
+        "trained_skill_level": 3
+      },
+      {
+        "active_skill_level": 3,
+        "skill_id": 47870,
+        "skillpoints_in_skill": 8000,
+        "trained_skill_level": 3
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 30548,
+        "skillpoints_in_skill": 45255,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 30549,
+        "skillpoints_in_skill": 147109,
+        "trained_skill_level": 4
+      }
+    ],
+    "total_sp": 97579242,
+    "unallocated_sp": 412741
+  },
+  "1780262783": {
+    "skills": [
+      {
+        "active_skill_level": 1,
+        "skill_id": 28164,
+        "skillpoints_in_skill": 750,
+        "trained_skill_level": 1
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 23566,
+        "skillpoints_in_skill": 226275,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 12305,
+        "skillpoints_in_skill": 256000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 23594,
+        "skillpoints_in_skill": 1280000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 3,
+        "skill_id": 24624,
+        "skillpoints_in_skill": 64000,
+        "trained_skill_level": 3
+      },
+      {
+        "active_skill_level": 3,
+        "skill_id": 24625,
+        "skillpoints_in_skill": 64000,
+        "trained_skill_level": 3
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 23606,
+        "skillpoints_in_skill": 256000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 23618,
+        "skillpoints_in_skill": 226275,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 23121,
+        "skillpoints_in_skill": 226275,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 2403,
+        "skillpoints_in_skill": 1280000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 0,
+        "skill_id": 35685,
+        "skillpoints_in_skill": 0,
+        "trained_skill_level": 0
+      },
+      {
+        "active_skill_level": 3,
+        "skill_id": 33399,
+        "skillpoints_in_skill": 16000,
+        "trained_skill_level": 3
+      },
+      {
+        "active_skill_level": 3,
+        "skill_id": 26252,
+        "skillpoints_in_skill": 16000,
+        "trained_skill_level": 3
+      },
+      {
+        "active_skill_level": 3,
+        "skill_id": 26254,
+        "skillpoints_in_skill": 24000,
+        "trained_skill_level": 3
+      },
+      {
+        "active_skill_level": 1,
+        "skill_id": 26255,
+        "skillpoints_in_skill": 750,
+        "trained_skill_level": 1
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 25235,
+        "skillpoints_in_skill": 45255,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 3,
+        "skill_id": 11433,
+        "skillpoints_in_skill": 40000,
+        "trained_skill_level": 3
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 24241,
+        "skillpoints_in_skill": 256000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 2,
+        "skill_id": 24242,
+        "skillpoints_in_skill": 1415,
+        "trained_skill_level": 2
+      },
+      {
+        "active_skill_level": 3,
+        "skill_id": 11446,
+        "skillpoints_in_skill": 40000,
+        "trained_skill_level": 3
+      },
+      {
+        "active_skill_level": 1,
+        "skill_id": 11449,
+        "skillpoints_in_skill": 1250,
+        "trained_skill_level": 1
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 11450,
+        "skillpoints_in_skill": 226275,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 33467,
+        "skillpoints_in_skill": 512000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 11452,
+        "skillpoints_in_skill": 1280000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 3,
+        "skill_id": 11453,
+        "skillpoints_in_skill": 76261,
+        "trained_skill_level": 3
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3387,
+        "skillpoints_in_skill": 512000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 12486,
+        "skillpoints_in_skill": 226275,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 24268,
+        "skillpoints_in_skill": 135765,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 2,
+        "skill_id": 24270,
+        "skillpoints_in_skill": 4243,
+        "trained_skill_level": 2
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 16591,
+        "skillpoints_in_skill": 1536000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 16594,
+        "skillpoints_in_skill": 135765,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 16595,
+        "skillpoints_in_skill": 45255,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 16597,
+        "skillpoints_in_skill": 768000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 2,
+        "skill_id": 21718,
+        "skillpoints_in_skill": 4243,
+        "trained_skill_level": 2
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3300,
+        "skillpoints_in_skill": 256000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 3301,
+        "skillpoints_in_skill": 45255,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 1,
+        "skill_id": 3304,
+        "skillpoints_in_skill": 750,
+        "trained_skill_level": 1
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 16622,
+        "skillpoints_in_skill": 768000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 1,
+        "skill_id": 3311,
+        "skillpoints_in_skill": 500,
+        "trained_skill_level": 1
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 3312,
+        "skillpoints_in_skill": 90510,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 2,
+        "skill_id": 3316,
+        "skillpoints_in_skill": 2829,
+        "trained_skill_level": 2
+      },
+      {
+        "active_skill_level": 1,
+        "skill_id": 3317,
+        "skillpoints_in_skill": 1250,
+        "trained_skill_level": 1
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3318,
+        "skillpoints_in_skill": 512000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3327,
+        "skillpoints_in_skill": 256000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3328,
+        "skillpoints_in_skill": 512000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3332,
+        "skillpoints_in_skill": 1280000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 16598,
+        "skillpoints_in_skill": 135765,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 19719,
+        "skillpoints_in_skill": 1536000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3340,
+        "skillpoints_in_skill": 1024000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 1,
+        "skill_id": 3342,
+        "skillpoints_in_skill": 1000,
+        "trained_skill_level": 1
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 3355,
+        "skillpoints_in_skill": 45255,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3356,
+        "skillpoints_in_skill": 512000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 3357,
+        "skillpoints_in_skill": 45255,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3359,
+        "skillpoints_in_skill": 768000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3380,
+        "skillpoints_in_skill": 256000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 33078,
+        "skillpoints_in_skill": 768000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3385,
+        "skillpoints_in_skill": 256000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 1,
+        "skill_id": 3386,
+        "skillpoints_in_skill": 250,
+        "trained_skill_level": 1
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 11579,
+        "skillpoints_in_skill": 271530,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3388,
+        "skillpoints_in_skill": 768000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3389,
+        "skillpoints_in_skill": 768000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 12095,
+        "skillpoints_in_skill": 181020,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3392,
+        "skillpoints_in_skill": 256000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3393,
+        "skillpoints_in_skill": 256000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3394,
+        "skillpoints_in_skill": 512000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 1,
+        "skill_id": 3395,
+        "skillpoints_in_skill": 500,
+        "trained_skill_level": 1
+      },
+      {
+        "active_skill_level": 3,
+        "skill_id": 3894,
+        "skillpoints_in_skill": 16000,
+        "trained_skill_level": 3
+      },
+      {
+        "active_skill_level": 3,
+        "skill_id": 33097,
+        "skillpoints_in_skill": 48000,
+        "trained_skill_level": 3
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3402,
+        "skillpoints_in_skill": 256000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3403,
+        "skillpoints_in_skill": 256000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3406,
+        "skillpoints_in_skill": 256000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 3409,
+        "skillpoints_in_skill": 135790,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3411,
+        "skillpoints_in_skill": 768000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3413,
+        "skillpoints_in_skill": 256000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 3,
+        "skill_id": 3417,
+        "skillpoints_in_skill": 8000,
+        "trained_skill_level": 3
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3418,
+        "skillpoints_in_skill": 768000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 3419,
+        "skillpoints_in_skill": 135765,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 3,
+        "skill_id": 3420,
+        "skillpoints_in_skill": 32000,
+        "trained_skill_level": 3
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3424,
+        "skillpoints_in_skill": 512000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 3425,
+        "skillpoints_in_skill": 90510,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3426,
+        "skillpoints_in_skill": 256000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 3427,
+        "skillpoints_in_skill": 90510,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 2,
+        "skill_id": 3428,
+        "skillpoints_in_skill": 2829,
+        "trained_skill_level": 2
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 3429,
+        "skillpoints_in_skill": 45255,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 2406,
+        "skillpoints_in_skill": 768000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 2,
+        "skill_id": 3431,
+        "skillpoints_in_skill": 1415,
+        "trained_skill_level": 2
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3432,
+        "skillpoints_in_skill": 512000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 1,
+        "skill_id": 3433,
+        "skillpoints_in_skill": 750,
+        "trained_skill_level": 1
+      },
+      {
+        "active_skill_level": 2,
+        "skill_id": 3435,
+        "skillpoints_in_skill": 4243,
+        "trained_skill_level": 2
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3436,
+        "skillpoints_in_skill": 256000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3437,
+        "skillpoints_in_skill": 256000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3441,
+        "skillpoints_in_skill": 1280000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3442,
+        "skillpoints_in_skill": 1280000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 3443,
+        "skillpoints_in_skill": 45255,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3446,
+        "skillpoints_in_skill": 512000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 3447,
+        "skillpoints_in_skill": 768000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 3449,
+        "skillpoints_in_skill": 45255,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 3450,
+        "skillpoints_in_skill": 45255,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 1,
+        "skill_id": 3451,
+        "skillpoints_in_skill": 500,
+        "trained_skill_level": 1
+      },
+      {
+        "active_skill_level": 2,
+        "skill_id": 3452,
+        "skillpoints_in_skill": 5657,
+        "trained_skill_level": 2
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 3453,
+        "skillpoints_in_skill": 90510,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 1,
+        "skill_id": 3454,
+        "skillpoints_in_skill": 1250,
+        "trained_skill_level": 1
+      },
+      {
+        "active_skill_level": 2,
+        "skill_id": 3455,
+        "skillpoints_in_skill": 1415,
+        "trained_skill_level": 2
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 12179,
+        "skillpoints_in_skill": 2048000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 3310,
+        "skillpoints_in_skill": 90510,
+        "trained_skill_level": 4
+      },
+      {
+        "active_skill_level": 2,
+        "skill_id": 33093,
+        "skillpoints_in_skill": 2829,
+        "trained_skill_level": 2
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 33699,
+        "skillpoints_in_skill": 512000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 2495,
+        "skillpoints_in_skill": 1024000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 5,
+        "skill_id": 2505,
+        "skillpoints_in_skill": 1024000,
+        "trained_skill_level": 5
+      },
+      {
+        "active_skill_level": 4,
+        "skill_id": 13279,
+        "skillpoints_in_skill": 45255,
+        "trained_skill_level": 4
+      }
+    ],
+    "total_sp": 36420754,
+    "unallocated_sp": 43128
+  }
+}
