@@ -339,7 +339,7 @@ No blueprint selected yet
 
 <div class="breakdown">
     {#each Object.keys(manufacturing.products) as type_id}
-        <div class="itemName" title={`${$Universe.types[type_id].name} [${type_id}]`}>{$Universe.types[type_id].name}</div>
+        <div class="itemName" title={`${$Universe.types[type_id]?.name} [${type_id}]`}>{$Universe.types[type_id]?.name}</div>
         <div class="qty">{manufacturing.products[type_id].quantity * runs}</div>
         <div>
             Unit price
@@ -367,7 +367,7 @@ No blueprint selected yet
         <div class="itemName">
             <label>
                 <input type="checkbox" bind:checked={manufacturedItems[type_id]} disabled={GetBlueprintToManufacture($Industry, parseInt(type_id)) == null} /> 
-                <span title={`${$Universe.types[type_id].name} [${type_id}]`}>{$Universe.types[type_id].name}</span>
+                <span title={`${$Universe.types[type_id]?.name} [${type_id}]`}>{$Universe.types[type_id]?.name}</span>
             </label>
         </div>
         <div class="qty">{materialQty(manufacturing.materials[type_id].quantity)}</div>

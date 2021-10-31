@@ -205,9 +205,12 @@ async function loadTypesStatic(marketGroups:EntityCollection<MarketGroup>) {
     });
 }
 
-let _types:EntityCollection<Type> = null;
+let _types:EntityCollection<Type> = {};
 
+let universePopulated = false;
 function setupUniverse( set:(value:any)=>void ) {
+    if(universePopulated) return ()=>{};
+
     const universe = {
         categories: null,
         types: _types,
@@ -235,6 +238,8 @@ function setupUniverse( set:(value:any)=>void ) {
                     _types = types;
                     universe.types = _types;
                     set(universe);
+
+                    universePopulated = true;
                 })
                 .catch(err => {console.error(err)});
         })
@@ -267,7 +272,7 @@ export type UniverseStore = {
     }
 }
 
-export const Universe: Readable<UniverseStore> = readable({}, setupUniverse);
+export const Universe: Readable<UniverseStore> = readable({types:{}}, setupUniverse);
 
 type Attribute = {
     attribute_id: number,

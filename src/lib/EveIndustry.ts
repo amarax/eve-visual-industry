@@ -50,8 +50,10 @@ export const INVENTION_ACTIVITY_ID = 8;
 export const REVERSE_ENGINEERING_ACTIVITY_ID = 7;
 
 
-
+let industryPopulated = false;
 function setupIndustry( set:(value:any)=>void ) {
+    if(industryPopulated) return ()=>{};
+    
     let industry: IndustryStore = {
         activities: {},
         types: {},
@@ -168,6 +170,7 @@ function setupIndustry( set:(value:any)=>void ) {
             data.forEach(blueprint=>industry.types[blueprint.type_id].maxProductionLimit = blueprint.maxProductionLimit);
 
             set(industry);
+            industryPopulated = true;
         })
         .catch(reason=>console.error(reason));
 
