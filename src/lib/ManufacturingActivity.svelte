@@ -1,12 +1,19 @@
 <script lang="ts">
-    import { Universe, Industry, GetBlueprintToManufacture, GetInventableBlueprint  } from "$lib/EveData";
-    import { MANUFACTURING_ACTIVITY_ID  } from "$lib/EveData";
-    import type { IndustryType, IndustryActivity, EntityCollection, Type_Id } from "$lib/EveData";
+    import { EveLocation, GetLocationStore, Location_Id, Universe } from "$lib/EveData";
+    import { MANUFACTURING_ACTIVITY_ID, Industry, GetBlueprintToManufacture, GetInventableBlueprint, ADVANCED_INDUSTRY_SKILL_ID, IndustrySystems } from "$lib/EveIndustry";
     import { getMarketType, IskAmount, MarketPrices } from "$lib/EveMarkets";
-    import type { DurationSeconds, MarketType, Quantity } from "$lib/EveMarkets";
+
+    import type { EntityCollection, Type_Id } from "$lib/EveData";
+    import type { IndustryActivity } from "$lib/EveIndustry";
+    import type { MarketType, Quantity } from "$lib/EveMarkets";
+
     import MarketOrdersBar from "./MarketOrdersBar.svelte";
     import { FormatDuration, FormatIskAmount, FormatIskChange } from "./Format";
     import InventionActivity from "./InventionActivity.svelte";
+    import { IndustryDogmaAttributes } from "./EveDogma";
+    import { CharacterSkills } from "./EveCharacter";
+    import LocationSelector from "./LocationSelector.svelte";
+    import type { ESIStore } from "./ESIStore";
 
 
 
@@ -22,7 +29,7 @@
 
 
     export let salesTaxRate = 0.036;
-    export let brokerFeeRate = 0.0151114234532; // Aqua Silentium's broker fee
+    export let brokerFeeRate = 0.0113709973928; // Selene's broker fee
 
     function subscribeToTypeStore( type_id: Type_Id ) {
         relatedTypeStores.push( getMarketType(type_id).subscribe(value=>{
@@ -76,7 +83,8 @@
                 }
 
                 // Initialise runs to default to the amount required to produce the quantity
-                runs = quantity ? Math.ceil( quantity / manufacturing.products[selectedProductId].quantity ) : 1;
+                if(quantity)
+                    runs = Math.ceil( quantity / manufacturing.products[selectedProductId].quantity );
             }
         }
     }
@@ -84,16 +92,28 @@
     // Currently it's safer to just have the runs defined by quantity,
     // if not I'll forget it's a bug
     $: if(quantity) {
-        runs = Math.ceil( quantity / manufacturing?.products[selectedProductId].quantity );
+        //runs = Math.ceil( quantity / manufacturing?.products[selectedProductId].quantity );
     }
     
 
 
-    let materialQty = (baseQuantity: Quantity): Quantity => baseQuantity;
+    export let selectedLocationId: Location_Id = null;
 
-    export let facilityMaterialConsumptionModifier: number = -1;
+    let systemCostIndex = 0.01;
+    let selectedLocation: ESIStore<EveLocation> = null;
     $: {
-        materialQty = (qty) => Math.max( runs, Math.ceil( qty * runs * (1-materialEfficiency/100) * (1+facilityMaterialConsumptionModifier/100) ) );
+        if(selectedLocationId) selectedLocation = GetLocationStore(selectedLocationId);
+        if($selectedLocation) {
+            systemCostIndex = $IndustrySystems.find(system=>system.solar_system_id === ($selectedLocation.solar_system_id ?? $selectedLocation.system_id)).cost_indices.find(value=>value.activity=="manufacturing").cost_index;
+        } else {
+            systemCostIndex = 0.01;
+        }
+    }
+
+
+    let materialQty = (baseQuantity: Quantity): Quantity => baseQuantity;
+    $: {
+        materialQty = (qty) => Math.max( runs, Math.ceil( qty * runs * (1-materialEfficiency/100) * (1+($selectedLocation?.modifiers?.materialConsumptionModifier ?? 0)/100)) );
     }
 
     function getBuySellInJita() {
@@ -159,8 +179,6 @@
         }
     }
 
-    export let systemCostIndex = 0.03;
-
     let totalAdjustedCostPrice = 0;
     $: {
         totalAdjustedCostPrice = 0;
@@ -171,9 +189,25 @@
         }
     }
 
-    $: manufacturingJobCost = totalAdjustedCostPrice * systemCostIndex * runs;
 
-    $: manufacturingTime = manufacturing?.time * (1-timeEfficiency/100) * runs;
+    $: manufacturingJobCost = totalAdjustedCostPrice * systemCostIndex * (1+($selectedLocation?.modifiers?.jobCostModifier ?? 0)/100) * (1+($selectedLocation?.modifiers?.facilityTax ?? 0)/100) * runs;
+
+    $: characterSkills = CharacterSkills[selectedCharacterId];
+
+    // TODO list all contributing skills
+    $: skillTimeModifier = manufacturing ? [...Object.values(manufacturing.requiredSkills).map(s=>s.type_id), ADVANCED_INDUSTRY_SKILL_ID]
+        .reduce((modifier: number, skill_id)=>{
+            if($IndustryDogmaAttributes.types[skill_id] === undefined) {return modifier;}   // Skill does not contribute to modifier
+
+            // let contributingSkill = $Universe.types[skill_id];
+
+            let factor = $IndustryDogmaAttributes.types[skill_id][440]?.value ?? $IndustryDogmaAttributes.types[skill_id][1982]?.value ??  $IndustryDogmaAttributes.types[skill_id][1961]?.value ?? 0;
+            factor *= $characterSkills?.skills.find(s=>s.skill_id==skill_id)?.active_skill_level ?? 0;
+
+            return modifier*(1+factor*0.01)
+        },1) : 1
+
+    $: manufacturingTime = manufacturing?.time * (1-timeEfficiency/100) * skillTimeModifier * (1+($selectedLocation?.modifiers?.jobDurationModifier ?? 0)/100) * runs;
 
     $: sellingPrice = relatedTypes[selectedProductId]?.orders.sell[0]?.price*(1-brokerFeeRate-salesTaxRate);
 
@@ -187,7 +221,19 @@
     export let compact = false;
 
     let inventing = false;
+    let inventedRuns: number = 10;
 
+    $: {
+        if(!inventable) inventing = false;
+    }
+
+    $: {
+        if(inventing) {
+            runs = inventedRuns;
+        }
+    }
+
+    export let selectedCharacterId;
 </script>
 
 <style lang="scss">
@@ -228,16 +274,18 @@
             margin-right: 10px;
         }
 
-        .subItem {
-            grid-column: span 3;
+    }
 
-            $divider: 1px solid #ccc;
+    .subItem {
+        grid-column: span 3;
 
-            border-top: $divider;
-            border-bottom: $divider;
+        $divider: 1px solid #ccc;
 
-            margin-bottom: 4px;
-        }
+        border-top: $divider;
+        border-bottom: $divider;
+
+        margin-bottom: 4px;
+        margin-left:24px;
     }
 
     .combinedInput input[type='text'] {
@@ -250,30 +298,34 @@
 No blueprint selected yet
 {:else}
 
-<div class="combinedInput">Runs <input type="range" bind:value={runs} min={1} max={blueprint?blueprint.maxProductionLimit+9 : 20} /> <input type="text" bind:value={runs} /></div>
+<div class="combinedInput">Runs <input type="range" bind:value={runs} min={1} max={inventing ? inventedRuns : blueprint?.maxProductionLimit} /> <input type="text" bind:value={runs} /></div>
 <p>
     <b>Blueprint</b> <br/>
 
     {#if inventable}
-        <label><input type="checkbox" bind:checked={inventing} /> Invent</label>
+        <label><input type="checkbox" bind:checked={inventing} /> Invent</label>        <br/>
 
         {#if inventing}
-            <InventionActivity />
+            <div class="subItem">
+                <InventionActivity {selectedCharacterId} blueprintToInvent={blueprint} extents={_extents} 
+                    bind:expectedCostPerRun={blueprintCostPerRun} bind:productME={materialEfficiency} bind:productTE={timeEfficiency} bind:productRuns={inventedRuns}
+                />
+            </div>
         {/if}
-        <br/>
     {/if}
 
     <label>ME <input type="range" bind:value={materialEfficiency} min={0} max={10} disabled={inventing} /> {materialEfficiency}</label>
     <label>TE <input type="range" bind:value={timeEfficiency} min={0} max={20} step={2} disabled={inventing} /> {timeEfficiency}</label>
     <br/>
     
-    <label>Cost per run <input type="text" bind:value={blueprintCostPerRun} /></label>
+    <label>Cost per run <input type="text" bind:value={blueprintCostPerRun} disabled={inventing} /></label>
 </p>
 
 {#if !compact}
 <b>Facility</b>
+<LocationSelector bind:value={selectedLocationId} />
 <dl>
-    <dt><label for="systemCostIndex">System cost index</label></dt> <dd><input id="systemCostIndex" bind:value={systemCostIndex} /></dd>
+    <dt>System cost index</dt> <dd>{systemCostIndex}</dd>
 </dl>
 
 <b>Manufacturing</b>
@@ -303,7 +355,7 @@ No blueprint selected yet
             />
             <br/>
 
-            Unit cost {FormatIskAmount(unitCost)}
+            Unit cost {FormatIskAmount(unitCost)} Total cost {FormatIskAmount(totalCost)}
 
         </div>
     {/each}
@@ -312,27 +364,27 @@ No blueprint selected yet
         <MarketOrdersBar height={20} extents={_extents} quantity={manufacturing.products[selectedProductId].quantity * runs} totalCost={manufacturingJobCost} />
     </div>
     {#each Object.keys(manufacturing.materials) as type_id}
-        {#if !manufacturedItems[type_id]}
-            <div class="itemName">
-                <label><input type="checkbox" bind:checked={manufacturedItems[type_id]} disabled={GetBlueprintToManufacture($Industry, parseInt(type_id)) == null} /> {$Universe.types[type_id].name}</label>
-            </div>
-            <div class="qty">{materialQty(manufacturing.materials[type_id].quantity)}</div>
-            <div>
-                <MarketOrdersBar height={20} extents={_extents} quantity={materialQty(manufacturing.materials[type_id].quantity)} 
-                    highestBuyOrder={relatedTypes[type_id].orders.buy[0]} lowestSellOrder={relatedTypes[type_id].orders.sell[0]} 
-                    buyOverheadRate={brokerFeeRate}
-                />
-            </div>
-        {:else}
+        <div class="itemName">
+            <label>
+                <input type="checkbox" bind:checked={manufacturedItems[type_id]} disabled={GetBlueprintToManufacture($Industry, parseInt(type_id)) == null} /> 
+                <span title={`${$Universe.types[type_id].name} [${type_id}]`}>{$Universe.types[type_id].name}</span>
+            </label>
+        </div>
+        <div class="qty">{materialQty(manufacturing.materials[type_id].quantity)}</div>
+        <div>
+            <MarketOrdersBar height={20} extents={_extents} quantity={materialQty(manufacturing.materials[type_id].quantity)} 
+                highestBuyOrder={relatedTypes[type_id].orders.buy[0]} lowestSellOrder={relatedTypes[type_id].orders.sell[0]} 
+                buyOverheadRate={brokerFeeRate}
+                totalCost={manufacturedUnitCostPrices[type_id] ? manufacturedUnitCostPrices[type_id]*materialQty(manufacturing.materials[type_id].quantity) : null}
+            />
+        </div>
+        {#if manufacturedItems[type_id]}
             <div class="subItem">
-                <div class="itemName">
-                    <label><input type="checkbox" bind:checked={manufacturedItems[type_id]} disabled={GetBlueprintToManufacture($Industry, parseInt(type_id)) == null} /> {$Universe.types[type_id].name} [{type_id}]</label>
-                </div>
                 <svelte:self selectedProductId={type_id} quantity={materialQty(manufacturing.materials[type_id].quantity)} {manufacturedItems}
                     bind:unitCost={manufacturedUnitCostPrices[type_id]} 
-                    {systemCostIndex} {facilityMaterialConsumptionModifier}
                     materialEfficiency={10} timeEfficiency={20}
-                    compact extents={_extents} />
+                    {selectedCharacterId} {selectedLocationId}
+                    compact />
             </div>
         {/if}
     {/each}
