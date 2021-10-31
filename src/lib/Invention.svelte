@@ -8,8 +8,10 @@
 
     import TypeSelector from '$lib/TypeSelector.svelte';
     import ManufacturingActivity from "./ManufacturingActivity.svelte";
+import { page } from "$app/stores";
+import { goto } from "$app/navigation";
 
-    let selectedTypeId:number = null;
+    $: selectedTypeId = parseInt( $page.params['type'] ) || null;
     let selectedType:Type = null;
 
     let selectableTypes: Array<Type> = null;
@@ -60,7 +62,7 @@
     Loading...
 {/if}
 
-<TypeSelector bind:selectedTypeId {selectableTypes} />
+<TypeSelector {selectedTypeId} on:change={event=>{goto(`/breakdown/${event.detail}`, {keepfocus:true})}} {selectableTypes} />
 
 <p><ManufacturingActivity selectedProductId={selectedTypeId} {selectedCharacterId} /></p>
 

@@ -2,7 +2,7 @@
     import { Universe } from '$lib/EveData';
 
     import type { MarketGroup_Id, Type_Id, MarketGroup, Type, EntityCollection } from '$lib/EveData';
-import { group_outros } from 'svelte/internal';
+import { createEventDispatcher } from 'svelte';
     
     let selectableMarketGroupIds: Set<MarketGroup_Id> = new Set();
 
@@ -14,6 +14,11 @@ import { group_outros } from 'svelte/internal';
 
     export let selectableTypes: Array<Type> = undefined;
     export let selectedTypeId:number = null;
+
+    const dispatch = createEventDispatcher();
+    function onSelectionChange(event) {
+        dispatch('change', parseInt(event.target.value));
+    }
 
     $: {
         if($Universe.types) {
@@ -109,7 +114,7 @@ import { group_outros } from 'svelte/internal';
         </select>
     {/each}
     <br />
-    <select bind:value={selectedTypeId}>
+    <select value={selectedTypeId} on:change={onSelectionChange}>
         {#each filteredTypes as {type_id,name} }
             <option value={type_id}>{name}</option>
         {/each}
