@@ -15,17 +15,18 @@ export interface ESIStore<T> extends Readable<T> {
 } 
 
 
-export default function CreateESIStore( route:string ): ESIStore<any> {
+export default function CreateESIStore<Data>( route:string, onLoad?:(value)=>void ): ESIStore<Data> {
     let store = {
         status: ESIStoreStatus.loading,
         subscribe: null,
     }
 
-    function start(set: Subscriber<any>) {
+    function start(set: Subscriber<Data>) {
         if(store.status === ESIStoreStatus.loaded) return;
 
         LoadFromESI(route)
             .then((value)=>{
+                if(onLoad) value = onLoad(value);
                 store.status=ESIStoreStatus.loaded;
                 set(value);
             })
@@ -44,13 +45,13 @@ export default function CreateESIStore( route:string ): ESIStore<any> {
     return store;
 }
 
-export function CreateESIStoreFromCache( route:string, onLoaded?:(value)=>void ): ESIStore<any> {
+export function CreateESIStoreFromCache<Data>( route:string, onLoad?:(value)=>void ): ESIStore<Data> {
     let store = {
         status: ESIStoreStatus.loading,
         subscribe: null,
     }
 
-    function start(set: Subscriber<any>) {
+    function start(set: Subscriber<Data>) {
         if(store.status === ESIStoreStatus.loaded) return;
 
         fetch(`/esi-cache${route}index.json`)
@@ -61,7 +62,7 @@ export function CreateESIStoreFromCache( route:string, onLoaded?:(value)=>void )
                     return Promise.reject("Fetch failed");
             })
             .then((value)=>{
-                onLoaded && onLoaded(value);
+                if(onLoad) value = onLoad(value);
                 store.status=ESIStoreStatus.loaded;
                 set(value);
             })

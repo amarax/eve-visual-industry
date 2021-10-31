@@ -372,6 +372,8 @@ export function GetLocationStore(location_id: Location_Id): ESIStore<EveLocation
                         if(reason != "Modifiers not available")
                             console.error(reason);
                     })
+
+                return value;
             } );
     
         }

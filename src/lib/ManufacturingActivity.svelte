@@ -137,7 +137,7 @@
 
                 totalCost += materialQuantity * (
                     manufacturedUnitCostPrices[type_id] || 
-                    getFirstOrder(relatedTypes[type_id].orders.sell, marketFilterLocation)?.price ||
+                    getFirstOrder(relatedTypes[type_id]?.orders.sell, marketFilterLocation)?.price ||
                     0
                 );
             }
@@ -163,7 +163,7 @@
             if(manufacturing) {
                 let prices = [];
 
-                if(relatedTypes[selectedProductId].orders.lastUpdated !== null) {
+                if(relatedTypes[selectedProductId] && relatedTypes[selectedProductId].orders.lastUpdated !== null) {
                     let {buy, sell} = relatedTypes[selectedProductId].orders;
                     if(marketFilterLocation) {
                         buy = buy.filter(order=>order.location_id === marketFilterLocation);
@@ -198,7 +198,7 @@
     $: characterSkills = CharacterSkills[selectedCharacterId];
 
     // TODO list all contributing skills
-    $: skillTimeModifier = manufacturing ? [...Object.values(manufacturing.requiredSkills).map(s=>s.type_id), ADVANCED_INDUSTRY_SKILL_ID]
+    $: skillTimeModifier = manufacturing ? [...Object.values(manufacturing.requiredSkills || {}).map(s=>s.type_id), ADVANCED_INDUSTRY_SKILL_ID]
         .reduce((modifier: number, skill_id)=>{
             if($IndustryDogmaAttributes.types[skill_id] === undefined) {return modifier;}   // Skill does not contribute to modifier
 

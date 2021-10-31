@@ -3,6 +3,8 @@ import { LoadFromESI } from "$lib/EveData";
 
 import type { Readable, Writable } from "svelte/store";
 import type { EntityCollection, Type_Id } from "$lib/EveData";
+import CreateESIStore from "./ESIStore";
+import type { ESIStore } from "./ESIStore";
 
 
 
@@ -56,7 +58,7 @@ export class MarketType {
     }
 }
 
-export type MarketTypeStore = Writable<MarketType>
+export type MarketTypeStore = ESIStore<MarketType>
 
 type MarketRegion = {
     types: EntityCollection<MarketTypeStore>
@@ -105,32 +107,16 @@ type MarketPrices = {
 }
 
 
-async function loadOrders(type: Type_Id, region: Region_Id = 10000002, store: MarketTypeStore) {
-    let marketType = get(store);
-
-    if(marketType.orders.lastUpdated === null || marketType.orders.lastUpdated <= new Date().getTime() - 5*60*1000 /*5 minutes*/ )
-    try {
-
-        let orders: Array<MarketOrder> = await LoadFromESI( `/markets/${region}/orders/?order_type=all&type_id=${type}` );
-        marketType = get(store);
-        marketType.orders.buy = orders.filter(order=>order.is_buy_order).sort((a,b)=>b.price-a.price);  // Descending order
-        marketType.orders.sell = orders.filter(order=>!order.is_buy_order).sort((a,b)=>a.price-b.price);    // Ascending order
-        marketType.orders.lastUpdated = new Date().getTime();
-
-        store.set(marketType);
-
-    } catch(error) {
-        console.log(error);
-    }
-}
-
 export function getMarketType(type: Type_Id, region: Region_Id = 10000002) {
     if(Markets.regions[region].types[type] === undefined) {
-        Markets.regions[region].types[type] = writable(new MarketType(type), (set)=>{
-        });
+        Markets.regions[region].types[type] = CreateESIStore( `/markets/${region}/orders/?order_type=all&type_id=${type}`, orders=>{
+            let value = new MarketType(type);
+            value.orders.buy = orders.filter(order=>order.is_buy_order).sort((a,b)=>b.price-a.price);  // Descending order
+            value.orders.sell = orders.filter(order=>!order.is_buy_order).sort((a,b)=>a.price-b.price);    // Ascending order
+            value.orders.lastUpdated = new Date().getTime();
+            return value;
+        })
     }
-
-    loadOrders(type, region, Markets.regions[region].types[type]);
 
     return Markets.regions[region].types[type];
 }
