@@ -1,7 +1,7 @@
 <script lang="ts">
     import { EveLocation, GetLocationStore, Location_Id, Universe } from "$lib/EveData";
     import { MANUFACTURING_ACTIVITY_ID, Industry, GetBlueprintToManufacture, GetInventableBlueprint, ADVANCED_INDUSTRY_SKILL_ID, IndustrySystems } from "$lib/EveIndustry";
-    import { getMarketType, IskAmount, MarketPrices } from "$lib/EveMarkets";
+    import { getMarketType, IskAmount, MarketOrder, MarketPrices } from "$lib/EveMarkets";
 
     import type { EntityCollection, Type_Id } from "$lib/EveData";
     import type { IndustryActivity } from "$lib/EveIndustry";
@@ -116,21 +116,14 @@
         materialQty = (qty) => Math.max( runs, Math.ceil( qty * runs * (1-materialEfficiency/100) * (1+($selectedLocation?.modifiers?.materialConsumptionModifier ?? 0)/100)) );
     }
 
-    function getBuySellInJita() {
-        const jita_tradehub_location_id = 60003760;
-        const jita_system_id = 30000142;
-
-        const perimeter_system_id = 30000144;
-        const tq_trading_location_id = 1028858195912;
-    }
-
-    function getLowestSellPrice(type_id: Type_Id) {
-        if(relatedTypes[type_id].orders.lastUpdated !== null) {
-
-        }
-    }
-
     let manufacturedUnitCostPrices: EntityCollection<IskAmount> = {};
+
+    function getFirstOrder(orders: Array<MarketOrder>, marketFilterLocation: Location_Id): MarketOrder {
+        if(marketFilterLocation) {
+            return orders.filter(order=>order.location_id === marketFilterLocation)[0];
+        }
+        return orders[0];
+    }
 
     let totalCost = 0;
     $: {
@@ -142,7 +135,7 @@
 
                 totalCost += materialQuantity * (
                     manufacturedUnitCostPrices[type_id] || 
-                    relatedTypes[type_id].orders.sell[0]?.price ||
+                    getFirstOrder(relatedTypes[type_id].orders.sell, marketFilterLocation)?.price ||
                     0
                 );
             }
@@ -159,6 +152,8 @@
         }
     }
 
+    export let marketFilterLocation: Location_Id = null;
+
     export let extents: Array<number> = null;
     let _extents = [0,1000];
     $: {
@@ -167,9 +162,15 @@
                 let prices = [];
 
                 if(relatedTypes[selectedProductId].orders.lastUpdated !== null) {
+                    let {buy, sell} = relatedTypes[selectedProductId].orders;
+                    if(marketFilterLocation) {
+                        buy = buy.filter(order=>order.location_id === marketFilterLocation);
+                        sell = sell.filter(order=>order.location_id === marketFilterLocation);
+                    }
+
                     let productQuantity = manufacturing.products[selectedProductId].quantity * runs;
-                    if(relatedTypes[selectedProductId].orders.buy.length > 0) prices.push( productQuantity * relatedTypes[selectedProductId].orders.buy[0].price );
-                    if(relatedTypes[selectedProductId].orders.sell.length > 0) prices.push( productQuantity * relatedTypes[selectedProductId].orders.sell[0].price );
+                    if(buy.length > 0) prices.push( productQuantity * buy[0].price );
+                    if(sell.length > 0) prices.push( productQuantity * sell[0].price );
                 }
 
                 _extents[1] = 1.1*Math.max(...prices, totalCost);
@@ -209,7 +210,7 @@
 
     $: manufacturingTime = manufacturing?.time * (1-timeEfficiency/100) * skillTimeModifier * (1+($selectedLocation?.modifiers?.jobDurationModifier ?? 0)/100) * runs;
 
-    $: sellingPrice = relatedTypes[selectedProductId]?.orders.sell[0]?.price*(1-brokerFeeRate-salesTaxRate);
+    $: sellingPrice = getFirstOrder(relatedTypes[selectedProductId]?.orders.sell, marketFilterLocation)?.price*(1-brokerFeeRate-salesTaxRate);
 
     $: profit = sellingPrice*runs - totalCost
 
@@ -383,7 +384,7 @@ No blueprint selected yet
                 <svelte:self selectedProductId={type_id} quantity={materialQty(manufacturing.materials[type_id].quantity)} {manufacturedItems}
                     bind:unitCost={manufacturedUnitCostPrices[type_id]} 
                     materialEfficiency={10} timeEfficiency={20}
-                    {selectedCharacterId} {selectedLocationId}
+                    {selectedCharacterId} {selectedLocationId} {marketFilterLocation}
                     compact />
             </div>
         {/if}

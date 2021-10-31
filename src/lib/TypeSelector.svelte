@@ -100,7 +100,6 @@ import { createEventDispatcher } from 'svelte';
 </script>
 
 <p>
-    Item to invent
     {#each groupTreeBranches as marketGroup, i}
         <select name={i.toString()} bind:value={selectedGroupTreeBranches[i]} on:change={(event)=>{
             let selectedMarketGroup = marketGroup[event.target.value];
@@ -114,6 +113,7 @@ import { createEventDispatcher } from 'svelte';
         </select>
     {/each}
     <br />
+    Item 
     <select value={selectedTypeId} on:change={onSelectionChange}>
         {#each filteredTypes as {type_id,name} }
             <option value={type_id}>{name}</option>

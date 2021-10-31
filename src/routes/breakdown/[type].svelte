@@ -3,14 +3,15 @@
     import { page } from "$app/stores";
 
     import CharacterSelector from "$lib/CharacterSelector.svelte";
-    import { Universe } from "$lib/EveData";
+    import { Location_Id, Universe } from "$lib/EveData";
     import { Industry } from "$lib/EveIndustry";
     import ManufacturingActivity from "$lib/ManufacturingActivity.svelte";
     import TypeSelector from "$lib/TypeSelector.svelte";
 
-    import { INVENTION_ACTIVITY_ID, REVERSE_ENGINEERING_ACTIVITY_ID, MANUFACTURING_ACTIVITY_ID } from '$lib/EveIndustry';
+    import { MANUFACTURING_ACTIVITY_ID } from '$lib/EveIndustry';
 
     import type { Type_Id, Type } from "$lib/EveData";
+    import LocationSelector from "$lib/LocationSelector.svelte";
 
     let selectedCharacterId;
 
@@ -34,12 +35,15 @@
         selectableTypes = selectableTypeIDs.filter(id=>$Universe.types[id]!==undefined).map(id=>$Universe.types[id]);
     }
 
+    let marketFilterLocation: Location_Id;
 </script>
 
 
-<CharacterSelector bind:value={selectedCharacterId} />
+<CharacterSelector bind:value={selectedCharacterId} /><br/>
+Filter market <LocationSelector allowUnselected bind:value={marketFilterLocation} />
+
 
 <TypeSelector {selectedTypeId} on:change={event=>{goto(`/breakdown/${event.detail}`, {keepfocus:true})}} {selectableTypes} />
 
-<p/><ManufacturingActivity selectedProductId={selectedTypeId} {selectedCharacterId} />
+<p/><ManufacturingActivity selectedProductId={selectedTypeId} {selectedCharacterId} {marketFilterLocation} />
     

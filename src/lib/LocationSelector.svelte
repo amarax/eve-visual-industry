@@ -21,7 +21,7 @@ import { onDestroy } from "svelte";
         });
 
         let ids = Object.keys(locations);
-        if(value === null && ids.length >=1) {
+        if(value === null && ids.length >=1 && !allowUnselected) {
             value = parseInt( ids[ids.length-1] );
         }
 
@@ -38,10 +38,15 @@ import { onDestroy } from "svelte";
 
 
     export let value: Location_Id = null;
+
+    export let allowUnselected: boolean = false;
 </script>
 
 
 <select bind:value={value}>
+    {#if allowUnselected}
+        <option value={null}></option>
+    {/if}
     {#each Object.keys(locations) as location_id}
         <option value={parseInt( location_id )}>{locations[location_id]?.name ?? location_id}</option>
     {/each}
