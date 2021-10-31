@@ -311,6 +311,7 @@ No blueprint selected yet
         {#if inventing}
             <div class="subItem">
                 <InventionActivity {selectedCharacterId} blueprintToInvent={blueprint} extents={_extents} 
+                    {marketFilterLocation}
                     bind:expectedCostPerRun={blueprintCostPerRun} bind:productME={materialEfficiency} bind:productTE={timeEfficiency} bind:productRuns={inventedRuns}
                 />
             </div>

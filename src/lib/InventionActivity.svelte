@@ -252,7 +252,7 @@ import LocationSelector from "./LocationSelector.svelte";
     }
 
 
-
+    export let marketFilterLocation: Location_Id = null;
 </script>
 
 <style lang="scss">
@@ -322,7 +322,7 @@ import LocationSelector from "./LocationSelector.svelte";
             <div class="qty">{inventionActivity.materials[type_id]?.quantity || 1}</div>
             <div>
                 <MarketOrdersBar height={20} extents={_extents} quantity={inventionActivity.materials[type_id]?.quantity || 1} 
-                    highestBuyOrder={relatedTypes[type_id].orders.buy[0]} lowestSellOrder={relatedTypes[type_id].orders.sell[0]} 
+                    {type_id} {marketFilterLocation}
                     buyOverheadRate={-brokerFeeRate}
                 />
                 <br/>
