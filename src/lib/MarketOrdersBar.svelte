@@ -41,7 +41,7 @@ import type { Location_Id, Type_Id } from "./EveData";
     export let price: IskAmount = null;
     export let overridePrice: IskAmount = null;
     let marketPrice: IskAmount = null;
-    $: defaultMarketPrice = lowestSellOrder?.price * (1-sellOverheadRate);
+    $: defaultMarketPrice = lowestSellOrder?.price * (1+sellOverheadRate);
     $: {
         price = overridePrice ?? marketPrice ?? defaultMarketPrice;
         if(isNaN(price)) price = 0;
