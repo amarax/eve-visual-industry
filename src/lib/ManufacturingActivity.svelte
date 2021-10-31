@@ -151,7 +151,7 @@
     $: manufacturingTime = manufacturing?.time * (1-timeEfficiency/100) * skillTimeModifier * (1+($selectedLocation?.modifiers?.jobDurationModifier ?? 0)/100) * runs;
 
     $: sellingPrice = itemPrices[selectedProductId];
-    $: producedQty = manufacturing.products[selectedProductId].quantity*runs;
+    $: producedQty = manufacturing?.products[selectedProductId].quantity*runs;
     $: profit = sellingPrice*producedQty - totalCost
 
     export let unitCost = null;
@@ -263,7 +263,7 @@ No blueprint selected yet
 
         {#if inventing}
             <div class="subItem">
-                <InventionActivity {selectedCharacterId} blueprintToInvent={blueprint} extents={_extents} 
+                <InventionActivity {selectedCharacterId} blueprintToInvent={blueprint} 
                     {marketFilterLocation}
                     bind:expectedCostPerRun={blueprintCostPerRun} bind:productME={materialEfficiency} bind:productTE={timeEfficiency} bind:productRuns={inventedRuns}
                 />
