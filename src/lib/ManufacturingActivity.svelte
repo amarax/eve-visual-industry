@@ -104,7 +104,7 @@
     $: {
         if(selectedLocationId) selectedLocation = GetLocationStore(selectedLocationId);
         if($selectedLocation) {
-            systemCostIndex = $IndustrySystems.find(system=>system.solar_system_id === ($selectedLocation.solar_system_id ?? $selectedLocation.system_id)).cost_indices.find(value=>value.activity=="manufacturing").cost_index;
+            systemCostIndex = $IndustrySystems?.find(system=>system.solar_system_id === ($selectedLocation.solar_system_id ?? $selectedLocation.system_id)).cost_indices.find(value=>value.activity=="manufacturing").cost_index;
         } else {
             systemCostIndex = 0.01;
         }
@@ -119,6 +119,8 @@
     let manufacturedUnitCostPrices: EntityCollection<IskAmount> = {};
 
     function getFirstOrder(orders: Array<MarketOrder>, marketFilterLocation: Location_Id): MarketOrder {
+        if(!orders) return null;
+
         if(marketFilterLocation) {
             return orders.filter(order=>order.location_id === marketFilterLocation)[0];
         }
