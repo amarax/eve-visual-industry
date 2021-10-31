@@ -22,20 +22,11 @@
 
     $: inventable = GetInventableBlueprint($Industry, blueprint?.type_id);
 
-    let relatedTypeStores = [];
-    let relatedTypes: EntityCollection<MarketType> = {};
-
     export let selectedProductId: Type_Id = null;
 
 
     export let salesTaxRate = 0.036;
     export let brokerFeeRate = 0.0113709973928; // Selene's broker fee
-
-    function subscribeToTypeStore( type_id: Type_Id ) {
-        relatedTypeStores.push( getMarketType(type_id).subscribe(value=>{
-            relatedTypes[type_id] = value;
-        }) );
-    }
 
     export let quantity: Quantity = null;
 
@@ -49,39 +40,15 @@
     }
     export let manufacturedItems: ItemPickedList = {};
 
-    function arrayToEntityCollection(array: Array<any>, indexAccessor: (item)=>number) : EntityCollection<any> {
-        let collection = {};
-
-        for(let item of array) {
-            let index = indexAccessor(item);
-            if(index) collection[index] = item;
-        }
-
-        return collection;
-    }
 
     let manufacturing: IndustryActivity = null;
     $: {
         let nextManufacturing = blueprint?.activities[MANUFACTURING_ACTIVITY_ID];
 
         if(nextManufacturing != manufacturing) {
-            // Unsubscribe from current material stores
-            relatedTypeStores.forEach(unsubscribe=>unsubscribe());
-
             manufacturing = nextManufacturing;
-            relatedTypeStores = [];
-            relatedTypes = {};
 
             if(manufacturing) {
-                // Request for new materials
-                for(let type_id in manufacturing.materials) {
-                    subscribeToTypeStore( parseInt(type_id) );
-                }
-                // And the manufactured product(s)
-                for(let type_id in manufacturing.products) {
-                    subscribeToTypeStore( parseInt(type_id) );
-                }
-
                 // Initialise runs to default to the amount required to produce the quantity
                 if(quantity)
                     runs = Math.ceil( quantity / manufacturing.products[selectedProductId].quantity );
@@ -127,24 +94,16 @@
         return orders[0];
     }
 
-    let _oldItemPrices: EntityCollection<number> = {};
     let itemPrices: EntityCollection<number> = {};
     let totalCost = 0;
     $: {
         totalCost = 0;
-        _oldItemPrices = {};
         if(manufacturing) {
 
             for(let type_id in manufacturing.materials) {
                 let materialQuantity = materialQty(manufacturing.materials[type_id].quantity);
 
-                _oldItemPrices[type_id] = (
-                    manufacturedUnitCostPrices[type_id] || 
-                    getFirstOrder(relatedTypes[type_id]?.orders.sell, marketFilterLocation)?.price ||
-                    0
-                )
-
-                totalCost += materialQuantity * _oldItemPrices[type_id];
+                totalCost += materialQuantity * itemPrices[type_id];
             }
 
             totalCost += manufacturingJobCost;
@@ -160,32 +119,6 @@
     }
 
     export let marketFilterLocation: Location_Id = null;
-
-    export let extents: Array<number> = null;
-    let _extents = [0,1000];
-    $: {
-        if(extents === null) {
-            if(manufacturing) {
-                let prices = [];
-
-                if(relatedTypes[selectedProductId] && relatedTypes[selectedProductId].orders.lastUpdated !== null) {
-                    let {buy, sell} = relatedTypes[selectedProductId].orders;
-                    if(marketFilterLocation) {
-                        buy = buy.filter(order=>order.location_id === marketFilterLocation);
-                        sell = sell.filter(order=>order.location_id === marketFilterLocation);
-                    }
-
-                    let productQuantity = manufacturing.products[selectedProductId].quantity * runs;
-                    if(buy.length > 0) prices.push( productQuantity * buy[0].price );
-                    if(sell.length > 0) prices.push( productQuantity * sell[0].price );
-                }
-
-                _extents[1] = 1.1*Math.max(...prices, totalCost);
-            }
-        } else {
-            _extents = extents;
-        }
-    }
 
     let totalAdjustedCostPrice = 0;
     $: {
@@ -217,13 +150,13 @@
 
     $: manufacturingTime = manufacturing?.time * (1-timeEfficiency/100) * skillTimeModifier * (1+($selectedLocation?.modifiers?.jobDurationModifier ?? 0)/100) * runs;
 
-    $: sellingPrice = getFirstOrder(relatedTypes[selectedProductId]?.orders.sell, marketFilterLocation)?.price*(1-brokerFeeRate-salesTaxRate);
-
-    $: profit = sellingPrice*runs - totalCost
+    $: sellingPrice = itemPrices[selectedProductId];
+    $: producedQty = manufacturing.products[selectedProductId].quantity*runs;
+    $: profit = sellingPrice*producedQty - totalCost
 
     export let unitCost = null;
     $: {
-        unitCost = manufacturing ? totalCost/(manufacturing.products[selectedProductId].quantity * runs) : null;
+        unitCost = manufacturing ? totalCost/producedQty : null;
     }
 
     export let compact = false;
@@ -242,6 +175,21 @@
     }
 
     export let selectedCharacterId;
+
+
+    export let extents: Array<number> = null;
+    let _extents = [0,1000];
+    $: {
+        if(extents === null) {
+            if(manufacturing) {
+                _extents[1] = 1.1*Math.max(itemPrices[selectedProductId]*producedQty, totalCost);
+            }
+        } else {
+            _extents = extents;
+        }
+    }
+
+
 </script>
 
 <style lang="scss">
@@ -347,30 +295,30 @@ No blueprint selected yet
 {/if}
 
 <div class="breakdown">
-    {#each Object.keys(manufacturing.products) as type_id}
-        <div class="itemName" title={`${$Universe.types[type_id]?.name} [${type_id}]`}>{$Universe.types[type_id]?.name}</div>
-        <div class="qty">{manufacturing.products[type_id].quantity * runs}</div>
-        <div>
-            Unit price
-            {FormatIskAmount(sellingPrice)}
-            Total Profit 
-            {FormatIskChange(profit)} 
-            <br/>
+    <div class="itemName" title={`${$Universe.types[selectedProductId]?.name} [${selectedProductId}]`}>{$Universe.types[selectedProductId]?.name}</div>
+    <div class="qty">{producedQty}</div>
+    <div>
+        Unit price
+        {FormatIskAmount(sellingPrice)}
+        Total Profit 
+        {FormatIskChange(profit)} 
+        <br/>
 
-            <MarketOrdersBar extents={_extents} quantity={manufacturing.products[type_id].quantity * runs} 
-                type_id={parseInt(type_id)} {marketFilterLocation}
-                buyOverheadRate={-salesTaxRate} sellOverheadRate={-brokerFeeRate-salesTaxRate}
-                {totalCost}
-            />
-            <br/>
+        <MarketOrdersBar extents={_extents} quantity={producedQty} 
+            type_id={selectedProductId} {marketFilterLocation}
+            bind:price={itemPrices[selectedProductId]}
+            buyOverheadRate={-salesTaxRate} sellOverheadRate={-brokerFeeRate-salesTaxRate}
+            {totalCost}
+        />
+        <br/>
 
-            Unit cost {FormatIskAmount(unitCost)} Total cost {FormatIskAmount(totalCost)}
+        Unit cost {FormatIskAmount(unitCost)} Total cost {FormatIskAmount(totalCost)}
 
-        </div>
-    {/each}
+    </div>
+
     <div>Job cost</div><div></div>
     <div>
-        <MarketOrdersBar height={20} extents={_extents} quantity={manufacturing.products[selectedProductId].quantity * runs} totalCost={manufacturingJobCost} />
+        <MarketOrdersBar height={20} extents={_extents} quantity={producedQty} totalCost={manufacturingJobCost} />
     </div>
     {#each Object.keys(manufacturing.materials) as type_id}
         <div class="itemName">
@@ -387,7 +335,6 @@ No blueprint selected yet
                 buyOverheadRate={brokerFeeRate}
                 totalCost={manufacturedUnitCostPrices[type_id] ? manufacturedUnitCostPrices[type_id]*materialQty(manufacturing.materials[type_id].quantity) : null}
             />
-            {_oldItemPrices[type_id]} | {itemPrices[type_id]}
         </div>
         {#if manufacturedItems[type_id]}
             <div class="subItem">
