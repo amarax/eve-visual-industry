@@ -10,7 +10,7 @@ import type { Location_Id, Type_Id } from "./EveData";
 
 
     export let height = 30;
-    export let width = 400;
+    export let width = 500;
 
     export let extents: Array<number> = [0,1000];
 
@@ -52,7 +52,7 @@ import type { Location_Id, Type_Id } from "./EveData";
 
     export let quantity: number = 1;
 
-    $: scale = (value: number) => {
+    $: x = (value: number) => {
         return 0 + width*(value-extents[0])/(extents[1]-extents[0]);
     }
 
@@ -70,26 +70,26 @@ import type { Location_Id, Type_Id } from "./EveData";
 
 </script>
 
-<svg style="background: #ccc" {width} {height} viewBox={`0 0 ${width} ${height}`} xmlns="http://www.w3.org/2000/svg">
+<svg {width} {height} viewBox={`0 0 ${width} ${height}`} xmlns="http://www.w3.org/2000/svg">
     {#if validExtents}
         {#each scaleMarks as mark, i}
-            <rect class="mark" x={scale(mark)} fill="#bbb" stroke="none" width={1} height={height} />
+            <rect class="mark scale" x={x(mark)} width={1} height={height} />
         {/each}
 
         {#if highestBuyOrder && highestBuyOrder.price !== null}
-            <rect class="mark" x={scale(highestBuyOrder.price*quantity*(1+buyOverheadRate))} fill="red" stroke="none" width={1} height={height} />
+            <rect class="mark buy" x={x(highestBuyOrder.price*quantity*(1+buyOverheadRate))} fill="red" width={1} height={height} />
             {#if buyOverheadRate != 0}
-                <rect class="overhead" x={scale(highestBuyOrder.price*quantity*Math.min(1,1+buyOverheadRate))} width={scale(Math.abs(buyOverheadRate*highestBuyOrder.price*quantity))} fill="rgba(255,0,0,0.3)" stroke="none" height={height} />
+                <rect class="overhead buy" x={x(highestBuyOrder.price*quantity*Math.min(1,1+buyOverheadRate))} width={x(Math.abs(buyOverheadRate*highestBuyOrder.price*quantity))} height={height} />
             {/if}
         {/if}
         {#if lowestSellOrder && lowestSellOrder.price !== null}
-            <rect class="mark" x={scale(lowestSellOrder.price*quantity*(1+sellOverheadRate))} fill="green" stroke="none" width={1} height={height} />
+            <rect class="mark sell" x={x(lowestSellOrder.price*quantity*(1+sellOverheadRate))} fill="green" width={1} height={height} />
             {#if sellOverheadRate != 0}
-                <rect class="overhead" x={scale(lowestSellOrder.price*quantity*Math.min(1,1+sellOverheadRate))} width={scale(Math.abs(sellOverheadRate*lowestSellOrder.price*quantity))} fill="rgba(0,255,0,0.3)" stroke="none" height={height} />
+                <rect class="overhead sell" x={x(lowestSellOrder.price*quantity*Math.min(1,1+sellOverheadRate))} width={x(Math.abs(sellOverheadRate*lowestSellOrder.price*quantity))} fill="rgba(0,255,0,0.3)" stroke="none" height={height} />
             {/if}
         {/if}
         {#if totalCost !== null}
-            <rect class="mark" x={scale(totalCost)} fill="#333" stroke="none" width={1} height={height} />
+            <rect class="mark cost" x={x(totalCost)} width={1} height={height} />
         {/if}
         
     {/if}
@@ -98,5 +98,41 @@ import type { Location_Id, Type_Id } from "./EveData";
 <style lang="scss">
     .mark, .overhead {
         transition: x 100ms ease-out 0ms;
+    }
+
+    rect.mark {
+        stroke: none;
+
+        &.scale {
+            fill: #444;
+        }
+
+        &.cost {
+            fill: #fff;
+        }
+
+        &.buy {
+            fill: red;
+        }
+
+        &.sell {
+            fill: #0f0;
+        }
+    }
+
+    rect.overhead {
+        &.buy {
+            fill: red;
+            opacity: 0.2;
+        }
+
+        &.sell {
+            fill: #0f0;
+            opacity: 0.2;
+        }
+    }
+
+    svg {
+        background-color: #2a2a2a;
     }
 </style>

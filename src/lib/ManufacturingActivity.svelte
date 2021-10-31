@@ -214,7 +214,7 @@
 
     div.breakdown {
         display: grid;
-        grid-template-columns: 1fr 80px 600px;
+        grid-template-columns: 1fr 80px 500px;
 
         max-width: 800px;
 
