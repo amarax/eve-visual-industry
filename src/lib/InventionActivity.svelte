@@ -12,7 +12,7 @@
     
     import { Characters, CharacterSkills } from "./EveCharacter";
     import type { ESIStore } from "./ESIStore";
-import LocationSelector from "./LocationSelector.svelte";
+    import LocationSelector from "./LocationSelector.svelte";
 
 
     export let selectedCharacterId = null;
@@ -47,21 +47,21 @@ import LocationSelector from "./LocationSelector.svelte";
 
             Object.values(inventionActivity.materials).forEach(material=>{
                 let unsubscribe = getMarketType(material.materialTypeID).subscribe(
-                    value=>relatedTypes[value.type_id] = value
+                    value=>{if(value) relatedTypes[value.type_id] = value}
                 );
                 if(unsubscribe) _relatedTypeStores.push( unsubscribe );
             })
 
             if(selectedIndustryType && !isBlueprint(selectedIndustryType.type_id)) {
                 let unsubscribe = getMarketType(selectedIndustryType.type_id).subscribe(
-                    value=>relatedTypes[value.type_id] = value
+                    value=>{if(value) relatedTypes[value.type_id] = value}
                 );
                 if(unsubscribe) _relatedTypeStores.push( unsubscribe );
             }
 
             if(selectedDecryptor) {
                 let unsubscribe = getMarketType(selectedDecryptor).subscribe(
-                    value=>relatedTypes[value.type_id] = value
+                    value=>{if(value) relatedTypes[value.type_id] = value}
                 );
                 if(unsubscribe) _relatedTypeStores.push( unsubscribe );
             }
@@ -139,8 +139,8 @@ import LocationSelector from "./LocationSelector.svelte";
         totalCost = 0;
         if(inventionActivity) {
             totalCost += selectedIndustryTypeCost;
-            totalCost += sum( Object.values(inventionActivity.materials), material=>relatedTypes[material.materialTypeID].orders.sell[0]?.price*material.quantity );
-            if(selectedDecryptor) totalCost += relatedTypes[selectedDecryptor].orders.sell[0]?.price;
+            totalCost += sum( Object.values(inventionActivity.materials), material=>relatedTypes[material.materialTypeID]?.orders.sell[0]?.price*material.quantity );
+            if(selectedDecryptor) totalCost += relatedTypes[selectedDecryptor].orders?.sell[0]?.price;
             totalCost += jobCost;
         }
     }

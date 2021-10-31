@@ -36,17 +36,19 @@ import type { Location_Id, Type_Id } from "./EveData";
     $:{
         highestBuyOrder = getFirstOrder( $marketType?.orders.buy, marketFilterLocation );
         lowestSellOrder = getFirstOrder( $marketType?.orders.sell, marketFilterLocation );
-
-        if(price === null) {
-            price = lowestSellOrder?.price * (1-sellOverheadRate)
-        }
     }
 
     export let price: IskAmount = null;
+    export let overridePrice: IskAmount = null;
+    let marketPrice: IskAmount = null;
+    $: defaultMarketPrice = lowestSellOrder?.price * (1-sellOverheadRate);
+    $: {
+        price = overridePrice ?? marketPrice ?? defaultMarketPrice;
+        if(isNaN(price)) price = 0;
+    }
+
 
     export let totalCost: number = null;
-
-    $: if(isNaN(totalCost)) console.error(totalCost);
 
     export let quantity: number = 1;
 

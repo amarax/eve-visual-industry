@@ -127,19 +127,24 @@
         return orders[0];
     }
 
+    let _oldItemPrices: EntityCollection<number> = {};
+    let itemPrices: EntityCollection<number> = {};
     let totalCost = 0;
     $: {
         totalCost = 0;
+        _oldItemPrices = {};
         if(manufacturing) {
 
             for(let type_id in manufacturing.materials) {
                 let materialQuantity = materialQty(manufacturing.materials[type_id].quantity);
 
-                totalCost += materialQuantity * (
+                _oldItemPrices[type_id] = (
                     manufacturedUnitCostPrices[type_id] || 
                     getFirstOrder(relatedTypes[type_id]?.orders.sell, marketFilterLocation)?.price ||
                     0
-                );
+                )
+
+                totalCost += materialQuantity * _oldItemPrices[type_id];
             }
 
             totalCost += manufacturingJobCost;
@@ -261,7 +266,7 @@
 
     div.breakdown {
         display: grid;
-        grid-template-columns: 1fr 80px 500px;
+        grid-template-columns: 1fr 80px 600px;
 
         max-width: 800px;
 
@@ -377,10 +382,12 @@ No blueprint selected yet
         <div class="qty">{materialQty(manufacturing.materials[type_id].quantity)}</div>
         <div>
             <MarketOrdersBar height={20} extents={_extents} quantity={materialQty(manufacturing.materials[type_id].quantity)} 
-                type_id={parseInt(type_id)} {marketFilterLocation}
+                type_id={parseInt(type_id)} {marketFilterLocation} 
+                bind:price={itemPrices[type_id]} overridePrice={manufacturedUnitCostPrices[type_id]}
                 buyOverheadRate={brokerFeeRate}
                 totalCost={manufacturedUnitCostPrices[type_id] ? manufacturedUnitCostPrices[type_id]*materialQty(manufacturing.materials[type_id].quantity) : null}
             />
+            {_oldItemPrices[type_id]} | {itemPrices[type_id]}
         </div>
         {#if manufacturedItems[type_id]}
             <div class="subItem">
