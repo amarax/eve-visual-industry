@@ -1,6 +1,7 @@
 import { writable } from "svelte/store";
 import type { Readable } from "svelte/store";
 import { LoadFromESI } from "./EveData";
+import type { Subscriber } from "svelte/store";
 
 
 export enum ESIStoreStatus {
@@ -20,7 +21,7 @@ export default function CreateESIStore( route:string ): ESIStore<any> {
         subscribe: null,
     }
 
-    function load(set) {
+    function start(set: Subscriber<any>) {
         if(store.status === ESIStoreStatus.loaded) return;
 
         LoadFromESI(route)
@@ -36,7 +37,7 @@ export default function CreateESIStore( route:string ): ESIStore<any> {
     }
 
     // Internally the store is a writable so we can trigger a refresh (not implemented yet) if necessary
-    const { subscribe } = writable(null, load);
+    const { subscribe } = writable(null, start);
 
     store.subscribe = subscribe;
 
@@ -49,7 +50,7 @@ export function CreateESIStoreFromCache( route:string, onLoaded?:(value)=>void )
         subscribe: null,
     }
 
-    function load(set) {
+    function start(set: Subscriber<any>) {
         if(store.status === ESIStoreStatus.loaded) return;
 
         fetch(`/esi-cache${route}index.json`)
@@ -72,7 +73,7 @@ export function CreateESIStoreFromCache( route:string, onLoaded?:(value)=>void )
     }
 
     // Internally the store is a writable so we can trigger a refresh (not implemented yet) if necessary
-    const { subscribe } = writable(null, load);
+    const { subscribe } = writable(null, start);
 
     store.subscribe = subscribe;
 
