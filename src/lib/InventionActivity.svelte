@@ -294,14 +294,14 @@
         <div class="itemName">Job cost</div>
         <div class="qty"></div>
         <div>
-            <MarketOrdersBar height={20} extents={_extents} quantity={1} totalCost={jobCost} />
+            <MarketOrdersBar compact extents={_extents} quantity={1} totalCost={jobCost} />
         </div>
 
         {#each breakdownItems as type_id}
             <div class="itemName" title={`${$Universe.types[type_id].name} [${type_id}]`}>{$Universe.types[type_id].name}</div>
             <div class="qty">{inventionActivity.materials[type_id]?.quantity || 1}</div>
             <div>
-                <MarketOrdersBar height={20} extents={_extents} quantity={inventionActivity.materials[type_id]?.quantity || 1} 
+                <MarketOrdersBar compact extents={_extents} quantity={inventionActivity.materials[type_id]?.quantity || 1} 
                     {type_id} {marketFilterLocation} 
                     bind:price={prices[type_id]}
                     buyOverheadRate={-brokerFeeRate}

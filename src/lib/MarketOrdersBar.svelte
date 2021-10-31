@@ -1,15 +1,19 @@
 <script lang="ts">
-import type { Location_Id, Type_Id } from "./EveData";
+    import type { Location_Id, Type_Id } from "./EveData";
 
     import { getMarketType } from "./EveMarkets";
     import type { IskAmount, MarketOrder } from "./EveMarkets";
 
     import { FormatIskAmount } from "./Format";
 
+    import { scaleLinear } from "d3-scale";
+    import { minIndex } from "d3-array";
 
 
 
-    export let height = 30;
+    export let compact = false;
+
+    export let height = compact? 24 : 40;
     export let width = 500;
 
     export let extents: Array<number> = [0,1000];
@@ -52,9 +56,15 @@ import type { Location_Id, Type_Id } from "./EveData";
 
     export let quantity: number = 1;
 
-    $: x = (value: number) => {
-        return 0 + width*(value-extents[0])/(extents[1]-extents[0]);
-    }
+    $: x = scaleLinear()
+        .domain(extents)
+        .range([0,width]);
+
+    let topBottomMargin = 8;
+    let yExtents = compact ? [0,height-topBottomMargin] : [topBottomMargin,height-2*topBottomMargin]
+    $: y = scaleLinear()
+        .domain([1,0])
+        .range(yExtents)
 
     let validExtents = false;
     let scaleMarks = [];
@@ -68,36 +78,89 @@ import type { Location_Id, Type_Id } from "./EveData";
         }
     }
 
+
+    $: fillGraphHeight = {
+        y: y(1),
+        height: Math.abs(y(0)-y(1))
+    }
+
+    let hover = false;
+    
+    let prices: Array<{price:IskAmount, is_buy_order?:boolean}> = [];
+    $: if($marketType && $marketType.orders) {
+        prices = [
+            ...$marketType?.orders?.buy.concat($marketType?.orders?.sell)
+                .filter(o=>marketFilterLocation?o.location_id===marketFilterLocation:true), 
+            {price:totalCost/quantity}
+        ]
+    } 
+
+    let hoverPrice = 0;
+    let hoverIndex = 0;
+    function onHoverGraph(e: MouseEvent) {
+        let mouseX = e.clientX - e.target.getBoundingClientRect().left;
+
+        // Snap the hover value to the closest related price
+        hoverIndex = minIndex(prices, p=>Math.abs(p.price*quantity-x.invert(mouseX)));
+        hoverPrice = prices[hoverIndex]?.price;
+    }
+
+    function onClickGraph(e: MouseEvent) {
+        if(prices[hoverIndex]?.is_buy_order !== undefined) {
+            marketPrice = hoverPrice;
+            marketPrice *= 1 + (prices[hoverIndex].is_buy_order ? buyOverheadRate : sellOverheadRate )
+        }
+    }
 </script>
 
 <svg {width} {height} viewBox={`0 0 ${width} ${height}`} xmlns="http://www.w3.org/2000/svg">
+    <rect class="graphArea" width={width} {...fillGraphHeight} />
     {#if validExtents}
         {#each scaleMarks as mark, i}
-            <rect class="mark scale" x={x(mark)} width={1} height={height} />
+            <rect class="mark scale" x={x(mark)} width={1} {...fillGraphHeight} />
         {/each}
 
         {#if highestBuyOrder && highestBuyOrder.price !== null}
-            <rect class="mark buy" x={x(highestBuyOrder.price*quantity*(1+buyOverheadRate))} fill="red" width={1} height={height} />
+            <rect class="mark buy" x={x(highestBuyOrder.price*quantity)} fill="red" width={1} {...fillGraphHeight} />
             {#if buyOverheadRate != 0}
-                <rect class="overhead buy" x={x(highestBuyOrder.price*quantity*Math.min(1,1+buyOverheadRate))} width={x(Math.abs(buyOverheadRate*highestBuyOrder.price*quantity))} height={height} />
+                <rect class="overhead buy" x={x(highestBuyOrder.price*quantity*Math.min(1,1+buyOverheadRate))} width={x(Math.abs(buyOverheadRate*highestBuyOrder.price*quantity))} {...fillGraphHeight} />
             {/if}
         {/if}
         {#if lowestSellOrder && lowestSellOrder.price !== null}
-            <rect class="mark sell" x={x(lowestSellOrder.price*quantity*(1+sellOverheadRate))} fill="green" width={1} height={height} />
+            <rect class="mark sell" x={x(lowestSellOrder.price*quantity)} fill="green" width={1} {...fillGraphHeight} />
             {#if sellOverheadRate != 0}
-                <rect class="overhead sell" x={x(lowestSellOrder.price*quantity*Math.min(1,1+sellOverheadRate))} width={x(Math.abs(sellOverheadRate*lowestSellOrder.price*quantity))} fill="rgba(0,255,0,0.3)" stroke="none" height={height} />
+                <rect class="overhead sell" x={x(lowestSellOrder.price*quantity*Math.min(1,1+sellOverheadRate))} width={x(Math.abs(sellOverheadRate*lowestSellOrder.price*quantity))} {...fillGraphHeight} />
             {/if}
         {/if}
         {#if totalCost !== null}
             <rect class="mark cost" x={x(totalCost)} width={1} height={height} />
+            {#if price != 0}
+                <rect class={`difference profit ${totalCost>price*quantity?"negative":"positive"}`} x={Math.min(x(totalCost), x(price*quantity))} width={Math.abs(x(totalCost)-x(price*quantity))} y={y(0.5)} height={1} />
+            {/if}
         {/if}
-        
+        <circle class="mark price" cx={x(price*quantity)} cy={y(0.5)} r={2} />
     {/if}
+
+    {#if hover}
+        <text class="hover" x={x(hoverPrice*quantity)} y={y(0)} dy={8} text-anchor="end">{FormatIskAmount(hoverPrice)}</text>
+        <circle class="hover" cx={x(hoverPrice*quantity)} cy={y(0.5)} r={4} />
+    {/if}
+
+    <rect class="hitArea" width={width} y={y(1)} height={y(0)-y(1)} 
+        on:mouseenter={event=>hover=true} on:mouseleave={event=>hover=false} on:mousemove={onHoverGraph} 
+        on:click={onClickGraph}
+    />
 </svg>
 
 <style lang="scss">
-    .mark, .overhead {
-        transition: x 100ms ease-out 0ms;
+    .mark, .overhead, .difference {
+        transition: x 100ms ease-out, width 100ms ease-out;
+
+    }
+
+    circle.mark {
+        fill: white;
+        transition: cx 100ms ease-out;
     }
 
     rect.mark {
@@ -120,6 +183,12 @@ import type { Location_Id, Type_Id } from "./EveData";
         }
     }
 
+    rect.difference {
+        &.profit {
+            fill: #fff;
+        }
+    }
+
     rect.overhead {
         &.buy {
             fill: red;
@@ -132,7 +201,30 @@ import type { Location_Id, Type_Id } from "./EveData";
         }
     }
 
-    svg {
-        background-color: #2a2a2a;
+    rect.graphArea {
+        fill: #2a2a2a;
+        stroke: none;
+
+        cursor:crosshair;
     }
+
+    rect.hitArea {
+        fill: transparent;
+        stroke: none;
+
+        cursor:crosshair;
+    }
+
+    text.hover {
+        fill: white;
+        font-size: 8px;
+        text-align: right;
+    }
+
+    circle.hover {
+        fill: none;
+        stroke: white;
+        stroke-width: 1px;
+    }
+
 </style>

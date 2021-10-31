@@ -125,7 +125,7 @@
         totalAdjustedCostPrice = 0;
         if(manufacturing) {
             for(let type_id in manufacturing.materials) {
-                totalAdjustedCostPrice += manufacturing.materials[type_id].quantity * $MarketPrices[type_id].adjusted_price;
+                totalAdjustedCostPrice += manufacturing.materials[type_id].quantity * $MarketPrices[type_id]?.adjusted_price;
             }
         }
     }
@@ -318,7 +318,7 @@ No blueprint selected yet
 
     <div>Job cost</div><div></div>
     <div>
-        <MarketOrdersBar height={20} extents={_extents} quantity={producedQty} totalCost={manufacturingJobCost} />
+        <MarketOrdersBar compact extents={_extents} quantity={producedQty} totalCost={manufacturingJobCost} />
     </div>
     {#each Object.keys(manufacturing.materials) as type_id}
         <div class="itemName">
@@ -329,11 +329,12 @@ No blueprint selected yet
         </div>
         <div class="qty">{materialQty(manufacturing.materials[type_id].quantity)}</div>
         <div>
-            <MarketOrdersBar height={20} extents={_extents} quantity={materialQty(manufacturing.materials[type_id].quantity)} 
+            <MarketOrdersBar extents={_extents} quantity={materialQty(manufacturing.materials[type_id].quantity)} 
                 type_id={parseInt(type_id)} {marketFilterLocation} 
                 bind:price={itemPrices[type_id]} overridePrice={manufacturedUnitCostPrices[type_id]}
                 buyOverheadRate={brokerFeeRate}
                 totalCost={manufacturedUnitCostPrices[type_id] ? manufacturedUnitCostPrices[type_id]*materialQty(manufacturing.materials[type_id].quantity) : null}
+                compact
             />
         </div>
         {#if manufacturedItems[type_id]}
