@@ -7,8 +7,13 @@ import { onDestroy } from "svelte";
 
 
     // For now just get locations from list of blueprints
+    // This part is hacky because there's no good way to know what list of locations to pick yet
     $: blueprints = CharacterBlueprints[ Object.keys(Characters)[0] ];
-    
+    if(blueprints===undefined) {
+        setTimeout(() => {
+            blueprints = CharacterBlueprints[ Object.keys(Characters)[0] ];
+        }, 500);
+    }
 
     let _unsubscribes=[];
     let locations = {};
