@@ -97,7 +97,7 @@
     
 
 
-    let selectedLocationId: Location_Id = null;
+    export let selectedLocationId: Location_Id = null;
 
     let systemCostIndex = 0.01;
     let selectedLocation: ESIStore<EveLocation> = null;
@@ -383,7 +383,7 @@ No blueprint selected yet
                 <svelte:self selectedProductId={type_id} quantity={materialQty(manufacturing.materials[type_id].quantity)} {manufacturedItems}
                     bind:unitCost={manufacturedUnitCostPrices[type_id]} 
                     materialEfficiency={10} timeEfficiency={20}
-                    {selectedCharacterId}
+                    {selectedCharacterId} {selectedLocationId}
                     compact />
             </div>
         {/if}

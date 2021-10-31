@@ -1,8 +1,8 @@
 <script lang="ts">
-    import { loadType, Universe } from "./EveData";
-    import { ADVANCED_INDUSTRY_SKILL_ID, Decryptors, Industry, INVENTION_ACTIVITY_ID, MANUFACTURING_ACTIVITY_ID,  } from "./EveIndustry";
+    import { GetLocationStore, loadType, Universe } from "./EveData";
+    import { ADVANCED_INDUSTRY_SKILL_ID, Decryptors, Industry, IndustrySystems, INVENTION_ACTIVITY_ID, MANUFACTURING_ACTIVITY_ID,  } from "./EveIndustry";
     
-    import type { EntityCollection, Type_Id } from "./EveData";
+    import type { EntityCollection, EveLocation, Location_Id, Type_Id } from "./EveData";
     import type { IndustryType } from "./EveIndustry";
 
     import { getMarketType, IskAmount, MarketPrices, MarketType } from "./EveMarkets";
@@ -12,6 +12,7 @@
     
     import { Characters, CharacterSkills } from "./EveCharacter";
     import type { ESIStore } from "./ESIStore";
+import LocationSelector from "./LocationSelector.svelte";
 
 
     export let selectedCharacterId = null;
@@ -111,10 +112,27 @@
         }
     }
 
-    let systemCostIndex = 0.06;
-    let jobCostModifier = -0.03
-    let facilityTax = 0.005;
-    $: jobCost = totalAdjustedCostPrice * systemCostIndex * 0.02 * (1+jobCostModifier) * (1+facilityTax);
+    let selectedLocationId: Location_Id = null;
+    let selectedLocation: ESIStore<EveLocation> = null;
+    $: {
+        if(selectedLocationId) selectedLocation = GetLocationStore(selectedLocationId);
+        if($selectedLocation) {
+            systemCostIndex = $IndustrySystems.find(system=>system.solar_system_id === ($selectedLocation.solar_system_id ?? $selectedLocation.system_id)).cost_indices.find(value=>value.activity=="invention").cost_index;
+            jobCostModifier = $selectedLocation.modifiers?.jobCostModifier ?? 0;
+            facilityTax = $selectedLocation.modifiers?.facilityTax ?? 0;
+            jobDurationModifier = $selectedLocation.modifiers?.jobDurationModifier ?? 0;
+        } else {
+            systemCostIndex = 0.01;
+            jobCostModifier = 0;
+            facilityTax = 0;
+            jobDurationModifier = 0;
+        }
+    }
+    
+    let systemCostIndex = 0.01;
+    let jobCostModifier = 0;
+    let facilityTax = 0;
+    $: jobCost = totalAdjustedCostPrice * systemCostIndex * 0.02 * (1+jobCostModifier/100) * (1+facilityTax/100);
 
     let totalCost = 0;
     $: {
@@ -127,8 +145,8 @@
         }
     }
 
-    let facilityModifier = -0.15;
-    $: jobDuration = inventionActivity.time * (1+facilityModifier) * (1 - 0.03*($characterSkills?.skills.find(skill=>skill.skill_id===ADVANCED_INDUSTRY_SKILL_ID)?.active_skill_level||0) )
+    let jobDurationModifier = 0;
+    $: jobDuration = inventionActivity.time * (1+jobDurationModifier/100) * (1 - 0.03*($characterSkills?.skills.find(skill=>skill.skill_id===ADVANCED_INDUSTRY_SKILL_ID)?.active_skill_level||0) )
 
 
     let skill1, skill2, encryptionSkill;
@@ -293,8 +311,11 @@
         <input bind:value={encryptionSkillLevel} type="range" min={0} max={5} />
     </label>
 
-    <p>System cost index <input type="text" bind:value={systemCostIndex} /></p>
-
+    <p>
+        <LocationSelector bind:value={selectedLocationId} /><br/>
+        System cost index {systemCostIndex}
+    </p>
+    
     <div class="breakdown">
         {#each breakdownItems as type_id}
             <div class="itemName" title={`${$Universe.types[type_id].name} [${type_id}]`}>{$Universe.types[type_id].name}</div>
@@ -313,7 +334,7 @@
         {/if}
     </div>
 
-    Invention job cost: {FormatIskAmount(jobCost)} {FormatIskAmount(totalAdjustedCostPrice*0.02)} <br/>
+    Invention job cost: {FormatIskAmount(jobCost)}<br/>
     Invention job duration: {FormatDuration(jobDuration)}
 
     <p>
