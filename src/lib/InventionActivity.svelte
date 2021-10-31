@@ -306,7 +306,6 @@
                     bind:price={prices[type_id]}
                     buyOverheadRate={-brokerFeeRate}
                 />
-                {prices[type_id]} | {prices[type_id]*inventionActivity.materials[type_id]?.quantity || 1}
             </div>
         {/each}
         {#if !selectedDecryptor}
