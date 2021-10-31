@@ -352,7 +352,7 @@ No blueprint selected yet
             <br/>
 
             <MarketOrdersBar extents={_extents} quantity={manufacturing.products[type_id].quantity * runs} 
-                highestBuyOrder={relatedTypes[type_id].orders.buy[0]} lowestSellOrder={relatedTypes[type_id].orders.sell[0]} 
+                type_id={parseInt(type_id)} {marketFilterLocation}
                 buyOverheadRate={-salesTaxRate} sellOverheadRate={-brokerFeeRate-salesTaxRate}
                 {totalCost}
             />
@@ -376,7 +376,7 @@ No blueprint selected yet
         <div class="qty">{materialQty(manufacturing.materials[type_id].quantity)}</div>
         <div>
             <MarketOrdersBar height={20} extents={_extents} quantity={materialQty(manufacturing.materials[type_id].quantity)} 
-                highestBuyOrder={relatedTypes[type_id].orders.buy[0]} lowestSellOrder={relatedTypes[type_id].orders.sell[0]} 
+                type_id={parseInt(type_id)} {marketFilterLocation}
                 buyOverheadRate={brokerFeeRate}
                 totalCost={manufacturedUnitCostPrices[type_id] ? manufacturedUnitCostPrices[type_id]*materialQty(manufacturing.materials[type_id].quantity) : null}
             />

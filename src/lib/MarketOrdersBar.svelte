@@ -1,5 +1,9 @@
 <script lang="ts">
-    import type { MarketOrder } from "./EveMarkets";
+import type { Location_Id, Type_Id } from "./EveData";
+
+    import { getMarketType } from "./EveMarkets";
+    import type { IskAmount, MarketOrder } from "./EveMarkets";
+
     import { FormatIskAmount } from "./Format";
 
 
@@ -10,13 +14,37 @@
 
     export let extents: Array<number> = [0,1000];
 
-    export let highestBuyOrder: MarketOrder = null;
-    export let lowestSellOrder: MarketOrder = null;
+    export let type_id: Type_Id = null;
+    export let marketFilterLocation: Location_Id = null;
 
-    export let totalCost: number = null;
+    $: marketType = type_id && getMarketType(type_id);
+
+    function getFirstOrder(orders: Array<MarketOrder>, marketFilterLocation: Location_Id): MarketOrder {
+        if(!orders) return null;
+
+        if(marketFilterLocation) {
+            return orders.filter(order=>order.location_id === marketFilterLocation)[0];
+        }
+        return orders[0];
+    }
 
     export let buyOverheadRate: number = 0;
     export let sellOverheadRate: number = 0;
+
+    let highestBuyOrder: MarketOrder = null;
+    let lowestSellOrder: MarketOrder = null;
+    $:{
+        highestBuyOrder = getFirstOrder( $marketType?.orders.buy, marketFilterLocation );
+        lowestSellOrder = getFirstOrder( $marketType?.orders.sell, marketFilterLocation );
+
+        if(price === null) {
+            price = lowestSellOrder?.price * (1-sellOverheadRate)
+        }
+    }
+
+    export let price: IskAmount = null;
+
+    export let totalCost: number = null;
 
     $: if(isNaN(totalCost)) console.error(totalCost);
 
