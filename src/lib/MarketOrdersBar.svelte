@@ -91,6 +91,10 @@
         height: Math.abs(y(0)-y(1))
     }
 
+    $: translateX = (value)=>{
+        return `transform: translateX(${x(value)}px)`
+    }
+
     let hover = false;
     
     let prices: Array<{price:IskAmount, is_buy_order?:boolean}> = [];
@@ -126,7 +130,7 @@
     <rect class="graphArea" width={width} {...fillGraphHeight} />
     {#if validExtents}
         {#each scaleMarks as mark, i}
-            <rect class="mark scale" x={x(mark)} width={1} {...fillGraphHeight} />
+            <rect class="mark scale" style={translateX(mark)} width={1} {...fillGraphHeight} />
         {/each}
 
         {#if highestBuyOrder && highestBuyOrder.price !== null}
@@ -153,8 +157,8 @@
     {/if}
 
     {#if hover}
-        <text class="hover" x={x(hoverPrice*quantity)} y={y(0)} dy={8} text-anchor="end">{FormatIskAmount(hoverPrice)}</text>
-        <circle class="hover" cx={x(hoverPrice*quantity)} cy={y(0.5)} r={4} />
+        <text class="hover" style={translateX(hoverPrice*quantity)} y={y(0)} dy={8} text-anchor="end">{FormatIskAmount(hoverPrice)}</text>
+        <circle class="hover" style={translateX(hoverPrice*quantity)} cx={0} cy={y(0.5)} r={4} />
     {/if}
 
     <rect class="hitArea" width={width} y={y(1)} height={y(0)-y(1)} 
@@ -165,8 +169,7 @@
 
 <style lang="scss">
     .mark, .overhead, .difference {
-        transition: x 100ms ease-out, width 100ms ease-out;
-
+        transition: x 100ms ease-out, transform 100ms ease-out, width 100ms ease-out;
     }
 
     circle.mark {
