@@ -7,7 +7,9 @@
     import { FormatIskAmount } from "./Format";
 
     import { scaleLinear } from "d3-scale";
-    import { minIndex } from "d3-array";
+    import { sum, minIndex } from "d3-array";
+    import { line, curveStepAfter } from "d3-shape";
+import { ESIStoreStatus } from "./ESIStore";
 
 
 
@@ -23,11 +25,14 @@
 
     $: marketType = type_id && getMarketType(type_id);
 
+    $: isOrderInFilteredLocation = o=>marketFilterLocation?o.location_id===marketFilterLocation:true
+
+
     function getFirstOrder(orders: Array<MarketOrder>, marketFilterLocation: Location_Id): MarketOrder {
         if(!orders) return null;
 
         if(marketFilterLocation) {
-            return orders.filter(order=>order.location_id === marketFilterLocation)[0];
+            return orders.filter(isOrderInFilteredLocation)[0];
         }
         return orders[0];
     }
@@ -41,6 +46,8 @@
         highestBuyOrder = getFirstOrder( $marketType?.orders.buy, marketFilterLocation );
         lowestSellOrder = getFirstOrder( $marketType?.orders.sell, marketFilterLocation );
     }
+
+    $: status = $marketType?.orders ? marketType?.status : ESIStoreStatus.loading;
 
     export let price: IskAmount = null;
     export let overridePrice: IskAmount = null;
@@ -60,11 +67,12 @@
 
 
     export let totalCost: number = null;
+    $: unitCost = totalCost/quantity;
 
     export let quantity: number = 1;
 
     $: x = scaleLinear()
-        .domain(extents)
+        .domain([extents[0]/quantity, extents[1]/quantity])
         .range([0,width]);
 
     let topBottomMargin = 8;
@@ -72,6 +80,23 @@
     $: y = scaleLinear()
         .domain([1,0])
         .range(yExtents)
+
+    $: volumeY = scaleLinear()
+        // .domain([sum($marketType?.orders.sell ?? [],o=>o.volume_remain) ,0])
+        .domain([Math.max(quantity*10,10),0])
+        .range(yExtents)
+
+        
+    $: ordersGraph = line()
+        .x(d=>x(d.price))
+
+    $: cumulativeVolumeY = ()=>{
+        let sum = 0;
+        return d=>{
+            sum+=d.volume_remain;
+            return volumeY(sum);
+        }
+    }
 
     let validExtents = false;
     let scaleMarks = [];
@@ -98,23 +123,26 @@
     let hover = false;
     
     let prices: Array<{price:IskAmount, is_buy_order?:boolean}> = [];
-    $: if($marketType && $marketType.orders) {
-        prices = [
-            ...$marketType?.orders?.buy.concat($marketType?.orders?.sell)
-                .filter(o=>marketFilterLocation?o.location_id===marketFilterLocation:true), 
-            {price:totalCost/quantity}
-        ]
-    } else if(type_id === null && totalCost) {
-        prices = [{price:totalCost/quantity}]
+    $: {
+        if($marketType && $marketType.orders) {
+            prices = $marketType?.orders?.buy.concat($marketType?.orders?.sell)
+                    .filter(isOrderInFilteredLocation);
+        } else {
+            prices = []
+        }
+
+        if(totalCost) {
+            prices = [...prices, {price:unitCost}]
+        }
     }
 
     let hoverPrice = 0;
     let hoverIndex = 0;
     function onHoverGraph(e: MouseEvent) {
-        let mouseX = e.clientX - e.target.getBoundingClientRect().left;
+        let mouseX = e.clientX - (e.target as SVGElement).getBoundingClientRect().left;
 
         // Snap the hover value to the closest related price
-        hoverIndex = minIndex(prices, p=>Math.abs(p.price*quantity-x.invert(mouseX)));
+        hoverIndex = minIndex(prices, p=>Math.abs(p.price-x.invert(mouseX)));
         hoverPrice = prices[hoverIndex]?.price;
     }
 
@@ -134,31 +162,33 @@
         {/each}
 
         {#if highestBuyOrder && highestBuyOrder.price !== null}
-            <rect class="mark buy" x={x(highestBuyOrder.price*quantity)} fill="red" width={1} {...fillGraphHeight} />
+            <!-- <rect class="mark buy" x={x(highestBuyOrder.price)} fill="red" width={1} {...fillGraphHeight} /> -->
+            <path class="graph buy" d={ordersGraph.y(cumulativeVolumeY())( [{price:highestBuyOrder.price, volume_remain:0}, ...$marketType?.orders.buy.filter(isOrderInFilteredLocation)] )} />
             {#if buyOverheadRate != 0}
-                <rect class="overhead buy" x={x(highestBuyOrder.price*quantity*Math.min(1,1+buyOverheadRate))} width={x(Math.abs(buyOverheadRate*highestBuyOrder.price*quantity))} {...fillGraphHeight} />
+                <rect class="overhead buy" x={x(highestBuyOrder.price*Math.min(1,1+buyOverheadRate))} width={x(Math.abs(buyOverheadRate*highestBuyOrder.price))} {...fillGraphHeight} />
             {/if}
         {/if}
         {#if lowestSellOrder && lowestSellOrder.price !== null}
-            <rect class="mark sell" x={x(lowestSellOrder.price*quantity)} fill="green" width={1} {...fillGraphHeight} />
+            <!-- <rect class="mark sell" x={x(lowestSellOrder.price)} fill="green" width={1} {...fillGraphHeight} /> -->
+            <path class="graph sell" d={ordersGraph.y(cumulativeVolumeY())( [{price:lowestSellOrder.price, volume_remain:0}, ...$marketType?.orders.sell.filter(isOrderInFilteredLocation)] )} />
             {#if sellOverheadRate != 0}
-                <rect class="overhead sell" x={x(lowestSellOrder.price*quantity*Math.min(1,1+sellOverheadRate))} width={x(Math.abs(sellOverheadRate*lowestSellOrder.price*quantity))} {...fillGraphHeight} />
+                <rect class="overhead sell" x={x(lowestSellOrder.price*Math.min(1,1+sellOverheadRate))} width={x(Math.abs(sellOverheadRate*lowestSellOrder.price))} {...fillGraphHeight} />
             {/if}
         {/if}
         {#if totalCost !== null}
-            <rect class="mark cost" x={x(totalCost)} width={1} height={height} />
+            <rect class="mark cost" x={x(unitCost)} width={1} height={height} />
             {#if price != 0}
-                <rect class={`difference profit ${totalCost>price*quantity?"negative":"positive"}`} x={Math.min(x(totalCost), x(price*quantity))} width={Math.abs(x(totalCost)-x(price*quantity))} y={y(0.5)} height={1} />
+                <rect class={`difference profit ${unitCost>price?"negative":"positive"}`} x={Math.min(x(unitCost), x(price))} width={Math.abs(x(unitCost)-x(price))} y={y(0.5)} height={1} />
             {/if}
         {/if}
         {#if type_id}
-            <circle class="mark price" cx={x(price*quantity)} cy={y(0.5)} r={2} />
+            <circle class="mark price" cx={x(price)} cy={y(0.5)} r={2} />
         {/if}
     {/if}
 
     {#if hover}
-        <text class="hover" style={translateX(hoverPrice*quantity)} y={y(0)} dy={8} text-anchor="end">{FormatIskAmount(hoverPrice)}</text>
-        <circle class="hover" style={translateX(hoverPrice*quantity)} cx={0} cy={y(0.5)} r={4} />
+        <text class="hover" style={translateX(hoverPrice)} y={y(0)} dy={8} text-anchor="end">{FormatIskAmount(hoverPrice)}</text>
+        <circle class="hover" style={translateX(hoverPrice)} cx={0} cy={y(0.5)} r={4} />
     {/if}
 
     <rect class="hitArea" width={width} y={y(1)} height={y(0)-y(1)} 
@@ -175,6 +205,19 @@
     circle.mark {
         fill: white;
         transition: cx 100ms ease-out;
+    }
+
+    path.graph {
+        fill: none;
+        stroke-width: 1px;
+
+        &.buy {
+            stroke: red;
+        }
+
+        &.sell {
+            stroke: #0f0;
+        }
     }
 
     rect.mark {
@@ -200,6 +243,10 @@
     rect.difference {
         &.profit {
             fill: #fff;
+
+            &.negative {
+                opacity: 0.3;
+            }
         }
     }
 
