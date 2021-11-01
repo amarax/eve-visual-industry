@@ -83,7 +83,7 @@ import { ESIStoreStatus } from "./ESIStore";
 
     $: volumeY = scaleLinear()
         // .domain([sum($marketType?.orders.sell ?? [],o=>o.volume_remain) ,0])
-        .domain([Math.max(quantity*2,10),0])
+        .domain([quantity*2,0])
         .range(yExtents)
 
         
@@ -188,7 +188,7 @@ import { ESIStoreStatus } from "./ESIStore";
     {/if}
 
     {#if hover}
-        <text class="hover" style={translateX(hoverPrice)} y={y(0)} dy={8} text-anchor="end">{FormatIskAmount(hoverPrice)}</text>
+        <text class="hover" style={translateX(hoverPrice)} y={y(0)} dy={8} text-anchor="middle">{FormatIskAmount(hoverPrice*quantity)} @{FormatIskAmount(hoverPrice)}</text>
         <circle class="hover" style={translateX(hoverPrice)} cx={0} cy={y(0.5)} r={4} />
     {/if}
 
