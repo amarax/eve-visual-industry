@@ -83,11 +83,12 @@ import { ESIStoreStatus } from "./ESIStore";
 
     $: volumeY = scaleLinear()
         // .domain([sum($marketType?.orders.sell ?? [],o=>o.volume_remain) ,0])
-        .domain([Math.max(quantity*10,10),0])
+        .domain([Math.max(quantity*2,10),0])
         .range(yExtents)
 
         
     $: ordersGraph = line()
+        .curve(curveStepAfter)
         .x(d=>x(d.price))
 
     $: cumulativeVolumeY = ()=>{
