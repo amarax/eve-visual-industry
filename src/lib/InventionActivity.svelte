@@ -55,23 +55,25 @@
 
     export let brokerFeeRate = 0.0151114234532; // Aqua Silentium's broker fee
 
+    $: selectedIndustryTypeIsBlueprint = isBlueprint(selectedIndustryType?.type_id);
+
+
     let selectedDecryptor: Type_Id;
 
     let breakdownItems: Array<Type_Id> = [];
     $: {
         breakdownItems = [];
         if(inventionActivity) {
-            if(selectedIndustryType && !isBlueprint(selectedIndustryType.type_id)) breakdownItems.push(selectedIndustryType.type_id);
+            if(!selectedIndustryTypeIsBlueprint) breakdownItems.push(selectedIndustryType.type_id);
             breakdownItems.push( ...Object.keys(inventionActivity.materials).map(string=>parseInt(string)) );
             if(selectedDecryptor) breakdownItems.push(selectedDecryptor);
         }
     }
 
 
-    let selectedIndustryTypeCost = 0;
+    let selectedIndustryTypeCost: IskAmount = 0;
     $: { 
-        selectedIndustryTypeCost = 0;
-        if(selectedIndustryType && !isBlueprint(selectedIndustryType.type_id)) {
+        if(!selectedIndustryTypeIsBlueprint) {
             selectedIndustryTypeCost = prices[selectedIndustryType.type_id];
         }
     }
@@ -108,7 +110,7 @@
     
     $: jobCost = totalAdjustedCostPrice * systemCostIndex * 0.02 * (1+jobCostModifier/100) * (1+facilityTax/100);
 
-    let totalCost = 0;
+    let totalCost: IskAmount = 0;
     $: {
         totalCost = 0;
         if(inventionActivity) {
@@ -304,15 +306,21 @@
                 <MarketOrdersBar compact extents={_extents} quantity={inventionActivity.materials[type_id]?.quantity || 1} 
                     {type_id} {marketFilterLocation} 
                     bind:price={prices[type_id]}
-                    buyOverheadRate={-brokerFeeRate}
+                    buyOverheadRate={brokerFeeRate}
                 />
             </div>
         {/each}
         {#if !selectedDecryptor}
             <div class="itemName">No decryptor</div>
-            <div style={`height:${24}px`}></div>
+            <div style={`height:${24}px`}></div><div></div>
+        {/if}
+        {#if selectedIndustryTypeIsBlueprint}
+            <div class="itemName">Blueprint copy cost per run</div>
+            <div></div>
+            <div><input type="number" bind:value={selectedIndustryTypeCost} /></div>            
         {/if}
     </div>
+    
 
     Invention job cost: {FormatIskAmount(jobCost)}<br/>
     Invention job duration: {FormatDuration(jobDuration)}

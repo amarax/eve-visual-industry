@@ -51,6 +51,13 @@
         if(isNaN(price)) price = 0;
     }
 
+    let _prevTypeId = null;
+    $: if(_prevTypeId !== type_id) {
+        // reset the market price
+        marketPrice = null;
+        _prevTypeId = type_id;
+    }
+
 
     export let totalCost: number = null;
 
@@ -93,7 +100,9 @@
                 .filter(o=>marketFilterLocation?o.location_id===marketFilterLocation:true), 
             {price:totalCost/quantity}
         ]
-    } 
+    } else if(type_id === null && totalCost) {
+        prices = [{price:totalCost/quantity}]
+    }
 
     let hoverPrice = 0;
     let hoverIndex = 0;
@@ -138,7 +147,9 @@
                 <rect class={`difference profit ${totalCost>price*quantity?"negative":"positive"}`} x={Math.min(x(totalCost), x(price*quantity))} width={Math.abs(x(totalCost)-x(price*quantity))} y={y(0.5)} height={1} />
             {/if}
         {/if}
-        <circle class="mark price" cx={x(price*quantity)} cy={y(0.5)} r={2} />
+        {#if type_id}
+            <circle class="mark price" cx={x(price*quantity)} cy={y(0.5)} r={2} />
+        {/if}
     {/if}
 
     {#if hover}

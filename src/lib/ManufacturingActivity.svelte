@@ -275,7 +275,7 @@ No blueprint selected yet
     <label>TE <input type="range" bind:value={timeEfficiency} min={0} max={20} step={2} disabled={inventing} /> {timeEfficiency}</label>
     <br/>
     
-    <label>Cost per run <input type="text" bind:value={blueprintCostPerRun} disabled={inventing} /></label>
+    <label>Cost per run <input type="number" bind:value={blueprintCostPerRun} disabled={inventing} /></label>
 </p>
 
 {#if !compact}

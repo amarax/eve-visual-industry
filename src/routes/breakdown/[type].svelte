@@ -38,6 +38,10 @@
     let marketFilterLocation: Location_Id;
 </script>
 
+<svelte:head>
+	<title>{($Universe?.types && $Universe?.types[selectedTypeId]) ? `${$Universe?.types[selectedTypeId]?.name} - ` : "" }EVE Online Visual Industry Calculator</title>
+</svelte:head>
+
 
 <CharacterSelector bind:value={selectedCharacterId} /><br/>
 Filter market <LocationSelector allowUnselected bind:value={marketFilterLocation} />
