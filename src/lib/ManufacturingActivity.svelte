@@ -125,11 +125,12 @@
         totalAdjustedCostPrice = 0;
         if(manufacturing) {
             for(let type_id in manufacturing.materials) {
-                totalAdjustedCostPrice += manufacturing.materials[type_id].quantity * $MarketPrices[type_id]?.adjusted_price;
+                // If the adjusted price is not available, treat the price as 0
+                // Verified behaviour on Tranquility on 1 Nov 2021
+                totalAdjustedCostPrice += manufacturing.materials[type_id].quantity * ($MarketPrices[type_id]?.adjusted_price ?? 0);
             }
         }
     }
-
 
     $: manufacturingJobCost = totalAdjustedCostPrice * systemCostIndex * (1+($selectedLocation?.modifiers?.jobCostModifier ?? 0)/100) * (1+($selectedLocation?.modifiers?.facilityTax ?? 0)/100) * runs;
 
@@ -188,7 +189,6 @@
             _extents = extents;
         }
     }
-
 
 </script>
 
