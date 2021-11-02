@@ -246,8 +246,8 @@
         margin-left:24px;
     }
 
-    .combinedInput input[type='text'] {
-        width: 30px;
+    .combinedInput input[type='number'] {
+        width: 60px;
         text-align: right;
     }
 </style>
@@ -256,7 +256,7 @@
 No blueprint selected yet
 {:else}
 
-<div class="combinedInput">Runs <input type="range" bind:value={runs} min={1} max={inventing ? inventedRuns : blueprint?.maxProductionLimit} /> <input type="text" bind:value={runs} /></div>
+<div class="combinedInput">Runs <input type="range" bind:value={runs} min={1} max={inventing ? inventedRuns : blueprint?.maxProductionLimit} /> <input type="number" bind:value={runs} /></div>
 <p>
     <b>Blueprint</b> <br/>
 
