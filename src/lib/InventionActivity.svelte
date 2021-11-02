@@ -83,7 +83,7 @@
         totalAdjustedCostPrice = 0;
         let manufacturing = blueprintToInvent.activities[MANUFACTURING_ACTIVITY_ID];
         for(let type_id in manufacturing.materials) {
-            totalAdjustedCostPrice += manufacturing.materials[type_id].quantity * $MarketPrices[type_id].adjusted_price;
+            totalAdjustedCostPrice += manufacturing.materials[type_id].quantity * ($MarketPrices[type_id]?.adjusted_price ?? 0);
         }
     }
 

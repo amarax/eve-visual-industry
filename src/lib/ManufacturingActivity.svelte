@@ -28,7 +28,7 @@
     export let salesTaxRate = 0.036;
     export let brokerFeeRate = 0.0113709973928; // Selene's broker fee
 
-    export let quantity: Quantity = null;
+    export let requiredQuantity: Quantity = null;
 
     let runs: number = 1;
 
@@ -50,16 +50,16 @@
 
             if(manufacturing) {
                 // Initialise runs to default to the amount required to produce the quantity
-                if(quantity)
-                    runs = Math.ceil( quantity / manufacturing.products[selectedProductId].quantity );
+                if(requiredQuantity)
+                    runs = Math.ceil( requiredQuantity / manufacturing.products[selectedProductId].quantity );
             }
         }
     }
 
     // Currently it's safer to just have the runs defined by quantity,
     // if not I'll forget it's a bug
-    $: if(quantity) {
-        //runs = Math.ceil( quantity / manufacturing?.products[selectedProductId].quantity );
+    $: if(requiredQuantity) {
+        //runs = Math.ceil( requiredQuantity / manufacturing?.products[selectedProductId].quantity );
     }
     
 
@@ -181,11 +181,13 @@
 
 
     export let extents: Array<number> = null;
+    let lowestSellPrice: IskAmount;
+    let highestBuyPrice: IskAmount;
     let _extents = [0,1000];
     $: {
         if(extents === null) {
             if(manufacturing) {
-                _extents[1] = 1.1*Math.max(itemPrices[selectedProductId]*producedQty, totalCost);
+                _extents[1] = 1.1*Math.max(itemPrices[selectedProductId], unitCost, lowestSellPrice ?? 0, highestBuyPrice ?? 0)*producedQty;
             }
         } else {
             _extents = extents;
@@ -309,6 +311,7 @@ No blueprint selected yet
             bind:price={itemPrices[selectedProductId]}
             buyOverheadRate={-salesTaxRate} sellOverheadRate={-brokerFeeRate-salesTaxRate}
             {totalCost}
+            bind:lowestSellPrice bind:highestBuyPrice
         />
         <br/>
 
@@ -339,7 +342,7 @@ No blueprint selected yet
         </div>
         {#if manufacturedItems[type_id]}
             <div class="subItem">
-                <svelte:self selectedProductId={type_id} quantity={materialQty(manufacturing.materials[type_id].quantity)} {manufacturedItems}
+                <svelte:self selectedProductId={type_id} requiredQuantity={materialQty(manufacturing.materials[type_id].quantity)} {manufacturedItems}
                     bind:unitCost={manufacturedUnitCostPrices[type_id]} 
                     materialEfficiency={10} timeEfficiency={20}
                     {selectedCharacterId} {selectedLocationId} {marketFilterLocation}

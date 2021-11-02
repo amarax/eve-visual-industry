@@ -47,6 +47,14 @@ import { ESIStoreStatus } from "./ESIStore";
         lowestSellOrder = getFirstOrder( $marketType?.orders.sell, marketFilterLocation );
     }
 
+    // Expose key market prices for extents calculation
+    export let lowestSellPrice: IskAmount = 0;
+    export let highestBuyPrice: IskAmount = 0;
+    $: {
+        lowestSellPrice = lowestSellOrder?.price;
+        highestBuyPrice = highestBuyOrder?.price;
+    }
+
     $: status = $marketType?.orders ? marketType?.status : ESIStoreStatus.loading;
 
     export let price: IskAmount = null;
