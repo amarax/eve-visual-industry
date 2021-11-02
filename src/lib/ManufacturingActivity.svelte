@@ -78,9 +78,10 @@
     }
 
 
+    let facilityRigMaterialBonus: number = 0;
     let materialQty = (baseQuantity: Quantity): Quantity => baseQuantity;
     $: {
-        materialQty = (qty) => Math.max( runs, Math.ceil( qty * runs * (1-materialEfficiency/100) * (1+($selectedLocation?.modifiers?.materialConsumptionModifier ?? 0)/100)) );
+        materialQty = (qty) => Math.max( runs, Math.ceil( qty * runs * (1-materialEfficiency/100) * (1+($selectedLocation?.modifiers?.materialConsumptionModifier ?? 0)/100) * (1+facilityRigMaterialBonus/100)) );
     }
 
     let manufacturedUnitCostPrices: EntityCollection<IskAmount> = {};
@@ -149,7 +150,8 @@
             return modifier*(1+factor*0.01)
         },1) : 1
 
-    $: manufacturingTime = manufacturing?.time * (1-timeEfficiency/100) * skillTimeModifier * (1+($selectedLocation?.modifiers?.jobDurationModifier ?? 0)/100) * runs;
+    let facilityRigDurationBonus: number = 0;
+    $: manufacturingTime = manufacturing?.time * (1-timeEfficiency/100) * skillTimeModifier * (1+($selectedLocation?.modifiers?.jobDurationModifier ?? 0)/100) * (1+facilityRigDurationBonus/100) * runs;
 
     $: sellingPrice = itemPrices[selectedProductId];
     $: producedQty = manufacturing?.products[selectedProductId].quantity*runs;
@@ -258,17 +260,15 @@ No blueprint selected yet
 <p>
     <b>Blueprint</b> <br/>
 
-    {#if inventable}
-        <label><input type="checkbox" bind:checked={inventing} /> Invent</label>        <br/>
+    <label><input type="checkbox" bind:checked={inventing} disabled={!inventable} /> Invent</label>        <br/>
 
-        {#if inventing}
-            <div class="subItem">
-                <InventionActivity {selectedCharacterId} blueprintToInvent={blueprint} 
-                    {marketFilterLocation}
-                    bind:expectedCostPerRun={blueprintCostPerRun} bind:productME={materialEfficiency} bind:productTE={timeEfficiency} bind:productRuns={inventedRuns}
-                />
-            </div>
-        {/if}
+    {#if inventing}
+        <div class="subItem">
+            <InventionActivity {selectedCharacterId} blueprintToInvent={blueprint} 
+                {marketFilterLocation}
+                bind:expectedCostPerRun={blueprintCostPerRun} bind:productME={materialEfficiency} bind:productTE={timeEfficiency} bind:productRuns={inventedRuns}
+            />
+        </div>
     {/if}
 
     <label>ME <input type="range" bind:value={materialEfficiency} min={0} max={10} disabled={inventing} /> {materialEfficiency}</label>
@@ -278,11 +278,12 @@ No blueprint selected yet
     <label>Cost per run <input type="number" bind:value={blueprintCostPerRun} disabled={inventing} /></label>
 </p>
 
-{#if !compact}
 <b>Facility</b>
 <LocationSelector bind:value={selectedLocationId} />
 <dl>
     <dt>System cost index</dt> <dd>{systemCostIndex}</dd>
+    <dt>Structure rig material bonus</dt> <dd><input type="number" bind:value={facilityRigMaterialBonus} /></dd>
+    <dt>Structure rig duration bonus</dt> <dd><input type="number" bind:value={facilityRigDurationBonus} /></dd>
 </dl>
 
 <b>Manufacturing</b>
@@ -292,7 +293,6 @@ No blueprint selected yet
     <dt>Job Cost</dt>
     <dd>{FormatIskAmount(manufacturingJobCost)}</dd>
 </dl>
-{/if}
 
 <div class="breakdown">
     <div class="itemName" title={`${$Universe.types[selectedProductId]?.name} [${selectedProductId}]`}>{$Universe.types[selectedProductId]?.name}</div>

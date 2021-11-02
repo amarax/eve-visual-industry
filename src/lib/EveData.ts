@@ -342,6 +342,7 @@ export interface EveLocation {
     name: string,
     system_id?: number,
     solar_system_id?: number,
+    type_id?: Type_Id,
 
     modifiers?: {
         jobDurationModifier: number,
@@ -369,8 +370,18 @@ export function GetLocationStore(location_id: Location_Id): ESIStore<EveLocation
                     })
                     .then(modifiers=>value.modifiers=modifiers)
                     .catch(reason=>{
-                        if(reason != "Modifiers not available")
+                        if(reason == "Modifiers not available") {
+                            if(value.type_id === 35825) {   // HACK default values for a Raitaru
+                                value.modifiers = {
+                                    "jobDurationModifier": -15,
+                                    "materialConsumptionModifier": -1,
+                                    "jobCostModifier": -3,
+                                    "facilityTax": 10
+                                }
+                            }
+                        } else {
                             console.error(reason);
+                        }
                     })
 
                 return value;
