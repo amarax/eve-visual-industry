@@ -98,17 +98,20 @@
 
     const StructureRigMEBonuses = [0,-2,-2.4];
     const StructureRigTEBonuses = [0,-20,-24];
+    const StructureRigCostBonuses = [0,-10,-12];
 
     // TODO also factor in system security bonus
     // Currently we assume hisec
     export let structureRigBonuses: {
         materialReductionBonus: number,
-        timeReductionBonus: number
+        timeReductionBonus: number,
+        costReductionBonus: number,
     } = null;
     $: if(locationIsStructure) {
         structureRigBonuses = {
             materialReductionBonus: 0,
-            timeReductionBonus: 0
+            timeReductionBonus: 0,
+            costReductionBonus: 0,
         }
     } else {
         structureRigBonuses = null;
@@ -201,6 +204,9 @@
                 {#if activity === MANUFACTURING_ACTIVITY_ID || activity === REACTION_ACTIVITY_ID}
                     ME {structureRigBonuses.materialReductionBonus}%
                 {/if}
+                {#if activity !== MANUFACTURING_ACTIVITY_ID && activity !== REACTION_ACTIVITY_ID}
+                    Cost {structureRigBonuses.costReductionBonus}%
+                {/if}
                 | TE {structureRigBonuses.timeReductionBonus}%
             </dd>
         {/if}
@@ -222,6 +228,13 @@
             <dt>Structure rig material bonus</dt> <dd>
                 {#each StructureRigMEBonuses as bonus }
                     <label><input type=radio bind:group={structureRigBonuses.materialReductionBonus} name="MEBonus" value={bonus}> {bonus}%</label>
+                {/each}
+            </dd>
+        {/if}
+        {#if activity !== MANUFACTURING_ACTIVITY_ID && activity !== REACTION_ACTIVITY_ID}
+            <dt>Structure rig cost bonus</dt> <dd>
+                {#each StructureRigCostBonuses as bonus }
+                    <label><input type=radio bind:group={structureRigBonuses.costReductionBonus} name="CostBonus" value={bonus}> {bonus}%</label>
                 {/each}
             </dd>
         {/if}

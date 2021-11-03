@@ -90,7 +90,7 @@
 
     let activitySystemCostIndex: number, activityTax: number;
     let structureRoleBonuses, structureRigBonuses;
-    $: jobCost = totalAdjustedCostPrice * activitySystemCostIndex * 0.02 * (1+(structureRoleBonuses?.jobCostModifier ?? 0)/100) * (1+activityTax/100);
+    $: jobCost = totalAdjustedCostPrice * activitySystemCostIndex * 0.02 * (1+(structureRoleBonuses?.jobCostModifier ?? 0)/100) * (1+(structureRigBonuses?.costReductionBonus ?? 0)/100) * (1+activityTax/100);
 
     let totalCost: IskAmount = 0;
     $: {
