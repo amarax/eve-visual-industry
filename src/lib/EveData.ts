@@ -205,9 +205,12 @@ async function loadTypesStatic(marketGroups:EntityCollection<MarketGroup>) {
     });
 }
 
-let _types:EntityCollection<Type> = null;
+let _types:EntityCollection<Type> = {};
 
+let universePopulated = false;
 function setupUniverse( set:(value:any)=>void ) {
+    if(universePopulated) return ()=>{};
+
     const universe = {
         categories: null,
         types: _types,
@@ -235,6 +238,8 @@ function setupUniverse( set:(value:any)=>void ) {
                     _types = types;
                     universe.types = _types;
                     set(universe);
+
+                    universePopulated = true;
                 })
                 .catch(err => {console.error(err)});
         })
@@ -267,7 +272,7 @@ export type UniverseStore = {
     }
 }
 
-export const Universe: Readable<UniverseStore> = readable({}, setupUniverse);
+export const Universe: Readable<UniverseStore> = readable({types:{}}, setupUniverse);
 
 type Attribute = {
     attribute_id: number,
@@ -337,6 +342,7 @@ export interface EveLocation {
     name: string,
     system_id?: number,
     solar_system_id?: number,
+    type_id?: Type_Id,
 
     modifiers?: {
         jobDurationModifier: number,
@@ -364,9 +370,21 @@ export function GetLocationStore(location_id: Location_Id): ESIStore<EveLocation
                     })
                     .then(modifiers=>value.modifiers=modifiers)
                     .catch(reason=>{
-                        if(reason != "Modifiers not available")
+                        if(reason == "Modifiers not available") {
+                            if(value.type_id === 35825) {   // HACK default values for a Raitaru
+                                value.modifiers = {
+                                    "jobDurationModifier": -15,
+                                    "materialConsumptionModifier": -1,
+                                    "jobCostModifier": -3,
+                                    "facilityTax": 10
+                                }
+                            }
+                        } else {
                             console.error(reason);
+                        }
                     })
+
+                return value;
             } );
     
         }

@@ -12,7 +12,7 @@
     
     import { Characters, CharacterSkills } from "./EveCharacter";
     import type { ESIStore } from "./ESIStore";
-import LocationSelector from "./LocationSelector.svelte";
+    import LocationSelector from "./LocationSelector.svelte";
 
 
     export let selectedCharacterId = null;
@@ -37,34 +37,17 @@ import LocationSelector from "./LocationSelector.svelte";
         return $Universe.categories[9].groups[$Universe.types[type_id]?.group_id] != undefined;
     }
 
-    let _relatedTypeStores: Array<Function> = [];   // Unsubscribe functions
-    let relatedTypes: EntityCollection<MarketType> = {};
+    let prices: EntityCollection<IskAmount> = {};
+
     $: {
         if(inventionActivity) {
-            _relatedTypeStores.forEach(unsubscribe=>unsubscribe());
+            // materials (datacores)
 
-            _relatedTypeStores = [];
+            // blueprint
 
-            Object.values(inventionActivity.materials).forEach(material=>{
-                let unsubscribe = getMarketType(material.materialTypeID).subscribe(
-                    value=>relatedTypes[value.type_id] = value
-                );
-                if(unsubscribe) _relatedTypeStores.push( unsubscribe );
-            })
-
-            if(selectedIndustryType && !isBlueprint(selectedIndustryType.type_id)) {
-                let unsubscribe = getMarketType(selectedIndustryType.type_id).subscribe(
-                    value=>relatedTypes[value.type_id] = value
-                );
-                if(unsubscribe) _relatedTypeStores.push( unsubscribe );
-            }
-
-            if(selectedDecryptor) {
-                let unsubscribe = getMarketType(selectedDecryptor).subscribe(
-                    value=>relatedTypes[value.type_id] = value
-                );
-                if(unsubscribe) _relatedTypeStores.push( unsubscribe );
-            }
+            // decryptor
+        } else {
+            prices = {}
         }
     }
 
@@ -72,15 +55,8 @@ import LocationSelector from "./LocationSelector.svelte";
 
     export let brokerFeeRate = 0.0151114234532; // Aqua Silentium's broker fee
 
+    $: selectedIndustryTypeIsBlueprint = isBlueprint(selectedIndustryType?.type_id);
 
-    let scienceSkills = [];
-    let encryptionSkills = [];
-    $: {
-        if($Universe.markets && $Universe.types) {
-            scienceSkills = $Universe.markets.groups[375].types.map(type_id=>$Universe.types[type_id]).sort((a,b)=>a.name.localeCompare(b.name));
-            encryptionSkills = scienceSkills.filter(type=>type.name.indexOf("Encryption") >=0);
-        }
-    }
 
     let selectedDecryptor: Type_Id;
 
@@ -88,18 +64,17 @@ import LocationSelector from "./LocationSelector.svelte";
     $: {
         breakdownItems = [];
         if(inventionActivity) {
-            if(selectedIndustryType && !isBlueprint(selectedIndustryType.type_id)) breakdownItems.push(selectedIndustryType.type_id);
+            if(!selectedIndustryTypeIsBlueprint) breakdownItems.push(selectedIndustryType.type_id);
             breakdownItems.push( ...Object.keys(inventionActivity.materials).map(string=>parseInt(string)) );
             if(selectedDecryptor) breakdownItems.push(selectedDecryptor);
         }
     }
 
 
-    let selectedIndustryTypeCost = 0;
+    let selectedIndustryTypeCost: IskAmount = 0;
     $: { 
-        selectedIndustryTypeCost = 0;
-        if(selectedIndustryType && !isBlueprint(selectedIndustryType.type_id)) {
-            selectedIndustryTypeCost = relatedTypes[selectedIndustryType.type_id].orders.sell[0]?.price;
+        if(!selectedIndustryTypeIsBlueprint) {
+            selectedIndustryTypeCost = prices[selectedIndustryType.type_id];
         }
     }
 
@@ -108,12 +83,16 @@ import LocationSelector from "./LocationSelector.svelte";
         totalAdjustedCostPrice = 0;
         let manufacturing = blueprintToInvent.activities[MANUFACTURING_ACTIVITY_ID];
         for(let type_id in manufacturing.materials) {
-            totalAdjustedCostPrice += manufacturing.materials[type_id].quantity * $MarketPrices[type_id].adjusted_price;
+            totalAdjustedCostPrice += manufacturing.materials[type_id].quantity * ($MarketPrices[type_id]?.adjusted_price ?? 0);
         }
     }
 
     let selectedLocationId: Location_Id = null;
     let selectedLocation: ESIStore<EveLocation> = null;
+
+    let systemCostIndex = 0.01;
+    let jobCostModifier = 0;
+    let facilityTax = 0;
     $: {
         if(selectedLocationId) selectedLocation = GetLocationStore(selectedLocationId);
         if($selectedLocation) {
@@ -129,18 +108,15 @@ import LocationSelector from "./LocationSelector.svelte";
         }
     }
     
-    let systemCostIndex = 0.01;
-    let jobCostModifier = 0;
-    let facilityTax = 0;
     $: jobCost = totalAdjustedCostPrice * systemCostIndex * 0.02 * (1+jobCostModifier/100) * (1+facilityTax/100);
 
-    let totalCost = 0;
+    let totalCost: IskAmount = 0;
     $: {
         totalCost = 0;
         if(inventionActivity) {
             totalCost += selectedIndustryTypeCost;
-            totalCost += sum( Object.values(inventionActivity.materials), material=>relatedTypes[material.materialTypeID].orders.sell[0]?.price*material.quantity );
-            if(selectedDecryptor) totalCost += relatedTypes[selectedDecryptor].orders.sell[0]?.price;
+            totalCost += sum( Object.values(inventionActivity.materials), material=>prices[material.materialTypeID]*material.quantity );
+            totalCost += prices[selectedDecryptor] ?? 0;
             totalCost += jobCost;
         }
     }
@@ -252,7 +228,7 @@ import LocationSelector from "./LocationSelector.svelte";
     }
 
 
-
+    export let marketFilterLocation: Location_Id = null;
 </script>
 
 <style lang="scss">
@@ -317,22 +293,34 @@ import LocationSelector from "./LocationSelector.svelte";
     </p>
     
     <div class="breakdown">
+        <div class="itemName">Job cost</div>
+        <div class="qty"></div>
+        <div>
+            <MarketOrdersBar compact extents={_extents} quantity={1} totalCost={jobCost} />
+        </div>
+
         {#each breakdownItems as type_id}
             <div class="itemName" title={`${$Universe.types[type_id].name} [${type_id}]`}>{$Universe.types[type_id].name}</div>
             <div class="qty">{inventionActivity.materials[type_id]?.quantity || 1}</div>
             <div>
-                <MarketOrdersBar height={20} extents={_extents} quantity={inventionActivity.materials[type_id]?.quantity || 1} 
-                    highestBuyOrder={relatedTypes[type_id].orders.buy[0]} lowestSellOrder={relatedTypes[type_id].orders.sell[0]} 
-                    buyOverheadRate={-brokerFeeRate}
+                <MarketOrdersBar compact extents={_extents} quantity={inventionActivity.materials[type_id]?.quantity || 1} 
+                    {type_id} {marketFilterLocation} 
+                    bind:price={prices[type_id]}
+                    buyOverheadRate={brokerFeeRate}
                 />
-                <br/>
             </div>
         {/each}
         {#if !selectedDecryptor}
             <div class="itemName">No decryptor</div>
-            <div style={`height:${24}px`}></div>
+            <div style={`height:${24}px`}></div><div></div>
+        {/if}
+        {#if selectedIndustryTypeIsBlueprint}
+            <div class="itemName">Blueprint copy cost per run</div>
+            <div></div>
+            <div><input type="number" bind:value={selectedIndustryTypeCost} /></div>            
         {/if}
     </div>
+    
 
     Invention job cost: {FormatIskAmount(jobCost)}<br/>
     Invention job duration: {FormatDuration(jobDuration)}

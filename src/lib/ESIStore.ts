@@ -1,6 +1,7 @@
 import { writable } from "svelte/store";
 import type { Readable } from "svelte/store";
 import { LoadFromESI } from "./EveData";
+import type { Subscriber } from "svelte/store";
 
 
 export enum ESIStoreStatus {
@@ -14,17 +15,18 @@ export interface ESIStore<T> extends Readable<T> {
 } 
 
 
-export default function CreateESIStore( route:string ): ESIStore<any> {
+export default function CreateESIStore<Data>( route:string, onLoad?:(value)=>void ): ESIStore<Data> {
     let store = {
         status: ESIStoreStatus.loading,
         subscribe: null,
     }
 
-    function load(set) {
+    function start(set: Subscriber<Data>) {
         if(store.status === ESIStoreStatus.loaded) return;
 
         LoadFromESI(route)
             .then((value)=>{
+                if(onLoad) value = onLoad(value);
                 store.status=ESIStoreStatus.loaded;
                 set(value);
             })
@@ -36,20 +38,20 @@ export default function CreateESIStore( route:string ): ESIStore<any> {
     }
 
     // Internally the store is a writable so we can trigger a refresh (not implemented yet) if necessary
-    const { subscribe } = writable(null, load);
+    const { subscribe } = writable(null, start);
 
     store.subscribe = subscribe;
 
     return store;
 }
 
-export function CreateESIStoreFromCache( route:string, onLoaded?:(value)=>void ): ESIStore<any> {
+export function CreateESIStoreFromCache<Data>( route:string, onLoad?:(value)=>void ): ESIStore<Data> {
     let store = {
         status: ESIStoreStatus.loading,
         subscribe: null,
     }
 
-    function load(set) {
+    function start(set: Subscriber<Data>) {
         if(store.status === ESIStoreStatus.loaded) return;
 
         fetch(`/esi-cache${route}index.json`)
@@ -60,7 +62,7 @@ export function CreateESIStoreFromCache( route:string, onLoaded?:(value)=>void )
                     return Promise.reject("Fetch failed");
             })
             .then((value)=>{
-                onLoaded && onLoaded(value);
+                if(onLoad) value = onLoad(value);
                 store.status=ESIStoreStatus.loaded;
                 set(value);
             })
@@ -72,7 +74,7 @@ export function CreateESIStoreFromCache( route:string, onLoaded?:(value)=>void )
     }
 
     // Internally the store is a writable so we can trigger a refresh (not implemented yet) if necessary
-    const { subscribe } = writable(null, load);
+    const { subscribe } = writable(null, start);
 
     store.subscribe = subscribe;
 
