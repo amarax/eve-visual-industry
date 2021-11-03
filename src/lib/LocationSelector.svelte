@@ -1,9 +1,9 @@
 <script lang="ts">
 import { onDestroy } from "svelte";
 
-    import { CharacterBlueprints, Characters } from "./EveCharacter";
+    import { CharacterBlueprints, Characters } from "$lib/eve-data/EveCharacter";
 
-    import { GetLocationStore, Location_Id } from "./EveData";
+    import { GetLocationStore, Location_Id } from "$lib/eve-data/EveData";
 
 
     // For now just get locations from list of blueprints

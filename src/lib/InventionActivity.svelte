@@ -1,21 +1,22 @@
 <script lang="ts">
-    import { GetLocationStore, loadType, Universe } from "./EveData";
-    import { ADVANCED_INDUSTRY_SKILL_ID, Decryptors, Industry, IndustrySystems, INVENTION_ACTIVITY_ID, MANUFACTURING_ACTIVITY_ID,  } from "./EveIndustry";
+    import { GetLocationStore, loadType, Universe } from "$lib/eve-data/EveData";
+    import { ADVANCED_INDUSTRY_SKILL_ID, Decryptors, Industry, IndustrySystems, INVENTION_ACTIVITY_ID, MANUFACTURING_ACTIVITY_ID,  } from "$lib/eve-data/EveIndustry";
     
-    import type { EntityCollection, EveLocation, Location_Id, Type_Id } from "./EveData";
-    import type { IndustryType } from "./EveIndustry";
+    import type { EntityCollection, EveLocation, Location_Id, Type_Id } from "$lib/eve-data/EveData";
+    import type { IndustryType } from "$lib/eve-data/EveIndustry";
 
-    import { getMarketType, IskAmount, MarketPrices, MarketType } from "./EveMarkets";
+    import { getMarketType, IskAmount, MarketPrices, MarketType } from "$lib/eve-data/EveMarkets";
     import MarketOrdersBar from "./MarketOrdersBar.svelte";
-    import { sum } from "./Utilities";
-    import { FormatDuration, FormatIskAmount } from "./Format";
+    import { sum } from "$lib/Utilities";
+    import { FormatDuration, FormatIskAmount } from "$lib/Format";
     
-    import { Characters, CharacterSkills } from "./EveCharacter";
-    import type { ESIStore } from "./ESIStore";
+    import { Characters, CharacterSkills } from "$lib/eve-data/EveCharacter";
+    import type { ESIStore } from "$lib/eve-data/ESIStore";
     import LocationSelector from "./LocationSelector.svelte";
 
 
     export let selectedCharacterId = null;
+
 
     
     let characterSkills: ESIStore<CharacterSkills>;

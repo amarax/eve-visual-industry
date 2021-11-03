@@ -1,8 +1,8 @@
 <script lang="ts">
-    import { Characters, LoadAuthorisedCharacters } from "./EveCharacter";
-    import type { Character_Id } from "./EveCharacter";
+    import { Characters, LoadAuthorisedCharacters } from "$lib/eve-data/EveCharacter";
+    import type { Character_Id } from "$lib/eve-data/EveCharacter";
     import { onDestroy } from "svelte";
-    import type { EntityCollection } from "./EveData";
+    import type { EntityCollection } from "$lib/eve-data/EveData";
 
     export let value: Character_Id = null;
 

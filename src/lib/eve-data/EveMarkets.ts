@@ -1,8 +1,8 @@
 import { get, readable, writable } from "svelte/store"
-import { LoadFromESI } from "$lib/EveData";
+import { LoadFromESI } from "./EveData";
 
 import type { Readable, Writable } from "svelte/store";
-import type { EntityCollection, Type_Id } from "$lib/EveData";
+import type { EntityCollection, Type_Id } from "./EveData";
 import CreateESIStore from "./ESIStore";
 import type { ESIStore } from "./ESIStore";
 

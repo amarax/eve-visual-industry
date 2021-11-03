@@ -358,6 +358,7 @@ export interface EveLocation {
 
 let Locations = {};
 
+
 export function GetLocationStore(location_id: Location_Id): ESIStore<EveLocation> {
     if(Locations[location_id] === undefined) {
         if(60000000 <= location_id && location_id < 70000000) { // this is a station

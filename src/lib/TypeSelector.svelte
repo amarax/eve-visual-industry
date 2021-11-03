@@ -1,7 +1,7 @@
 <script lang="ts">
-    import { Universe } from '$lib/EveData';
+    import { Universe } from '$lib/eve-data/EveData';
 
-    import type { MarketGroup_Id, Type_Id, MarketGroup, Type, EntityCollection } from '$lib/EveData';
+    import type { MarketGroup_Id, Type_Id, MarketGroup, Type, EntityCollection } from '$lib/eve-data/EveData';
 import { createEventDispatcher } from 'svelte';
     
     let selectableMarketGroupIds: Set<MarketGroup_Id> = new Set();

@@ -1,19 +1,19 @@
 <script lang="ts">
-    import { EveLocation, GetLocationStore, Location_Id, Universe } from "$lib/EveData";
-    import { MANUFACTURING_ACTIVITY_ID, Industry, GetBlueprintToManufacture, GetInventableBlueprint, ADVANCED_INDUSTRY_SKILL_ID, IndustrySystems } from "$lib/EveIndustry";
-    import { getMarketType, IskAmount, MarketOrder, MarketPrices } from "$lib/EveMarkets";
+    import { EveLocation, GetLocationStore, Location_Id, Universe } from "$lib/eve-data/EveData";
+    import { MANUFACTURING_ACTIVITY_ID, Industry, GetBlueprintToManufacture, GetInventableBlueprint, ADVANCED_INDUSTRY_SKILL_ID, IndustrySystems } from "$lib/eve-data/EveIndustry";
+    import { getMarketType, IskAmount, MarketOrder, MarketPrices } from "$lib/eve-data/EveMarkets";
+    import { IndustryDogmaAttributes } from "$lib/eve-data/EveDogma";
+    import { CharacterSkills } from "$lib/eve-data/EveCharacter";
 
-    import type { EntityCollection, Type_Id } from "$lib/EveData";
-    import type { IndustryActivity } from "$lib/EveIndustry";
-    import type { MarketType, Quantity } from "$lib/EveMarkets";
+    import type { EntityCollection, Type_Id } from "$lib/eve-data/EveData";
+    import type { IndustryActivity } from "$lib/eve-data/EveIndustry";
+    import type { MarketType, Quantity } from "$lib/eve-data/EveMarkets";
+    import type { ESIStore } from "$lib/eve-data/ESIStore";
 
     import MarketOrdersBar from "./MarketOrdersBar.svelte";
-    import { FormatDuration, FormatIskAmount, FormatIskChange } from "./Format";
+    import { FormatDuration, FormatIskAmount, FormatIskChange } from "$lib/Format";
     import InventionActivity from "./InventionActivity.svelte";
-    import { IndustryDogmaAttributes } from "./EveDogma";
-    import { CharacterSkills } from "./EveCharacter";
     import LocationSelector from "./LocationSelector.svelte";
-    import type { ESIStore } from "./ESIStore";
 
 
 

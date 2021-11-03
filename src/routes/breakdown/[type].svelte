@@ -3,14 +3,14 @@
     import { page } from "$app/stores";
 
     import CharacterSelector from "$lib/CharacterSelector.svelte";
-    import { Location_Id, Universe } from "$lib/EveData";
-    import { Industry } from "$lib/EveIndustry";
+    import { Location_Id, Universe } from "$lib/eve-data/EveData";
+    import { Industry } from "$lib/eve-data/EveIndustry";
     import ManufacturingActivity from "$lib/ManufacturingActivity.svelte";
     import TypeSelector from "$lib/TypeSelector.svelte";
 
-    import { MANUFACTURING_ACTIVITY_ID } from '$lib/EveIndustry';
+    import { MANUFACTURING_ACTIVITY_ID } from "$lib/eve-data/EveIndustry";
 
-    import type { Type_Id, Type } from "$lib/EveData";
+    import type { Type_Id, Type } from "$lib/eve-data/EveData";
     import LocationSelector from "$lib/LocationSelector.svelte";
 
     let selectedCharacterId;
