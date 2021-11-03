@@ -5,6 +5,8 @@ import type { Location_Id, Type_Id } from "./EveData";
 import type { Quantity } from "./EveMarkets";
 import { browser } from "$app/env";
 
+import { base as basePath } from '$app/paths';
+
 
 export type Character_Id = number;
 
@@ -50,7 +52,7 @@ export async function LoadAuthorisedCharacters() {
     if(!browser) return;
 
     try{
-        let authorisedCharacterIds: Array<Character_Id> = await (await fetch("/esi-cache/authorisedCharacters.json")).json();
+        let authorisedCharacterIds: Array<Character_Id> = await (await fetch(`${basePath}/esi-cache/authorisedCharacters.json`)).json();
 
         for(let character_id of authorisedCharacterIds) {
             Characters[character_id] = CreateESIStore(`/characters/${character_id}/`);
