@@ -60,11 +60,11 @@ function setupIndustry( set:(value:any)=>void ) {
 
     }
 
-    LoadFromSDE("/data/ramActivities.csv")
+    LoadFromSDE("ramActivities")
         .then((data: Array<RAMActivity>)=>{
             data.forEach(activity=>industry.activities[activity.activityID]=activity);
         })
-        .then(()=>LoadFromSDE("/data/industryActivity.csv"))
+        .then(()=>LoadFromSDE("industryActivity"))
         .then((data: Array<{
             type_id:Type_Id,
             activityID:Activity_Id,
@@ -88,7 +88,7 @@ function setupIndustry( set:(value:any)=>void ) {
 
             });
         })
-        .then(()=>LoadFromSDE("/data/industryActivityMaterials.csv"))
+        .then(()=>LoadFromSDE("industryActivityMaterials"))
         .then((data: Array<{
             typeID: Type_Id,
             activityID: Activity_Id,
@@ -111,7 +111,7 @@ function setupIndustry( set:(value:any)=>void ) {
                 }
             })
         })
-        .then(()=>LoadFromSDE("/data/industryActivityProducts.csv"))
+        .then(()=>LoadFromSDE("industryActivityProducts"))
         .then((data:Array<{
             type_id: Type_Id,
             activityID: Activity_Id,
@@ -128,7 +128,7 @@ function setupIndustry( set:(value:any)=>void ) {
                 };
             });
         })
-        .then(()=>LoadFromSDE("/data/industryActivityProbabilities.csv"))
+        .then(()=>LoadFromSDE("industryActivityProbabilities"))
         .then((data:Array<{
             typeID: Type_Id,
             activityID: Activity_Id,
@@ -142,7 +142,7 @@ function setupIndustry( set:(value:any)=>void ) {
                 activity.products[activityProbability.productTypeID].probability = activityProbability.probability;
             })
         })
-        .then(()=>LoadFromSDE("/data/industryActivitySkills.csv"))
+        .then(()=>LoadFromSDE("industryActivitySkills"))
         .then((data:Array<{
             typeID: Type_Id,
             activityID: Activity_Id,
@@ -160,7 +160,7 @@ function setupIndustry( set:(value:any)=>void ) {
                 };
             })
         })
-        .then(()=>LoadFromSDE("/data/industryBlueprints.csv"))
+        .then(()=>LoadFromSDE("industryBlueprints"))
         .then((data:Array<{
             type_id:Type_Id, 
             maxProductionLimit:number

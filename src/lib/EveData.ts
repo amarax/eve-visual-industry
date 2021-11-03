@@ -84,7 +84,7 @@ async function loadCategoriesStatic() {
     if(!browser) return Promise.reject("Doesn't work on server");
 
     const response = await fetch(
-        `${basePath}/data/categories.json`,
+        `${basePath}/eve-sde/categories.json`,
         {
             method: 'GET',
             headers: {
@@ -105,7 +105,7 @@ async function loadCategoriesStatic() {
 async function loadMarketsStatic() {
     let raw;
     try {
-        raw = await LoadFromSDE("/data/invMarketGroups.csv");
+        raw = await LoadFromSDE("invMarketGroups");
     } catch (error) {
         console.error(error);        
     }
@@ -152,9 +152,11 @@ export function LoadFromSDE( route: string ):Promise<Object> {
         }
     });
 
+    let url = `${basePath}/eve-sde/${route}.csv`
+
     if(browser) {
         return new Promise((resolve)=>{
-            Papa.parse(basePath+route, {
+            Papa.parse(url, {
                 download: true,
                 ...parseOptions(resolve)
             });    
@@ -162,7 +164,7 @@ export function LoadFromSDE( route: string ):Promise<Object> {
     } else {
         // Need to check if this actually works on the server
         return new Promise((resolve)=>{
-            Papa.parse(basePath+route, {
+            Papa.parse(url, {
                 ...parseOptions(resolve)
             });    
         });
@@ -174,7 +176,7 @@ async function loadTypesStatic(marketGroups:EntityCollection<MarketGroup>) {
     if(!browser) return;
 
     return new Promise((resolve)=>{
-        Papa.parse(`${basePath}/data/types.csv`, {
+        Papa.parse(`${basePath}/eve-sde/types.csv`, {
             download: true,
             header: true,
             dynamicTyping: true,
