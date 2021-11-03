@@ -3,6 +3,8 @@ import type { Readable } from "svelte/store";
 import { LoadFromESI } from "./EveData";
 import type { Subscriber } from "svelte/store";
 
+import { base as basePath } from '$app/paths';
+
 
 export enum ESIStoreStatus {
     loading,
@@ -54,7 +56,7 @@ export function CreateESIStoreFromCache<Data>( route:string, onLoad?:(value)=>vo
     function start(set: Subscriber<Data>) {
         if(store.status === ESIStoreStatus.loaded) return;
 
-        fetch(`/esi-cache${route}index.json`)
+        fetch(`${basePath}/esi-cache${route}index.json`)
             .then(response=>{
                 if(response.ok)
                     return response.json();
