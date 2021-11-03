@@ -111,7 +111,7 @@
             timeReductionBonus: 0
         }
     } else {
-        locationIsStructure = null;
+        structureRigBonuses = null;
     }
 
 
