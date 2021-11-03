@@ -1,4 +1,4 @@
-import { derived, readable } from "svelte/store";
+import { derived, readable, writable } from "svelte/store";
 import type { Readable } from "svelte/store";
 
 // import Papa from "https://cdnjs.cloudflare.com/ajax/libs/PapaParse/4.6.2/papaparse.min.js";
@@ -9,14 +9,13 @@ import CreateESIStore, { CreateESIStoreFromCache } from "./ESIStore";
 import type { ESIStore } from "./ESIStore";
 
 import { base as basePath } from '$app/paths';
+import type { Activity_Id } from "./EveIndustry";
 
 interface ESIOptions {
     dev?: any,
     datasource?: "tranquility" | "singularity",
 
 }
-
-console.log(basePath);
 
 export type Type_Id = number;
 
@@ -84,7 +83,7 @@ async function loadCategoriesStatic() {
     if(!browser) return Promise.reject("Doesn't work on server");
 
     const response = await fetch(
-        `${basePath}/data/categories.json`,
+        `${basePath}/eve-sde/categories.json`,
         {
             method: 'GET',
             headers: {
@@ -105,7 +104,7 @@ async function loadCategoriesStatic() {
 async function loadMarketsStatic() {
     let raw;
     try {
-        raw = await LoadFromSDE("/data/invMarketGroups.csv");
+        raw = await LoadFromSDE("invMarketGroups");
     } catch (error) {
         console.error(error);        
     }
@@ -152,9 +151,11 @@ export function LoadFromSDE( route: string ):Promise<Object> {
         }
     });
 
+    let url = `${basePath}/eve-sde/${route}.csv`
+
     if(browser) {
         return new Promise((resolve)=>{
-            Papa.parse(basePath+route, {
+            Papa.parse(url, {
                 download: true,
                 ...parseOptions(resolve)
             });    
@@ -162,7 +163,7 @@ export function LoadFromSDE( route: string ):Promise<Object> {
     } else {
         // Need to check if this actually works on the server
         return new Promise((resolve)=>{
-            Papa.parse(basePath+route, {
+            Papa.parse(url, {
                 ...parseOptions(resolve)
             });    
         });
@@ -174,7 +175,7 @@ async function loadTypesStatic(marketGroups:EntityCollection<MarketGroup>) {
     if(!browser) return;
 
     return new Promise((resolve)=>{
-        Papa.parse(`${basePath}/data/types.csv`, {
+        Papa.parse(`${basePath}/eve-sde/types.csv`, {
             download: true,
             header: true,
             dynamicTyping: true,
@@ -347,52 +348,45 @@ export interface EveLocation {
     system_id?: number,
     solar_system_id?: number,
     type_id?: Type_Id,
-
-    modifiers?: {
-        jobDurationModifier: number,
-        materialConsumptionModifier: number,
-        jobCostModifier: number,
-        facilityTax: number
-    }
 }
 
-let Locations = {};
+let Locations: {[index: Location_Id]: ESIStore<EveLocation>} = {};
+
+type StructureTaxRates = {[index: number]:{
+    [index:Activity_Id]: number
+}};
+
+
+function createStructureTaxRates() {
+	const { subscribe, update } = writable<StructureTaxRates>({});
+
+	return {
+		subscribe,
+        update: (change:StructureTaxRates)=>update(rates=>{
+            for(let structure_id in change) {
+                if(rates[structure_id] === undefined) rates[structure_id] = {};
+                Object.assign(rates[structure_id], change[structure_id]);
+            }
+            return rates;
+        })
+	};
+}
+
+export const StructureTaxRates = createStructureTaxRates();
+
+export function IsLocationStation(location_id:Location_Id) {
+    return 60000000 <= location_id && location_id < 70000000;
+}
 
 export function GetLocationStore(location_id: Location_Id): ESIStore<EveLocation> {
     if(Locations[location_id] === undefined) {
-        if(60000000 <= location_id && location_id < 70000000) { // this is a station
+        if(IsLocationStation(location_id)) { // this is a station
             Locations[location_id] = CreateESIStore( `/universe/stations/${location_id}/` )
         } else {
-            Locations[location_id] = CreateESIStoreFromCache( `/universe/structures/${location_id}/`, (value: EveLocation)=>{
-                fetch( `${basePath}/esi-cache/universe/structures/${location_id}/modifiers.json` )
-                    .then(response=>{
-                        if(response.status == 404) {
-                            return Promise.reject("Modifiers not available")
-                        }
-
-                        return response.json()
-                    })
-                    .then(modifiers=>value.modifiers=modifiers)
-                    .catch(reason=>{
-                        if(reason == "Modifiers not available") {
-                            if(value.type_id === 35825) {   // HACK default values for a Raitaru
-                                value.modifiers = {
-                                    "jobDurationModifier": -15,
-                                    "materialConsumptionModifier": -1,
-                                    "jobCostModifier": -3,
-                                    "facilityTax": 10
-                                }
-                            }
-                        } else {
-                            console.error(reason);
-                        }
-                    })
-
-                return value;
-            } );
-    
+            Locations[location_id] = CreateESIStoreFromCache( `/universe/structures/${location_id}/`);
         }
     }
 
     return Locations[location_id];
 }
+

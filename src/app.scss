@@ -1,7 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;600&display=swap');
 
 :root {
-	font-family: Roboto, 'Open Sans', 'Helvetica Neue', sans-serif;
+	font-family: 'Rubik', sans-serif;
 	font-weight: 300;
 
 	background-color: #181818;
@@ -9,7 +9,7 @@
 }
 
 select, input {
-	font-family: Roboto, 'Open Sans', 'Helvetica Neue', sans-serif;
+	font-family: 'Rubik', sans-serif;
 
 	background-color: #333;
 	color: #eee;
@@ -18,4 +18,23 @@ select, input {
 		background-color: #444;
 		color: #888;
 	}
+}
+
+
+dl {
+	display: grid;
+	grid-template-columns: 150px 1fr;
+
+	margin-top: 0px;
+}
+
+dt {
+
+	overflow-x: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+dd {
+	margin-inline-start: 10px;
 }

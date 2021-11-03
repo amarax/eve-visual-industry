@@ -1,21 +1,22 @@
 <script lang="ts">
-    import { GetLocationStore, loadType, Universe } from "./EveData";
-    import { ADVANCED_INDUSTRY_SKILL_ID, Decryptors, Industry, IndustrySystems, INVENTION_ACTIVITY_ID, MANUFACTURING_ACTIVITY_ID,  } from "./EveIndustry";
+    import { loadType, Universe } from "$lib/eve-data/EveData";
+    import { ADVANCED_INDUSTRY_SKILL_ID, Decryptors, Industry, INVENTION_ACTIVITY_ID, MANUFACTURING_ACTIVITY_ID,  } from "$lib/eve-data/EveIndustry";
     
-    import type { EntityCollection, EveLocation, Location_Id, Type_Id } from "./EveData";
-    import type { IndustryType } from "./EveIndustry";
+    import type { EntityCollection, Location_Id, Type_Id } from "$lib/eve-data/EveData";
+    import type { IndustryType } from "$lib/eve-data/EveIndustry";
 
-    import { getMarketType, IskAmount, MarketPrices, MarketType } from "./EveMarkets";
+    import { IskAmount, MarketPrices } from "$lib/eve-data/EveMarkets";
     import MarketOrdersBar from "./MarketOrdersBar.svelte";
-    import { sum } from "./Utilities";
-    import { FormatDuration, FormatIskAmount } from "./Format";
+    import { sum } from "$lib/Utilities";
+    import { FormatDuration, FormatIskAmount } from "$lib/Format";
     
-    import { Characters, CharacterSkills } from "./EveCharacter";
-    import type { ESIStore } from "./ESIStore";
+    import { CharacterSkills } from "$lib/eve-data/EveCharacter";
+    import type { ESIStore } from "$lib/eve-data/ESIStore";
     import LocationSelector from "./LocationSelector.svelte";
 
 
     export let selectedCharacterId = null;
+
 
     
     let characterSkills: ESIStore<CharacterSkills>;
@@ -87,28 +88,9 @@
         }
     }
 
-    let selectedLocationId: Location_Id = null;
-    let selectedLocation: ESIStore<EveLocation> = null;
-
-    let systemCostIndex = 0.01;
-    let jobCostModifier = 0;
-    let facilityTax = 0;
-    $: {
-        if(selectedLocationId) selectedLocation = GetLocationStore(selectedLocationId);
-        if($selectedLocation) {
-            systemCostIndex = $IndustrySystems.find(system=>system.solar_system_id === ($selectedLocation.solar_system_id ?? $selectedLocation.system_id)).cost_indices.find(value=>value.activity=="invention").cost_index;
-            jobCostModifier = $selectedLocation.modifiers?.jobCostModifier ?? 0;
-            facilityTax = $selectedLocation.modifiers?.facilityTax ?? 0;
-            jobDurationModifier = $selectedLocation.modifiers?.jobDurationModifier ?? 0;
-        } else {
-            systemCostIndex = 0.01;
-            jobCostModifier = 0;
-            facilityTax = 0;
-            jobDurationModifier = 0;
-        }
-    }
-    
-    $: jobCost = totalAdjustedCostPrice * systemCostIndex * 0.02 * (1+jobCostModifier/100) * (1+facilityTax/100);
+    let activitySystemCostIndex: number, activityTax: number;
+    let structureRoleBonuses, structureRigBonuses;
+    $: jobCost = totalAdjustedCostPrice * activitySystemCostIndex * 0.02 * (1+(structureRoleBonuses?.jobCostModifier ?? 0)/100) * (1+(structureRigBonuses?.costReductionBonus ?? 0)/100) * (1+activityTax/100);
 
     let totalCost: IskAmount = 0;
     $: {
@@ -121,8 +103,10 @@
         }
     }
 
-    let jobDurationModifier = 0;
-    $: jobDuration = inventionActivity.time * (1+jobDurationModifier/100) * (1 - 0.03*($characterSkills?.skills.find(skill=>skill.skill_id===ADVANCED_INDUSTRY_SKILL_ID)?.active_skill_level||0) )
+    $: jobDuration = inventionActivity.time 
+        * (1 - 0.03*($characterSkills?.skills.find(skill=>skill.skill_id===ADVANCED_INDUSTRY_SKILL_ID)?.active_skill_level||0) )
+        * (1+(structureRoleBonuses?.jobDurationModifier ?? 0)/100)
+        * (1+(structureRigBonuses?.timeReductionBonus ?? 0)/100);
 
 
     let skill1, skill2, encryptionSkill;
@@ -229,6 +213,7 @@
 
 
     export let marketFilterLocation: Location_Id = null;
+
 </script>
 
 <style lang="scss">
@@ -288,8 +273,8 @@
     </label>
 
     <p>
-        <LocationSelector bind:value={selectedLocationId} /><br/>
-        System cost index {systemCostIndex}
+        <LocationSelector activity={INVENTION_ACTIVITY_ID}
+            bind:activitySystemCostIndex bind:activityTax bind:structureRoleBonuses bind:structureRigBonuses /><br/>
     </p>
     
     <div class="breakdown">

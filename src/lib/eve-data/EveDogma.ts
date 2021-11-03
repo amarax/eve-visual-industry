@@ -32,7 +32,7 @@ export const IndustryDogmaAttributes: Readable<{
     let attributes = {};
     let types = {};
 
-    LoadFromSDE("/data/dgmAttributeTypes.csv")
+    LoadFromSDE("dgmAttributeTypes")
         .then((data: Array<{
             attributeID: number,
             attributeName: string,
@@ -49,7 +49,7 @@ export const IndustryDogmaAttributes: Readable<{
             data.filter(type=>type.attributeID!==null && (type.attributeName?.indexOf("Manufacturing Time Bonus")!=-1 || type.attributeName?.indexOf("Industry Job Length Bonus")!=-1))
                 .forEach(type=>attributes[type.attributeID]=type);
         })
-        .then(()=>LoadFromSDE("/data/dgmIndustryTypeAttributes.csv")) // This first load has a large impact on performance, need to figure out how to cut it down
+        .then(()=>LoadFromSDE("dgmIndustryTypeAttributes")) // This first load has a large impact on performance, need to figure out how to cut it down
         .then((data:Array<{
             typeID: Type_Id,
             attributeID,

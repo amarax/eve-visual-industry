@@ -23,10 +23,9 @@ export default function CreateESIStore<Data>( route:string, onLoad?:(value)=>voi
         subscribe: null,
     }
 
-    function start(set: Subscriber<Data>) {
-        if(store.status === ESIStoreStatus.loaded) return;
-
-        LoadFromESI(route)
+    function start(set: Subscriber<Data>): ()=>void {
+        if(store.status !== ESIStoreStatus.loaded) {
+            LoadFromESI(route)
             .then((value)=>{
                 if(onLoad) value = onLoad(value);
                 store.status=ESIStoreStatus.loaded;
@@ -37,6 +36,9 @@ export default function CreateESIStore<Data>( route:string, onLoad?:(value)=>voi
                 set(null);
                 console.error(reason);
             });
+        }
+        
+        return ()=>{}
     }
 
     // Internally the store is a writable so we can trigger a refresh (not implemented yet) if necessary
@@ -53,10 +55,9 @@ export function CreateESIStoreFromCache<Data>( route:string, onLoad?:(value)=>vo
         subscribe: null,
     }
 
-    function start(set: Subscriber<Data>) {
-        if(store.status === ESIStoreStatus.loaded) return;
-
-        fetch(`${basePath}/esi-cache${route}index.json`)
+    function start(set: Subscriber<Data>): ()=>void {
+        if(store.status !== ESIStoreStatus.loaded) {
+            fetch(`${basePath}/esi-cache${route}index.json`)
             .then(response=>{
                 if(response.ok)
                     return response.json();
@@ -73,7 +74,11 @@ export function CreateESIStoreFromCache<Data>( route:string, onLoad?:(value)=>vo
                 set(null);
                 console.error(reason);
             });
+        }
+
+        return ()=>{}
     }
+    
 
     // Internally the store is a writable so we can trigger a refresh (not implemented yet) if necessary
     const { subscribe } = writable(null, start);

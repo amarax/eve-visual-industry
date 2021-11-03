@@ -1,7 +1,7 @@
 import { derived, readable } from "svelte/store";
 import { LoadFromESI, LoadFromSDE, Universe } from "./EveData";
 import type { Readable } from "svelte/store";
-import type { EntityCollection, Type, Type_Id, UniverseStore } from "./EveData";
+import type { EveLocation, EntityCollection, Type, Type_Id, UniverseStore } from "./EveData";
 import CreateESIStore  from "./ESIStore";
 import type { ESIStore } from "./ESIStore";
 
@@ -48,6 +48,7 @@ export type IndustryStore = {
 export const MANUFACTURING_ACTIVITY_ID = 1;
 export const INVENTION_ACTIVITY_ID = 8;
 export const REVERSE_ENGINEERING_ACTIVITY_ID = 7;
+export const REACTION_ACTIVITY_ID = 11;
 
 
 let industryPopulated = false;
@@ -60,11 +61,11 @@ function setupIndustry( set:(value:any)=>void ) {
 
     }
 
-    LoadFromSDE("/data/ramActivities.csv")
+    LoadFromSDE("ramActivities")
         .then((data: Array<RAMActivity>)=>{
-            data.forEach(activity=>industry.activities[activity.activityID]=activity);
+            data.filter(activity=>activity.activityID).forEach(activity=>industry.activities[activity.activityID]=activity);
         })
-        .then(()=>LoadFromSDE("/data/industryActivity.csv"))
+        .then(()=>LoadFromSDE("industryActivity"))
         .then((data: Array<{
             type_id:Type_Id,
             activityID:Activity_Id,
@@ -88,7 +89,7 @@ function setupIndustry( set:(value:any)=>void ) {
 
             });
         })
-        .then(()=>LoadFromSDE("/data/industryActivityMaterials.csv"))
+        .then(()=>LoadFromSDE("industryActivityMaterials"))
         .then((data: Array<{
             typeID: Type_Id,
             activityID: Activity_Id,
@@ -111,7 +112,7 @@ function setupIndustry( set:(value:any)=>void ) {
                 }
             })
         })
-        .then(()=>LoadFromSDE("/data/industryActivityProducts.csv"))
+        .then(()=>LoadFromSDE("industryActivityProducts"))
         .then((data:Array<{
             type_id: Type_Id,
             activityID: Activity_Id,
@@ -128,7 +129,7 @@ function setupIndustry( set:(value:any)=>void ) {
                 };
             });
         })
-        .then(()=>LoadFromSDE("/data/industryActivityProbabilities.csv"))
+        .then(()=>LoadFromSDE("industryActivityProbabilities"))
         .then((data:Array<{
             typeID: Type_Id,
             activityID: Activity_Id,
@@ -142,7 +143,7 @@ function setupIndustry( set:(value:any)=>void ) {
                 activity.products[activityProbability.productTypeID].probability = activityProbability.probability;
             })
         })
-        .then(()=>LoadFromSDE("/data/industryActivitySkills.csv"))
+        .then(()=>LoadFromSDE("industryActivitySkills"))
         .then((data:Array<{
             typeID: Type_Id,
             activityID: Activity_Id,
@@ -160,7 +161,7 @@ function setupIndustry( set:(value:any)=>void ) {
                 };
             })
         })
-        .then(()=>LoadFromSDE("/data/industryBlueprints.csv"))
+        .then(()=>LoadFromSDE("industryBlueprints"))
         .then((data:Array<{
             type_id:Type_Id, 
             maxProductionLimit:number
@@ -231,3 +232,19 @@ type IndustrySystem = {
   }
 
 export const IndustrySystems: ESIStore<Array<IndustrySystem>> = CreateESIStore("/industry/systems/")
+
+
+const ActivityIdMapToCostIndexActivity = {
+    "manufacturing": 1,  // Manufacturing,18_02,Manufacturing,1
+    "researching_time_efficiency": 3,  // Researching Time Efficiency,33_02,Researching time efficiency,1
+    "researching_material_efficiency": 4,  // Researching Material Efficiency,33_02,Researching material efficiency,1
+    "copying": 5,  // Copying,33_02,Copying,1
+    "invention": 8,  // Invention,33_02,The process of creating a more advanced item based on an existing item,1
+    "reaction": 11, // Reactions,18_02,The process of combining raw and intermediate materials to create advanced components,1
+
+}
+export function GetCostIndex(industrySystems:Array<IndustrySystem>, location: EveLocation, activity_id: Activity_Id) {
+    return industrySystems
+        ?.find(system=>system.solar_system_id === (location?.solar_system_id ?? location?.system_id))   // Need to accommodate for both stations and structures
+        ?.cost_indices.find(value=>ActivityIdMapToCostIndexActivity[value.activity]==activity_id )?.cost_index
+}

@@ -1,15 +1,15 @@
 <script lang="ts">
-    import type { Location_Id, Type_Id } from "./EveData";
+    import type { Location_Id, Type_Id } from "$lib/eve-data/EveData";
 
-    import { getMarketType } from "./EveMarkets";
-    import type { IskAmount, MarketOrder } from "./EveMarkets";
+    import { getMarketType } from "$lib/eve-data/EveMarkets";
+    import type { IskAmount, MarketOrder } from "$lib/eve-data/EveMarkets";
 
     import { FormatIskAmount } from "./Format";
 
     import { scaleLinear } from "d3-scale";
     import { sum, minIndex } from "d3-array";
     import { line, curveStepAfter } from "d3-shape";
-import { ESIStoreStatus } from "./ESIStore";
+    import { ESIStoreStatus } from "$lib/eve-data/ESIStore";
 
 
 
