@@ -8,11 +8,15 @@ import Papa from "papaparse";
 import CreateESIStore, { CreateESIStoreFromCache } from "./ESIStore";
 import type { ESIStore } from "./ESIStore";
 
+import { base as basePath } from '$app/paths';
+
 interface ESIOptions {
     dev?: any,
     datasource?: "tranquility" | "singularity",
 
 }
+
+console.log(basePath);
 
 export type Type_Id = number;
 
@@ -80,7 +84,7 @@ async function loadCategoriesStatic() {
     if(!browser) return Promise.reject("Doesn't work on server");
 
     const response = await fetch(
-        "data/categories.json",
+        `${basePath}/data/categories.json`,
         {
             method: 'GET',
             headers: {
@@ -150,7 +154,7 @@ export function LoadFromSDE( route: string ):Promise<Object> {
 
     if(browser) {
         return new Promise((resolve)=>{
-            Papa.parse(route, {
+            Papa.parse(basePath+route, {
                 download: true,
                 ...parseOptions(resolve)
             });    
@@ -158,7 +162,7 @@ export function LoadFromSDE( route: string ):Promise<Object> {
     } else {
         // Need to check if this actually works on the server
         return new Promise((resolve)=>{
-            Papa.parse(route, {
+            Papa.parse(basePath+route, {
                 ...parseOptions(resolve)
             });    
         });
@@ -170,7 +174,7 @@ async function loadTypesStatic(marketGroups:EntityCollection<MarketGroup>) {
     if(!browser) return;
 
     return new Promise((resolve)=>{
-        Papa.parse("/data/types.csv", {
+        Papa.parse(`${basePath}/data/types.csv`, {
             download: true,
             header: true,
             dynamicTyping: true,
@@ -360,7 +364,7 @@ export function GetLocationStore(location_id: Location_Id): ESIStore<EveLocation
             Locations[location_id] = CreateESIStore( `/universe/stations/${location_id}/` )
         } else {
             Locations[location_id] = CreateESIStoreFromCache( `/universe/structures/${location_id}/`, (value: EveLocation)=>{
-                fetch( `/esi-cache/universe/structures/${location_id}/modifiers.json` )
+                fetch( `${basePath}/esi-cache/universe/structures/${location_id}/modifiers.json` )
                     .then(response=>{
                         if(response.status == 404) {
                             return Promise.reject("Modifiers not available")
