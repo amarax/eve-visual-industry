@@ -16,8 +16,6 @@ interface ESIOptions {
 
 }
 
-console.log(basePath);
-
 export type Type_Id = number;
 
 
