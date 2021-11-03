@@ -47,7 +47,7 @@
 Filter market <LocationSelector allowUnselected bind:value={marketFilterLocation} />
 
 
-<TypeSelector {selectedTypeId} on:change={event=>{goto(`/breakdown/${event.detail}`, {keepfocus:true})}} {selectableTypes} />
+<TypeSelector {selectedTypeId} on:change={event=>{goto(`breakdown/${event.detail}`, {keepfocus:true})}} {selectableTypes} />
 
 <p/><ManufacturingActivity selectedProductId={selectedTypeId} {selectedCharacterId} {marketFilterLocation} />
     
