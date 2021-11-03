@@ -238,9 +238,11 @@ No blueprint selected yet
     <label>Cost per run <input type="number" bind:value={blueprintCostPerRun} disabled={inventing} /></label>
 </p>
 
+<p>
 <b>Facility</b>
 <LocationSelector bind:value={selectedLocationId} activity={MANUFACTURING_ACTIVITY_ID}
     bind:activitySystemCostIndex bind:activityTax bind:structureRoleBonuses bind:structureRigBonuses />
+</p>
 
 <b>Manufacturing</b>
 <dl>

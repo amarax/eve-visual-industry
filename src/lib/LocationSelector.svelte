@@ -115,6 +115,9 @@
     }
 
 
+    export let collapsed = true;
+
+
     let _locations: Array<{location_id:Location_Id, name:string}> = [];
     $: _locations = Object.keys($locations).map(id=>({
         location_id: parseInt(id), 
@@ -123,18 +126,94 @@
 </script>
 
 
-<select bind:value={value}>
-    {#if allowUnselected}
-        <option value={null}></option>
-    {/if}
-    {#each _locations as location}
-        <option value={location.location_id}>{location.name ?? location.location_id}</option>
-    {/each}
-</select>
+<style lang="scss">
 
-{#if _activity}
+    .overlay-parent {
+        position: relative;
+
+        .overlay {
+            visibility: hidden;
+
+            position: absolute;
+            z-index: 1;
+
+            top: 0px;
+            left: calc(100% + 4px);
+
+            border: 1px solid #444;
+            background: #1c1c1c;
+            padding: 2px 8px 2px 8px;
+            
+            font-size: 0.75rem;
+            line-height: 1.25rem;
+
+            dl {
+            	grid-template-columns: 125px auto;
+
+                margin-bottom: 0px;
+
+                font-weight: 400;
+
+                .full-width {
+                    grid-column: span 2;
+                }
+
+                dt {
+                    color: #aaa;
+                }
+
+                dd {
+                    text-align: end;
+                    margin-bottom: 4px;
+                }
+            }
+        }
+
+        &:hover {
+            .overlay {
+                visibility: inherit;
+            }
+        }
+    }
+</style>
+
+
+<span class="overlay-parent">
+    <select bind:value={value}>
+        {#if allowUnselected}
+            <option value={null}></option>
+        {/if}
+        {#each _locations as location}
+            <option value={location.location_id}>{location.name ?? location.location_id}</option>
+        {/each}
+    </select> 
+    <button on:click={()=>{collapsed = !collapsed}}>{collapsed?"+":"-"}</button>
+    {#if _activity && collapsed}
+    <div class="overlay">
+        <dl>
+            <dt>System cost index</dt> <dd>{activitySystemCostIndex*100}%</dd>
+            <dt>Tax for {_activity.activityName}</dt> <dd>{activityTax}%</dd>
+            {#if locationIsStructure}
+            <dt class="full-width">Structure role bonuses</dt>
+            <dd class="full-width">ME {structureRoleBonuses.materialConsumptionModifier}% | Cost {structureRoleBonuses.jobCostModifier}% | TE {structureRoleBonuses.jobDurationModifier}%</dd>
+            <dt class="full-width">Structure rig bonuses</dt>
+            <dd class="full-width">
+                {#if activity === MANUFACTURING_ACTIVITY_ID || activity === REACTION_ACTIVITY_ID}
+                    ME {structureRigBonuses.materialReductionBonus}%
+                {/if}
+                | TE {structureRigBonuses.timeReductionBonus}%
+            </dd>
+        {/if}
+        </dl>
+    </div>
+    {/if}
+</span>
+
+
+
+{#if _activity && !collapsed}
 <dl>
-    <dt>System cost index</dt> <dd>{activitySystemCostIndex}</dd>
+    <dt>System cost index</dt> <dd>{activitySystemCostIndex*100}%</dd>
     <dt>Tax for {_activity.activityName}</dt> <dd><input type="range" min={0} max={15} step={0.5} value={activityTax} on:input={onChangeFacilityTax} disabled={IsLocationStation(value)} /> {activityTax}</dd>
     {#if locationIsStructure}
         <dt>Structure role bonuses</dt>
