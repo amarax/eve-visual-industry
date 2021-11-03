@@ -15,8 +15,8 @@ const config = {
 
 		adapter: adapter({
 			// default options are shown
-			pages: 'build',
-			assets: 'build',
+			pages: 'dist',
+			assets: 'dist',
 			fallback: 'index.html'
 		}),
 
