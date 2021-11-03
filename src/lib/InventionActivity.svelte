@@ -88,26 +88,9 @@
         }
     }
 
-    let selectedLocationId: Location_Id = null;
-    let selectedLocation: ESIStore<EveLocation> = null;
-
-    let systemCostIndex = 0.01;
-    let jobCostModifier = 0;
-    $: facilityTax = IsLocationStation(selectedLocationId) ? 10 : (($StructureTaxRates[selectedLocationId] && $StructureTaxRates[selectedLocationId][INVENTION_ACTIVITY_ID]) || 10)
-    $: {
-        if(selectedLocationId) selectedLocation = GetLocationStore(selectedLocationId);
-        if($selectedLocation) {
-            systemCostIndex = $IndustrySystems.find(system=>system.solar_system_id === ($selectedLocation.solar_system_id ?? $selectedLocation.system_id)).cost_indices.find(value=>value.activity=="invention").cost_index;
-            jobCostModifier = $selectedLocation.modifiers?.jobCostModifier ?? 0;
-            jobDurationModifier = $selectedLocation.modifiers?.jobDurationModifier ?? 0;
-        } else {
-            systemCostIndex = 0.01;
-            jobCostModifier = 0;
-            jobDurationModifier = 0;
-        }
-    }
-    
-    $: jobCost = totalAdjustedCostPrice * systemCostIndex * 0.02 * (1+jobCostModifier/100) * (1+facilityTax/100);
+    let activitySystemCostIndex: number, activityTax: number;
+    let structureRoleBonuses, structureRigBonuses;
+    $: jobCost = totalAdjustedCostPrice * activitySystemCostIndex * 0.02 * (1+(structureRoleBonuses?.jobCostModifier ?? 0)/100) * (1+activityTax/100);
 
     let totalCost: IskAmount = 0;
     $: {
@@ -120,8 +103,10 @@
         }
     }
 
-    let jobDurationModifier = 0;
-    $: jobDuration = inventionActivity.time * (1+jobDurationModifier/100) * (1 - 0.03*($characterSkills?.skills.find(skill=>skill.skill_id===ADVANCED_INDUSTRY_SKILL_ID)?.active_skill_level||0) )
+    $: jobDuration = inventionActivity.time 
+        * (1 - 0.03*($characterSkills?.skills.find(skill=>skill.skill_id===ADVANCED_INDUSTRY_SKILL_ID)?.active_skill_level||0) )
+        * (1+(structureRoleBonuses?.jobDurationModifier ?? 0)/100)
+        * (1+(structureRigBonuses?.timeReductionBonus ?? 0)/100);
 
 
     let skill1, skill2, encryptionSkill;
@@ -229,13 +214,6 @@
 
     export let marketFilterLocation: Location_Id = null;
 
-    function onChangeFacilityTax(event) {
-        let update = {}
-        update[selectedLocationId] = {}
-        update[selectedLocationId][INVENTION_ACTIVITY_ID] = parseFloat(event.target.value)
-        StructureTaxRates.update(update);
-    }
-
 </script>
 
 <style lang="scss">
@@ -261,24 +239,6 @@
         margin-top: 16px;
         margin-bottom: 16px;
     }
-
-    dl {
-        display: grid;
-        grid-template-columns: 150px 1fr;
-
-        margin-top: 0px;
-    }
-
-    dt {
-
-        overflow-x: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    dd {
-        margin-inline-start: 10px;
-    }    
 </style>
 
 <div>
@@ -313,9 +273,8 @@
     </label>
 
     <p>
-        <LocationSelector bind:value={selectedLocationId} /><br/>
-        System cost index {systemCostIndex}
-        <dt>Facility invention tax</dt> <dd><input type="number" value={facilityTax} on:change={onChangeFacilityTax} /></dd>
+        <LocationSelector activity={INVENTION_ACTIVITY_ID}
+            bind:activitySystemCostIndex bind:activityTax bind:structureRoleBonuses bind:structureRigBonuses /><br/>
     </p>
     
     <div class="breakdown">

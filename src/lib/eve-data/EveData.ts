@@ -348,12 +348,6 @@ export interface EveLocation {
     system_id?: number,
     solar_system_id?: number,
     type_id?: Type_Id,
-
-    modifiers?: {
-        jobDurationModifier: number,
-        materialConsumptionModifier: number,
-        jobCostModifier: number
-    }
 }
 
 let Locations: {[index: Location_Id]: ESIStore<EveLocation>} = {};
@@ -389,28 +383,10 @@ export function GetLocationStore(location_id: Location_Id): ESIStore<EveLocation
         if(IsLocationStation(location_id)) { // this is a station
             Locations[location_id] = CreateESIStore( `/universe/stations/${location_id}/` )
         } else {
-            Locations[location_id] = CreateESIStoreFromCache( `/universe/structures/${location_id}/`, (location: EveLocation)=>{
-                switch(location.type_id) {
-                    case 35825: // Raitaru
-                        location.modifiers = {
-                            "jobDurationModifier": -15,
-                            "materialConsumptionModifier": -1,
-                            "jobCostModifier": -3
-                        }
-                        break;
-                    case 35827: // Sotiyo?
-                        location.modifiers = {
-                            "jobDurationModifier": -44,
-                            "materialConsumptionModifier": -1,
-                            "jobCostModifier": -14.5,
-                        }
-                }
-
-                return location;
-            } );
-    
+            Locations[location_id] = CreateESIStoreFromCache( `/universe/structures/${location_id}/`);
         }
     }
 
     return Locations[location_id];
 }
+

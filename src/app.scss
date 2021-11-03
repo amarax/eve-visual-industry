@@ -19,3 +19,22 @@ select, input {
 		color: #888;
 	}
 }
+
+
+dl {
+	display: grid;
+	grid-template-columns: 150px 1fr;
+
+	margin-top: 0px;
+}
+
+dt {
+
+	overflow-x: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+dd {
+	margin-inline-start: 10px;
+}

@@ -1,14 +1,13 @@
 <script lang="ts">
-    import { EveLocation, GetLocationStore, IsLocationStation, Location_Id, StructureTaxRates, Universe } from "$lib/eve-data/EveData";
+    import { Universe } from "$lib/eve-data/EveData";
     import { MANUFACTURING_ACTIVITY_ID, Industry, GetBlueprintToManufacture, GetInventableBlueprint, ADVANCED_INDUSTRY_SKILL_ID, IndustrySystems } from "$lib/eve-data/EveIndustry";
-    import { getMarketType, IskAmount, MarketOrder, MarketPrices } from "$lib/eve-data/EveMarkets";
+    import { IskAmount, MarketPrices } from "$lib/eve-data/EveMarkets";
     import { IndustryDogmaAttributes } from "$lib/eve-data/EveDogma";
     import { CharacterSkills } from "$lib/eve-data/EveCharacter";
 
-    import type { EntityCollection, Type_Id } from "$lib/eve-data/EveData";
+    import type { Location_Id, EntityCollection, Type_Id } from "$lib/eve-data/EveData";
     import type { IndustryActivity } from "$lib/eve-data/EveIndustry";
-    import type { MarketType, Quantity } from "$lib/eve-data/EveMarkets";
-    import type { ESIStore } from "$lib/eve-data/ESIStore";
+    import type { Quantity } from "$lib/eve-data/EveMarkets";
 
     import MarketOrdersBar from "./MarketOrdersBar.svelte";
     import { FormatDuration, FormatIskAmount, FormatIskChange } from "$lib/Format";
@@ -66,41 +65,19 @@
 
     export let selectedLocationId: Location_Id = null;
 
-    let systemCostIndex = 0.01;
-    let selectedLocation: ESIStore<EveLocation> = null;
-    $: {
-        if(selectedLocationId) selectedLocation = GetLocationStore(selectedLocationId);
-        if($selectedLocation) {
-            systemCostIndex = $IndustrySystems?.find(system=>system.solar_system_id === ($selectedLocation.solar_system_id ?? $selectedLocation.system_id)).cost_indices.find(value=>value.activity=="manufacturing").cost_index;
-        } else {
-            systemCostIndex = 0.01;
-        }
-    }
-
-
-    let facilityRigMaterialBonus: number = 0;
+    let activitySystemCostIndex, activityTax, structureRoleBonuses, structureRigBonuses;
     let materialQty = (baseQuantity: Quantity): Quantity => baseQuantity;
     $: {
-        materialQty = (qty) => Math.max( runs, Math.ceil( qty * runs * (1-materialEfficiency/100) * (1+($selectedLocation?.modifiers?.materialConsumptionModifier ?? 0)/100) * (1+facilityRigMaterialBonus/100)) );
+        materialQty = (qty) => Math.max( runs, Math.ceil( qty * runs * (1-materialEfficiency/100) * (1+(structureRoleBonuses?.materialConsumptionModifier ?? 0)/100) * (1+(structureRigBonuses?.materialReductionBonus ?? 0)/100)) );
     }
 
     let manufacturedUnitCostPrices: EntityCollection<IskAmount> = {};
-
-    function getFirstOrder(orders: Array<MarketOrder>, marketFilterLocation: Location_Id): MarketOrder {
-        if(!orders) return null;
-
-        if(marketFilterLocation) {
-            return orders.filter(order=>order.location_id === marketFilterLocation)[0];
-        }
-        return orders[0];
-    }
 
     let itemPrices: EntityCollection<number> = {};
     let totalCost = 0;
     $: {
         totalCost = 0;
         if(manufacturing) {
-
             for(let type_id in manufacturing.materials) {
                 let materialQuantity = materialQty(manufacturing.materials[type_id].quantity);
 
@@ -133,8 +110,7 @@
         }
     }
 
-    $: facilityTax = IsLocationStation(selectedLocationId) ? 10 : (($StructureTaxRates[selectedLocationId] && $StructureTaxRates[selectedLocationId][MANUFACTURING_ACTIVITY_ID]) || 10)
-    $: manufacturingJobCost = totalAdjustedCostPrice * systemCostIndex * (1+($selectedLocation?.modifiers?.jobCostModifier ?? 0)/100) * (1+(facilityTax ?? 0)/100) * runs;
+    $: manufacturingJobCost = totalAdjustedCostPrice * activitySystemCostIndex * (1+(structureRoleBonuses?.jobCostModifier ?? 0)/100) * (1+activityTax/100) * runs;
 
     $: characterSkills = CharacterSkills[selectedCharacterId];
 
@@ -151,8 +127,7 @@
             return modifier*(1+factor*0.01)
         },1) : 1
 
-    let facilityRigDurationBonus: number = 0;
-    $: manufacturingTime = manufacturing?.time * (1-timeEfficiency/100) * skillTimeModifier * (1+($selectedLocation?.modifiers?.jobDurationModifier ?? 0)/100) * (1+facilityRigDurationBonus/100) * runs;
+    $: manufacturingTime = manufacturing?.time * (1-timeEfficiency/100) * skillTimeModifier * (1+(structureRoleBonuses?.jobDurationModifier ?? 0)/100) * (1+(structureRigBonuses?.timeReductionBonus ?? 0)/100) * runs;
 
     $: sellingPrice = itemPrices[selectedProductId];
     $: producedQty = manufacturing?.products[selectedProductId].quantity*runs;
@@ -163,7 +138,7 @@
         unitCost = manufacturing ? totalCost/producedQty : null;
     }
 
-    export let compact = false;
+    // export let compact: boolean = false;
 
     let inventing = false;
     let inventedRuns: number = 10;
@@ -195,35 +170,10 @@
         }
     }
 
-    function onChangeFacilityTax(event) {
-        let update = {}
-        update[selectedLocationId] = {}
-        update[selectedLocationId][MANUFACTURING_ACTIVITY_ID] = parseFloat(event.target.value)
-        StructureTaxRates.update(update);
-    }
 
 </script>
 
 <style lang="scss">
-    dl {
-        display: grid;
-        grid-template-columns: 150px 1fr;
-
-        margin-top: 0px;
-    }
-
-    dt {
-
-        overflow-x: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    dd {
-        margin-inline-start: 10px;
-    }
-
-
     div.breakdown {
         display: grid;
         grid-template-columns: 1fr 80px 500px;
@@ -289,13 +239,8 @@ No blueprint selected yet
 </p>
 
 <b>Facility</b>
-<LocationSelector bind:value={selectedLocationId} />
-<dl>
-    <dt>System cost index</dt> <dd>{systemCostIndex}</dd>
-    <dt>Facility manufacturing tax</dt> <dd><input type="number" value={facilityTax} on:change={onChangeFacilityTax} /></dd>
-    <dt>Structure rig material bonus</dt> <dd><input type="number" bind:value={facilityRigMaterialBonus} /></dd>
-    <dt>Structure rig duration bonus</dt> <dd><input type="number" bind:value={facilityRigDurationBonus} /></dd>
-</dl>
+<LocationSelector bind:value={selectedLocationId} activity={MANUFACTURING_ACTIVITY_ID}
+    bind:activitySystemCostIndex bind:activityTax bind:structureRoleBonuses bind:structureRigBonuses />
 
 <b>Manufacturing</b>
 <dl>
