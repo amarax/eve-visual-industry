@@ -44,6 +44,15 @@ import { Unsubscriber, writable } from "svelte/store";
 
     $: blueprints = CharacterBlueprints[ selectedCharacterId ];
 
+    const TradeHubs = [
+        60003760,   // Jita IV - Moon 4 - Caldari Navy Assembly Plant
+        // Currently only Jita is supported because market region is hard-coded to The Forge
+        
+        // 60008494,   // Amarr VIII (Oris) - Emperor Family Academy
+        // 60004588,   // Rens VI - Moon 8 - Brutor Tribe Treasury
+        // 60011866,   // Dodixie IX - Moon 20 - Federation Navy Assembly Plant
+        // 60005686,   // Hek VIII - Moon 12 - Boundless Creation Factory
+    ]
 
     // Set the locations context for all location selectors below
     let _unsubscribes: Array<Unsubscriber>=[];
@@ -53,10 +62,13 @@ import { Unsubscriber, writable } from "svelte/store";
         _unsubscribes = [];
 
         let _locations = {};
+        locations.set(_locations);
 
         $blueprints?.forEach(b=>{ 
             _locations[b.location_id] = null;
         });
+
+        TradeHubs.forEach(location_id=>_locations[location_id] = null)
 
         let ids = Object.keys(_locations);
         ids.forEach(location_id=>{
