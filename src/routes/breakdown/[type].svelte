@@ -3,7 +3,7 @@
     import { page } from "$app/stores";
 
     import CharacterSelector from "$lib/CharacterSelector.svelte";
-    import { Location_Id, Universe } from "$lib/eve-data/EveData";
+    import { GetLocationStore, Location_Id, Universe } from "$lib/eve-data/EveData";
     import { Industry } from "$lib/eve-data/EveIndustry";
     import ManufacturingActivity from "$lib/ManufacturingActivity.svelte";
     import TypeSelector from "$lib/TypeSelector.svelte";
@@ -12,6 +12,11 @@
 
     import type { Type_Id, Type } from "$lib/eve-data/EveData";
     import LocationSelector from "$lib/LocationSelector.svelte";
+import { onDestroy, setContext } from "svelte";
+import { CharacterBlueprints } from "$lib/eve-data/EveCharacter";
+import { Unsubscriber, writable } from "svelte/store";
+
+    
 
     let selectedCharacterId;
 
@@ -36,7 +41,40 @@
     }
 
     let marketFilterLocation: Location_Id;
+
+    $: blueprints = CharacterBlueprints[ selectedCharacterId ];
+
+
+    // Set the locations context for all location selectors below
+    let _unsubscribes: Array<Unsubscriber>=[];
+    let locations = writable({});
+    $: {
+        _unsubscribes.forEach(u=>u());
+        _unsubscribes = [];
+
+        let _locations = {};
+
+        $blueprints?.forEach(b=>{ 
+            _locations[b.location_id] = null;
+        });
+
+        let ids = Object.keys(_locations);
+        ids.forEach(location_id=>{
+            let unsubscribe = GetLocationStore(parseInt(location_id)).subscribe(value=>{
+                _locations[location_id] = value;
+                locations.set(_locations);
+            });
+
+            if(typeof unsubscribe == 'function') _unsubscribes.push(unsubscribe);
+
+        })
+    }
+
+    onDestroy(()=>{_unsubscribes.forEach(u=>u&&u())})
+
+    setContext('locations', locations);
 </script>
+
 
 <svelte:head>
 	<title>{($Universe?.types && $Universe?.types[selectedTypeId]) ? `${$Universe?.types[selectedTypeId]?.name} - ` : "" }EVE Online Visual Industry Calculator</title>

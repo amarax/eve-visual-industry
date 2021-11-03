@@ -356,7 +356,7 @@ export interface EveLocation {
     }
 }
 
-let Locations = {};
+let Locations: {[index: Location_Id]: ESIStore<EveLocation>} = {};
 
 type StructureTaxRates = {[index: number]:{
     [index:Activity_Id]: number
