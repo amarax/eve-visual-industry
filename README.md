@@ -5,13 +5,14 @@ This is a web-app that will (eventually) be a way to visualise and try out diffe
 It's currently also my learning space for trying out a few things at once:
 - Svelte and SvelteKit
 - Publishing to GitHub Pages
+- Connecting to a Swagger API (ESI)
 - Building a web app from scratch
 
 It's currently just a personal project and is not meant to be used by others yet, so I won't (yet?) be answering any queries with regards to its functionality. 
 
 The instructions below are currently targeted at my future self should I forget how to set things up.
 
-Ongoing documentation will be included in (docs/), which is NOT used for GitHub pages.
+Ongoing documentation will be included in [docs/](docs/), which is NOT used for GitHub pages.
 
 
 # Setting up
@@ -33,4 +34,6 @@ git checkout main   # Switch back to the main branch
 git branch -D gh-pages   # Delete the local branch
 ```
 
-Some parts of this app will be a Single-Page App, so the approach at (https://github.com/rafgraph/spa-github-pages) was followed to use a `404.html` redirect to the built `index.html`.
+Some parts of this app will be a Single-Page App, so the approach at https://github.com/rafgraph/spa-github-pages was followed to use a `404.html` redirect to the built `index.html`.
+
+On Pages, there will be a missing `/esi-cache` folder, which includes downloaded files as a temporary replacement for ESI's SSO. This was not deployed to Pages as it includes information that would only be available using authenticated access to ESI. However, the web-app should still work as per normal, just without authenticated information.
