@@ -1,38 +1,39 @@
-# create-svelte
+# EVE Visual Industry
 
-Everything you need to build a Svelte project, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte);
+This is a web-app that will (eventually) be a way to visualise and try out different ideas for industry activities in EVE Online.
 
-## Creating a project
+It's currently also my learning space for trying out a few things at once:
+- Svelte and SvelteKit
+- Publishing to GitHub Pages
+- Connecting to a Swagger API (ESI)
+- Building a web app from scratch
 
-If you're seeing this, you've probably already done this step. Congrats!
+It's currently just a personal project and is not meant to be used by others yet, so I won't (yet?) be answering any queries with regards to its functionality. 
 
-```bash
-# create a new project in the current directory
-npm init svelte@next
+The instructions below are currently targeted at my future self should I forget how to set things up.
 
-# create a new project in my-app
-npm init svelte@next my-app
-```
+Ongoing documentation will be included in [docs/](docs/), which is NOT used for GitHub pages.
 
-> Note: the `@next` is temporary
 
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+# Setting up
 
 ```bash
+npm install
 npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
 ```
 
-## Building
 
-Before creating a production version of your app, install an [adapter](https://kit.svelte.dev/docs#adapters) for your target environment. Then:
+# Deploying to GitHub pages
 
 ```bash
-npm run build
+git checkout -b gh-pages   # Create a local branch called "gh-pages"
+npm run build   # Build the Svelte app using the currently specified adapter into the "/dist" folder
+git subtree push --prefix dist origin gh-pages   # Push the "/dist" folder onto the "gh-pages" branch on GitHub to update Pages
+
+git checkout main   # Switch back to the main branch
+git branch -D gh-pages   # Delete the local branch
 ```
 
-> You can preview the built app with `npm run preview`, regardless of whether you installed an adapter. This should _not_ be used to serve your app in production.
+Some parts of this app will be a Single-Page App, so the approach at https://github.com/rafgraph/spa-github-pages was followed to use a `404.html` redirect to the built `index.html`.
+
+On Pages, there will be a missing `/esi-cache` folder, which includes downloaded files as a temporary replacement for ESI's SSO. This was not deployed to Pages as it includes information that would only be available using authenticated access to ESI. However, the web-app should still work as per normal, just without authenticated information.
