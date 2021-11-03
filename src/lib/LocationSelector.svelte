@@ -116,7 +116,10 @@
 
 
     let _locations: Array<{location_id:Location_Id, name:string}> = [];
-    
+    $: _locations = Object.keys($locations).map(id=>({
+        location_id: parseInt(id), 
+        name: $locations[id]?.name
+    })).sort((a,b)=>(a.name && b.name) ? a.name.localeCompare(b.name) : 0)
 </script>
 
 
@@ -124,8 +127,8 @@
     {#if allowUnselected}
         <option value={null}></option>
     {/if}
-    {#each Object.keys($locations) as location_id}
-        <option value={parseInt( location_id )}>{$locations[location_id]?.name ?? location_id}</option>
+    {#each _locations as location}
+        <option value={location.location_id}>{location.name ?? location.location_id}</option>
     {/each}
 </select>
 
