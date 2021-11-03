@@ -80,7 +80,7 @@ async function loadCategoriesStatic() {
     if(!browser) return Promise.reject("Doesn't work on server");
 
     const response = await fetch(
-        "/data/categories.json",
+        "data/categories.json",
         {
             method: 'GET',
             headers: {
