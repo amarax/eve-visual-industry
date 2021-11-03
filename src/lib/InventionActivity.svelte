@@ -93,7 +93,7 @@
 
     let systemCostIndex = 0.01;
     let jobCostModifier = 0;
-    $: facilityTax = IsLocationStation(selectedLocationId) ? 10 : (($StructureTaxRates[selectedLocationId] && $StructureTaxRates[selectedLocationId][MANUFACTURING_ACTIVITY_ID]) || 10)
+    $: facilityTax = IsLocationStation(selectedLocationId) ? 10 : (($StructureTaxRates[selectedLocationId] && $StructureTaxRates[selectedLocationId][INVENTION_ACTIVITY_ID]) || 10)
     $: {
         if(selectedLocationId) selectedLocation = GetLocationStore(selectedLocationId);
         if($selectedLocation) {
