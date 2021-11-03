@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { EveLocation, GetLocationStore, Location_Id, Universe } from "$lib/eve-data/EveData";
+    import { EveLocation, GetLocationStore, IsLocationStation, Location_Id, StructureTaxRates, Universe } from "$lib/eve-data/EveData";
     import { MANUFACTURING_ACTIVITY_ID, Industry, GetBlueprintToManufacture, GetInventableBlueprint, ADVANCED_INDUSTRY_SKILL_ID, IndustrySystems } from "$lib/eve-data/EveIndustry";
     import { getMarketType, IskAmount, MarketOrder, MarketPrices } from "$lib/eve-data/EveMarkets";
     import { IndustryDogmaAttributes } from "$lib/eve-data/EveDogma";
@@ -133,7 +133,8 @@
         }
     }
 
-    $: manufacturingJobCost = totalAdjustedCostPrice * systemCostIndex * (1+($selectedLocation?.modifiers?.jobCostModifier ?? 0)/100) * (1+($selectedLocation?.modifiers?.facilityTax ?? 0)/100) * runs;
+    $: facilityTax = IsLocationStation(selectedLocationId) ? 10 : (($StructureTaxRates[selectedLocationId] && $StructureTaxRates[selectedLocationId][MANUFACTURING_ACTIVITY_ID]) || 10)
+    $: manufacturingJobCost = totalAdjustedCostPrice * systemCostIndex * (1+($selectedLocation?.modifiers?.jobCostModifier ?? 0)/100) * (1+(facilityTax ?? 0)/100) * runs;
 
     $: characterSkills = CharacterSkills[selectedCharacterId];
 
@@ -192,6 +193,13 @@
         } else {
             _extents = extents;
         }
+    }
+
+    function onChangeFacilityTax(event) {
+        let update = {}
+        update[selectedLocationId] = {}
+        update[selectedLocationId][MANUFACTURING_ACTIVITY_ID] = parseFloat(event.target.value)
+        StructureTaxRates.update(update);
     }
 
 </script>
@@ -284,6 +292,7 @@ No blueprint selected yet
 <LocationSelector bind:value={selectedLocationId} />
 <dl>
     <dt>System cost index</dt> <dd>{systemCostIndex}</dd>
+    <dt>Facility manufacturing tax</dt> <dd><input type="number" value={facilityTax} on:change={onChangeFacilityTax} /></dd>
     <dt>Structure rig material bonus</dt> <dd><input type="number" bind:value={facilityRigMaterialBonus} /></dd>
     <dt>Structure rig duration bonus</dt> <dd><input type="number" bind:value={facilityRigDurationBonus} /></dd>
 </dl>

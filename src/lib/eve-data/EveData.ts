@@ -1,4 +1,4 @@
-import { derived, readable } from "svelte/store";
+import { derived, readable, writable } from "svelte/store";
 import type { Readable } from "svelte/store";
 
 // import Papa from "https://cdnjs.cloudflare.com/ajax/libs/PapaParse/4.6.2/papaparse.min.js";
@@ -9,6 +9,7 @@ import CreateESIStore, { CreateESIStoreFromCache } from "./ESIStore";
 import type { ESIStore } from "./ESIStore";
 
 import { base as basePath } from '$app/paths';
+import type { Activity_Id } from "./EveIndustry";
 
 interface ESIOptions {
     dev?: any,
@@ -351,45 +352,61 @@ export interface EveLocation {
     modifiers?: {
         jobDurationModifier: number,
         materialConsumptionModifier: number,
-        jobCostModifier: number,
-        facilityTax: number
+        jobCostModifier: number
     }
 }
 
 let Locations = {};
 
+type StructureTaxRates = {[index: number]:{
+    [index:Activity_Id]: number
+}};
+
+
+function createStructureTaxRates() {
+	const { subscribe, update } = writable<StructureTaxRates>({});
+
+	return {
+		subscribe,
+        update: (change:StructureTaxRates)=>update(rates=>{
+            for(let structure_id in change) {
+                if(rates[structure_id] === undefined) rates[structure_id] = {};
+                Object.assign(rates[structure_id], change[structure_id]);
+            }
+            return rates;
+        })
+	};
+}
+
+export const StructureTaxRates = createStructureTaxRates();
+
+export function IsLocationStation(location_id:Location_Id) {
+    return 60000000 <= location_id && location_id < 70000000;
+}
 
 export function GetLocationStore(location_id: Location_Id): ESIStore<EveLocation> {
     if(Locations[location_id] === undefined) {
-        if(60000000 <= location_id && location_id < 70000000) { // this is a station
+        if(IsLocationStation(location_id)) { // this is a station
             Locations[location_id] = CreateESIStore( `/universe/stations/${location_id}/` )
         } else {
-            Locations[location_id] = CreateESIStoreFromCache( `/universe/structures/${location_id}/`, (value: EveLocation)=>{
-                fetch( `${basePath}/esi-cache/universe/structures/${location_id}/modifiers.json` )
-                    .then(response=>{
-                        if(response.status == 404) {
-                            return Promise.reject("Modifiers not available")
+            Locations[location_id] = CreateESIStoreFromCache( `/universe/structures/${location_id}/`, (location: EveLocation)=>{
+                switch(location.type_id) {
+                    case 35825: // Raitaru
+                        location.modifiers = {
+                            "jobDurationModifier": -15,
+                            "materialConsumptionModifier": -1,
+                            "jobCostModifier": -3
                         }
-
-                        return response.json()
-                    })
-                    .then(modifiers=>value.modifiers=modifiers)
-                    .catch(reason=>{
-                        if(reason == "Modifiers not available") {
-                            if(value.type_id === 35825) {   // HACK default values for a Raitaru
-                                value.modifiers = {
-                                    "jobDurationModifier": -15,
-                                    "materialConsumptionModifier": -1,
-                                    "jobCostModifier": -3,
-                                    "facilityTax": 10
-                                }
-                            }
-                        } else {
-                            console.error(reason);
+                        break;
+                    case 35827: // Sotiyo?
+                        location.modifiers = {
+                            "jobDurationModifier": -44,
+                            "materialConsumptionModifier": -1,
+                            "jobCostModifier": -14.5,
                         }
-                    })
+                }
 
-                return value;
+                return location;
             } );
     
         }
