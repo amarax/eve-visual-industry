@@ -80,7 +80,7 @@
     export let quantity: number = 1;
 
     $: x = scaleLinear()
-        .domain([extents[0]/quantity, extents[1]/quantity])
+        .domain([extents[0], extents[1]])
         .range([0,width]);
 
     let topBottomMargin = 8;
@@ -97,7 +97,7 @@
         
     $: ordersGraph = line()
         .curve(curveStepAfter)
-        .x(d=>x(d.price))
+        .x(d=>x(d.price*quantity))
 
     $: cumulativeVolumeY = ()=>{
         let sum = 0;
@@ -151,7 +151,7 @@
         let mouseX = e.clientX - (e.target as SVGElement).getBoundingClientRect().left;
 
         // Snap the hover value to the closest related price
-        hoverIndex = minIndex(prices, p=>Math.abs(p.price-x.invert(mouseX)));
+        hoverIndex = minIndex( prices, p=>Math.abs(p.price*quantity-x.invert(mouseX))/quantity );
         hoverPrice = prices[hoverIndex]?.price;
     }
 
@@ -171,33 +171,31 @@
         {/each}
 
         {#if highestBuyOrder && highestBuyOrder.price !== null}
-            <!-- <rect class="mark buy" x={x(highestBuyOrder.price)} fill="red" width={1} {...fillGraphHeight} /> -->
             <path class="graph buy" d={ordersGraph.y(cumulativeVolumeY())( [{price:highestBuyOrder.price, volume_remain:0}, ...$marketType?.orders.buy.filter(isOrderInFilteredLocation)] )} />
             {#if buyOverheadRate != 0}
-                <rect class="overhead buy" x={x(highestBuyOrder.price*Math.min(1,1+buyOverheadRate))} width={x(Math.abs(buyOverheadRate*highestBuyOrder.price))} {...fillGraphHeight} />
+                <rect class="overhead buy" x={x(highestBuyOrder.price*Math.min(1,1+buyOverheadRate)*quantity)} width={x(Math.abs(buyOverheadRate*highestBuyOrder.price*quantity))} {...fillGraphHeight} />
             {/if}
         {/if}
         {#if lowestSellOrder && lowestSellOrder.price !== null}
-            <!-- <rect class="mark sell" x={x(lowestSellOrder.price)} fill="green" width={1} {...fillGraphHeight} /> -->
             <path class="graph sell" d={ordersGraph.y(cumulativeVolumeY())( [{price:lowestSellOrder.price, volume_remain:0}, ...$marketType?.orders.sell.filter(isOrderInFilteredLocation)] )} />
             {#if sellOverheadRate != 0}
-                <rect class="overhead sell" x={x(lowestSellOrder.price*Math.min(1,1+sellOverheadRate))} width={x(Math.abs(sellOverheadRate*lowestSellOrder.price))} {...fillGraphHeight} />
+                <rect class="overhead sell" x={x(lowestSellOrder.price*Math.min(1,1+sellOverheadRate)*quantity)} width={x(Math.abs(sellOverheadRate*lowestSellOrder.price*quantity))} {...fillGraphHeight} />
             {/if}
         {/if}
         {#if totalCost !== null}
-            <rect class="mark cost" x={x(unitCost)} width={1} height={height} />
+            <rect class="mark cost" x={x(totalCost)} width={1} height={height} />
             {#if price != 0}
-                <rect class={`difference profit ${unitCost>price?"negative":"positive"}`} x={Math.min(x(unitCost), x(price))} width={Math.abs(x(unitCost)-x(price))} y={y(0.5)} height={1} />
+                <rect class={`difference profit ${unitCost>price?"negative":"positive"}`} x={Math.min(x(totalCost), x(price*quantity))} width={Math.abs(x(totalCost)-x(price*quantity))} y={y(0.5)} height={1} />
             {/if}
         {/if}
         {#if type_id}
-            <circle class="mark price" cx={x(price)} cy={y(0.5)} r={2} />
+            <circle class="mark price" cx={x(price*quantity)} cy={y(0.5)} r={2} />
         {/if}
     {/if}
 
     {#if hover}
-        <text class="hover" style={translateX(hoverPrice)} y={y(0)} dy={8} text-anchor="middle">{FormatIskAmount(hoverPrice*quantity)} @{FormatIskAmount(hoverPrice)}</text>
-        <circle class="hover" style={translateX(hoverPrice)} cx={0} cy={y(0.5)} r={4} />
+        <text class="hover" style={translateX(hoverPrice*quantity)} y={y(0)} dy={8} text-anchor="middle">{FormatIskAmount(hoverPrice*quantity)} @{FormatIskAmount(hoverPrice)}</text>
+        <circle class="hover" style={translateX(hoverPrice*quantity)} cx={0} cy={y(0.5)} r={4} />
     {/if}
 
     <rect class="hitArea" width={width} y={y(1)} height={y(0)-y(1)} 
