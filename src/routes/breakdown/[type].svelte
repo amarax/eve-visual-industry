@@ -46,7 +46,8 @@ import { Unsubscriber, writable } from "svelte/store";
 
     const TradeHubs = [
         60003760,   // Jita IV - Moon 4 - Caldari Navy Assembly Plant
-        // Currently only Jita is supported because market region is hard-coded to The Forge
+        1028858195912,   // Perimeter Tranquility Trading Tower
+        // Currently only Jita/Perimeter is supported because market region is hard-coded to The Forge
         
         // 60008494,   // Amarr VIII (Oris) - Emperor Family Academy
         // 60004588,   // Rens VI - Moon 8 - Brutor Tribe Treasury

@@ -41,26 +41,13 @@
 
 
     let manufacturing: IndustryActivity = null;
-    $: {
-        let nextManufacturing = blueprint?.activities[MANUFACTURING_ACTIVITY_ID];
+    $: manufacturing = blueprint?.activities[MANUFACTURING_ACTIVITY_ID];
 
-        if(nextManufacturing != manufacturing) {
-            manufacturing = nextManufacturing;
 
-            if(manufacturing) {
-                // Initialise runs to default to the amount required to produce the quantity
-                if(requiredQuantity)
-                    runs = Math.ceil( requiredQuantity / manufacturing.products[selectedProductId].quantity );
-            }
-        }
+    let overrideRequiredQuantity: boolean = false;
+    $: if(requiredQuantity !== null && !overrideRequiredQuantity && manufacturing) {
+        runs = Math.ceil( requiredQuantity / manufacturing.products[selectedProductId].quantity );
     }
-
-    // Currently it's safer to just have the runs defined by quantity,
-    // if not I'll forget it's a bug
-    $: if(requiredQuantity) {
-        //runs = Math.ceil( requiredQuantity / manufacturing?.products[selectedProductId].quantity );
-    }
-    
 
 
     export let selectedLocationId: Location_Id = null;
@@ -216,7 +203,12 @@
 No blueprint selected yet
 {:else}
 
-<div class="combinedInput">Runs <input type="range" bind:value={runs} min={1} max={inventing ? inventedRuns : blueprint?.maxProductionLimit} /> <input type="number" bind:value={runs} /></div>
+<div class="combinedInput">
+    Runs <input type="range" bind:value={runs} min={1} max={inventing ? inventedRuns : blueprint?.maxProductionLimit} disabled={requiredQuantity !== null && !overrideRequiredQuantity} /> <input type="number" bind:value={runs} disabled={requiredQuantity !== null && !overrideRequiredQuantity} /> 
+    {#if requiredQuantity !== null}
+        <label><input type="checkbox" bind:checked={overrideRequiredQuantity} /> Override</label> 
+    {/if}
+</div>
 <p>
     <b>Blueprint</b> <br/>
 
