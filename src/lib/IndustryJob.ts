@@ -1,6 +1,7 @@
 import type { EntityCollection, Type, Type_Id } from "$lib/eve-data/EveData"
 import type { IndustryActivity } from "$lib/eve-data/EveIndustry"
 import type { DurationSeconds, IskAmount, MarketPrices, Quantity } from "$lib/eve-data/EveMarkets"
+import { Readable, writable } from "svelte/store";
 
 // Get all the computed details for a facility that affect this job
 export type IndustryFacilityModifiers = {
@@ -150,3 +151,42 @@ export class IndustryJob {
 }
 
 
+interface IndustryJobStore extends Readable<IndustryJob> {
+    update(changes: {
+        activity?: IndustryActivity
+        selectedProduct?: Type_Id
+    
+        characterModifiers?: {
+            skill_jobDuration: number,
+            implant_jobDuration: number,
+        }
+        facilityModifiers?: IndustryFacilityModifiers
+        blueprintModifiers?: {
+            materialEfficiency: number,
+            timeEfficiency: number,
+        }
+        blueprintCostPerRun?: number
+    
+        prices?: EntityCollection<IskAmount>
+        indexPrices?: EntityCollection<MarketPrices>
+    
+        runs?: number
+    })
+}
+
+export function CreateIndustryJobStore(selectedProduct: Type_Id): IndustryJobStore {
+    let activity = null;
+
+    let job = new IndustryJob(activity, selectedProduct);
+    let { subscribe, set } = writable(job);
+
+    return {
+        subscribe,
+        update: (changes)=>{
+            for(let change in changes) {
+                job[change] = changes[change];
+            }
+            set(job);
+        }
+    }
+}
