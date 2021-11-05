@@ -1,6 +1,7 @@
-import type { EntityCollection, Type, Type_Id } from "$lib/eve-data/EveData"
-import type { IndustryActivity } from "$lib/eve-data/EveIndustry"
+import type { EntityCollection, Type_Id } from "$lib/eve-data/EveData"
+import type { IndustryActivity, IndustryStore } from "$lib/eve-data/EveIndustry"
 import type { DurationSeconds, IskAmount, MarketPrices, Quantity } from "$lib/eve-data/EveMarkets"
+import { REACTION_ACTIVITY_ID } from "$lib/eve-data/EveIndustry"
 import { Readable, writable } from "svelte/store";
 
 // Get all the computed details for a facility that affect this job
@@ -174,9 +175,7 @@ interface IndustryJobStore extends Readable<IndustryJob> {
     })
 }
 
-export function CreateIndustryJobStore(selectedProduct: Type_Id): IndustryJobStore {
-    let activity = null;
-
+export function CreateIndustryJobStore(activity: Required<IndustryActivity>, selectedProduct: Required<Type_Id>): IndustryJobStore {
     let job = new IndustryJob(activity, selectedProduct);
     let { subscribe, set } = writable(job);
 
@@ -189,4 +188,11 @@ export function CreateIndustryJobStore(selectedProduct: Type_Id): IndustryJobSto
             set(job);
         }
     }
+}
+
+export function CreateReactionJobStore(industry: Required<IndustryStore>, selectedProduct: Required<Type_Id>): IndustryJobStore {
+    let activity = Object.values(industry.types)
+        .find(type=>type.activities[REACTION_ACTIVITY_ID]?.products[selectedProduct])?.activities[REACTION_ACTIVITY_ID];
+
+    return CreateIndustryJobStore(activity, selectedProduct);
 }
