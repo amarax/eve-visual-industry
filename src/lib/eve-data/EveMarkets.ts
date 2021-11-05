@@ -100,7 +100,7 @@ export const Markets: Markets = {
 export const MarketPrices = Markets.prices;
 
 
-type MarketPrices = {
+export type MarketPrices = {
     adjusted_price: IskAmount,
     average_price: IskAmount,
     type_id: Type_Id
