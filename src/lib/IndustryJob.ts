@@ -1,6 +1,6 @@
-import type { EntityCollection, Type, Type_Id } from "./EveData"
-import type { IndustryActivity } from "./EveIndustry"
-import type { DurationSeconds, IskAmount, MarketPrices, Quantity } from "./EveMarkets"
+import type { EntityCollection, Type, Type_Id } from "$lib/eve-data/EveData"
+import type { IndustryActivity } from "$lib/eve-data/EveIndustry"
+import type { DurationSeconds, IskAmount, MarketPrices, Quantity } from "$lib/eve-data/EveMarkets"
 
 // Get all the computed details for a facility that affect this job
 export type IndustryFacilityModifiers = {
@@ -112,7 +112,6 @@ export class IndustryJob {
 
             totalCost += materialQuantity * this.prices[type_id];
         }
-
         totalCost += this.jobCost;
         totalCost += this.blueprintCostPerRun * this.runs;
 
