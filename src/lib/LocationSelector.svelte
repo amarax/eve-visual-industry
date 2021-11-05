@@ -109,7 +109,7 @@
     } = null;
     $: if(locationIsStructure) {
         structureRigBonuses = {
-            materialReductionBonus: 0,
+            materialReductionBonus: -2,
             timeReductionBonus: 0,
             costReductionBonus: 0,
         }
