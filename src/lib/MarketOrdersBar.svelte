@@ -10,7 +10,8 @@
     import { sum, minIndex } from "d3-array";
     import { line, curveStepAfter } from "d3-shape";
     import { ESIStoreStatus } from "$lib/eve-data/ESIStore";
-import { onDestroy, onMount } from "svelte";
+import { getContext, onDestroy, onMount } from "svelte";
+import type { Writable } from "svelte/store";
 
 
 
@@ -22,17 +23,19 @@ import { onDestroy, onMount } from "svelte";
     export let extents: Array<number> = [0,1000];
 
     export let type_id: Type_Id = null;
-    export let marketFilterLocation: Location_Id = null;
+
+    let marketFilterLocation: Writable<Location_Id> = getContext('marketFilterLocation');
 
     $: marketType = type_id && getMarketType(type_id);
 
-    $: isOrderInFilteredLocation = o=>marketFilterLocation?o.location_id===marketFilterLocation:true
+    let isOrderInFilteredLocation: (order: MarketOrder)=>boolean = ()=>true;
+    $: isOrderInFilteredLocation = o=>$marketFilterLocation?o.location_id===$marketFilterLocation:true
 
 
-    function getFirstOrder(orders: Array<MarketOrder>, marketFilterLocation: Location_Id): MarketOrder {
+    function getFirstOrder(orders: Array<MarketOrder>, locationFilter: Location_Id): MarketOrder {
         if(!orders) return null;
 
-        if(marketFilterLocation) {
+        if(locationFilter) {
             return orders.filter(isOrderInFilteredLocation)[0];
         }
         return orders[0];
@@ -44,8 +47,8 @@ import { onDestroy, onMount } from "svelte";
     let highestBuyOrder: MarketOrder = null;
     let lowestSellOrder: MarketOrder = null;
     $:{
-        highestBuyOrder = getFirstOrder( $marketType?.orders.buy, marketFilterLocation );
-        lowestSellOrder = getFirstOrder( $marketType?.orders.sell, marketFilterLocation );
+        highestBuyOrder = getFirstOrder( $marketType?.orders.buy, $marketFilterLocation );
+        lowestSellOrder = getFirstOrder( $marketType?.orders.sell, $marketFilterLocation );
     }
 
     // Expose key market prices for extents calculation

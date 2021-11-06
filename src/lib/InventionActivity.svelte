@@ -187,8 +187,6 @@
     }
 
 
-    export let marketFilterLocation: Location_Id = null;
-
     function formatChange(value:number) {
         return `${value>=0?"+":""}${Math.round(value)}`;
     }
@@ -243,7 +241,7 @@
         <div class="qty">{inventionActivity.materials[type_id]?.quantity}</div>
         <div class="graph">
             <MarketOrdersBar compact extents={_extents} quantity={inventionActivity.materials[type_id]?.quantity} 
-                {type_id} {marketFilterLocation} 
+                {type_id} 
                 bind:price={prices[type_id]}
                 buyOverheadRate={brokerFeeRate}
             />
@@ -272,7 +270,7 @@
         <div class="qty">{1}</div>
         <div class="graph">
             <MarketOrdersBar compact extents={_extents} quantity={1} 
-                type_id={selectedDecryptor} {marketFilterLocation} 
+                type_id={selectedDecryptor} 
                 bind:price={prices[selectedDecryptor]}
                 buyOverheadRate={brokerFeeRate}
             />  
@@ -296,7 +294,7 @@
         <div class="qty">{1}</div>
         <div class="graph">
             <MarketOrdersBar compact extents={_extents} quantity={1} 
-                type_id={selectedIndustryType.type_id} {marketFilterLocation} 
+                type_id={selectedIndustryType.type_id} 
                 bind:price={prices[selectedIndustryType.type_id]}
                 buyOverheadRate={brokerFeeRate}
             />  

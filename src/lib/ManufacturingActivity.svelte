@@ -84,8 +84,6 @@ import ReactionActivity from "./ReactionActivity.svelte";
         }
     }
 
-    export let marketFilterLocation: Location_Id = null;
-
     let totalAdjustedCostPrice = 0;
     $: {
         totalAdjustedCostPrice = 0;
@@ -200,7 +198,7 @@ No blueprint selected yet
         <br/>
 
         <MarketOrdersBar extents={_extents} quantity={producedQty} 
-            type_id={selectedProductId} {marketFilterLocation}
+            type_id={selectedProductId}
             bind:price={itemPrices[selectedProductId]}
             buyOverheadRate={-salesTaxRate} sellOverheadRate={-brokerFeeRate-salesTaxRate}
             {totalCost}
@@ -227,7 +225,6 @@ No blueprint selected yet
     {#if inventing}
         <div class="subItem">
             <InventionActivity {selectedCharacterId} blueprintToInvent={blueprint} 
-                {marketFilterLocation}
                 bind:expectedCostPerRun={blueprintCostPerRun} bind:productME={materialEfficiency} bind:productTE={timeEfficiency} bind:productRuns={inventedRuns}
             />
         </div>
@@ -270,7 +267,7 @@ No blueprint selected yet
         <div class="qty">{materialQty(manufacturing.materials[type_id].quantity)}</div>
         <div class="graph">
             <MarketOrdersBar extents={_extents} quantity={materialQty(manufacturing.materials[type_id].quantity)} 
-                {type_id} {marketFilterLocation} 
+                {type_id} 
                 bind:price={itemPrices[type_id]} overridePrice={manufacturedUnitCostPrices[type_id]}
                 buyOverheadRate={brokerFeeRate}
                 totalCost={manufacturedUnitCostPrices[type_id] ? manufacturedUnitCostPrices[type_id]*materialQty(manufacturing.materials[type_id].quantity) : null}
@@ -283,7 +280,7 @@ No blueprint selected yet
                     <svelte:self selectedProductId={type_id} requiredQuantity={materialQty(manufacturing.materials[type_id].quantity)} {producedItems}
                         bind:unitCost={manufacturedUnitCostPrices[type_id]} 
                         materialEfficiency={10} timeEfficiency={20}
-                        {selectedCharacterId} {selectedLocationId} {marketFilterLocation}
+                        {selectedCharacterId} {selectedLocationId}
                         compact />
                 {:else if GetReactionActivity(type_id, $Industry).activity}
                     <ReactionActivity productTypeId={type_id} />
