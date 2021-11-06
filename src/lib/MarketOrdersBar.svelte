@@ -213,7 +213,7 @@ import type { Writable } from "svelte/store";
                 <rect class="overhead sell" x={x(lowestSellOrder.price*Math.min(1,1+sellOverheadRate)*quantity)} width={x(Math.abs(sellOverheadRate*lowestSellOrder.price*quantity))} {...fillGraphHeight} />
             {/if}
         {/if}
-        {#if totalCost !== null}
+        {#if !isNaN(totalCost) && totalCost !== null}
             <rect class="mark cost" x={x(totalCost)} width={1} height={height} />
             {#if price != 0}
                 <rect class={`difference profit ${unitCost>price?"negative":"positive"}`} x={Math.min(x(totalCost), x(price*quantity))} width={Math.abs(x(totalCost)-x(price*quantity))} y={y(0.5)} height={1} />
