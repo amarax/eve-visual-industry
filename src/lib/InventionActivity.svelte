@@ -10,12 +10,14 @@
     import { sum } from "$lib/Utilities";
     import { FormatDuration, FormatIskAmount } from "$lib/Format";
     
-    import { CharacterSkills } from "$lib/eve-data/EveCharacter";
+    import { CharacterSkills, Character_Id } from "$lib/eve-data/EveCharacter";
     import type { ESIStore } from "$lib/eve-data/ESIStore";
     import LocationSelector from "./LocationSelector.svelte";
+import { getContext } from "svelte";
+import type { Readable } from "svelte/store";
 
 
-    export let selectedCharacterId = null;
+    let currentCharacter = getContext('currentCharacter') as Readable<Character_Id>;
 
 
     
@@ -40,37 +42,12 @@
 
     let prices: EntityCollection<IskAmount> = {};
 
-    $: {
-        if(inventionActivity) {
-            // materials (datacores)
-
-            // blueprint
-
-            // decryptor
-        } else {
-            prices = {}
-        }
-    }
-
-
-
     export let brokerFeeRate = 0.0151114234532; // Aqua Silentium's broker fee
 
     $: selectedIndustryTypeIsBlueprint = isBlueprint(selectedIndustryType?.type_id);
 
 
     let selectedDecryptor: Type_Id;
-
-    let breakdownItems: Array<Type_Id> = [];
-    $: {
-        breakdownItems = [];
-        if(inventionActivity) {
-            if(!selectedIndustryTypeIsBlueprint) breakdownItems.push(selectedIndustryType.type_id);
-            breakdownItems.push( ...Object.keys(inventionActivity.materials).map(string=>parseInt(string)) );
-            if(selectedDecryptor) breakdownItems.push(selectedDecryptor);
-        }
-    }
-
 
     let selectedIndustryTypeCost: IskAmount = 0;
     $: { 
@@ -113,8 +90,8 @@
     let skill1Level = 3, skill2Level =3, encryptionSkillLevel =3;
     $: {
         let characterChanged = false;
-        if(characterSkills !== CharacterSkills[selectedCharacterId]) {
-            characterSkills = CharacterSkills[selectedCharacterId];
+        if(characterSkills !== CharacterSkills[$currentCharacter]) {
+            characterSkills = CharacterSkills[$currentCharacter];
             characterChanged = true;    // Hidden bug over here where if the contents of the skills change, this isn't triggered
         }
 
@@ -208,111 +185,134 @@
     export let extents: Array<IskAmount> = null;
     let _extents = [0,1000000];
     $:{
-        _extents = extents || [0,totalCost*1.1];
+        _extents = extents || [0,totalCost*1.5];
     }
 
 
-    export let marketFilterLocation: Location_Id = null;
-
+    function formatChange(value:number) {
+        return `${value>=0?"+":""}${Math.round(value)}`;
+    }
 </script>
 
 <style lang="scss">
-    div.breakdown {
-        display: grid;
-        grid-template-columns: 1fr 80px 500px;
+    select {
+        width: 100%;
+    }
 
-        max-width: 800px;
+    .overlay dl {
+        grid-template-columns: 70px auto;
+    }
 
-        .itemName {
-            overflow-x: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-
-        }
-
-        .qty {
-            text-align: right;
-            margin-right: 10px;
-        }
-
-
-        margin-top: 16px;
-        margin-bottom: 16px;
+    .graph {
+        height: 28px;
     }
 </style>
 
-<div>
-    <select bind:value={selectedIndustryType}>
-        {#each inputIndustryTypes as blueprint }
-            <option value={blueprint}>{$Universe.types[blueprint?.type_id]?.name}</option>
-        {/each}
-    </select>
 
-    <select bind:value={selectedDecryptor}>
-        <option value={null}>No decryptor</option>
-        {#each Object.values($Decryptors) as decryptorType }
-            <option value={decryptorType.type_id}>{decryptorType.name}</option>
-        {/each}
-    </select>
-    Runs +{decrpytorRunModifier} ME {decryptorMEModifier} TE {decryptorTEModifier} Probability {decryptorProbabilityModifier*100-100}%
-    <br/>
 
-    <label>
-        {skill1?.name} 
-        <input bind:value={skill1Level} type="range" min={0} max={5} />
-    </label>
-    <br />
-    <label>
-        {skill2?.name}
-        <input bind:value={skill2Level} type="range" min={0} max={5} />
-    </label>
-    <br />
-    <label>
-        {encryptionSkill?.name}
-        <input bind:value={encryptionSkillLevel} type="range" min={0} max={5} />
-    </label>
 
-    <p>
-        <LocationSelector activity={INVENTION_ACTIVITY_ID}
-            bind:activitySystemCostIndex bind:activityTax bind:structureRoleBonuses bind:structureRigBonuses /><br/>
-    </p>
-    
-    <div class="breakdown">
-        <div class="itemName">Job cost</div>
-        <div class="qty"></div>
-        <div>
-            <MarketOrdersBar compact extents={_extents} quantity={1} totalCost={jobCost} />
-        </div>
+<label>
+    {skill1?.name} 
+    <input bind:value={skill1Level} type="range" min={0} max={5} />
+</label>
+<br />
+<label>
+    {skill2?.name}
+    <input bind:value={skill2Level} type="range" min={0} max={5} />
+</label>
+<br />
+<label>
+    {encryptionSkill?.name}
+    <input bind:value={encryptionSkillLevel} type="range" min={0} max={5} />
+</label>
 
-        {#each breakdownItems as type_id}
-            <div class="itemName" title={`${$Universe.types[type_id].name} [${type_id}]`}>{$Universe.types[type_id].name}</div>
-            <div class="qty">{inventionActivity.materials[type_id]?.quantity || 1}</div>
-            <div>
-                <MarketOrdersBar compact extents={_extents} quantity={inventionActivity.materials[type_id]?.quantity || 1} 
-                    {type_id} {marketFilterLocation} 
-                    bind:price={prices[type_id]}
-                    buyOverheadRate={brokerFeeRate}
-                />
-            </div>
-        {/each}
-        {#if !selectedDecryptor}
-            <div class="itemName">No decryptor</div>
-            <div style={`height:${24}px`}></div><div></div>
-        {/if}
-        {#if selectedIndustryTypeIsBlueprint}
-            <div class="itemName">Blueprint copy cost per run</div>
-            <div></div>
-            <div><input type="number" bind:value={selectedIndustryTypeCost} /></div>            
-        {/if}
+<p>
+    <LocationSelector activity={INVENTION_ACTIVITY_ID}
+        bind:activitySystemCostIndex bind:activityTax bind:structureRoleBonuses bind:structureRigBonuses /><br/>
+</p>
+
+<div class="breakdown">
+    <div class="itemName">Job cost</div>
+    <div class="qty"></div>
+    <div class="graph">
+        <MarketOrdersBar compact extents={_extents} quantity={1} totalCost={jobCost} />
     </div>
-    
 
-    Invention job cost: {FormatIskAmount(jobCost)}<br/>
-    Invention job duration: {FormatDuration(jobDuration)}
+    {#each Object.keys(inventionActivity.materials).map(k=>parseInt(k)) as type_id}
+        <div class="itemName" title={`${$Universe.types[type_id].name} [${type_id}]`}>{$Universe.types[type_id].name}</div>
+        <div class="qty">{inventionActivity.materials[type_id]?.quantity}</div>
+        <div class="graph">
+            <MarketOrdersBar compact extents={_extents} quantity={inventionActivity.materials[type_id]?.quantity} 
+                {type_id} 
+                bind:price={prices[type_id]}
+                buyOverheadRate={brokerFeeRate}
+            />
+        </div>
+    {/each}
 
-    <p>
-        Invention Cost per run: <b>{FormatIskAmount(totalCost)}</b> Chance of success: <b>{inventionProbability*100}%</b> <br/>
-        Expected invention attempts to get >=90% chance to get >=1 successes: {Math.ceil(Math.log(1-0.9)/Math.log(1-inventionProbability))} <br/>
-        Expected Runs: {expectedRuns}  Expected cost per run: {FormatIskAmount(expectedCostPerRun)}
-    </p>
+    <div>
+        <span class="overlay-parent">
+            <select bind:value={selectedDecryptor}>
+                <option value={null}>No decryptor</option>
+                {#each Object.values($Decryptors) as decryptorType }
+                    <option value={decryptorType.type_id}>{decryptorType.name}</option>
+                {/each}
+            </select>
+            <div class="overlay">
+                <dl>
+                    <dt>Runs</dt><dd>{formatChange(decrpytorRunModifier)}</dd>
+                    <dt>ME</dt><dd>{formatChange(decryptorMEModifier)}</dd>
+                    <dt>TE</dt><dd>{formatChange(decryptorTEModifier)}</dd>
+                    <dt>Probability</dt><dd>{formatChange(100-decryptorProbabilityModifier*100)}%</dd>
+                </dl>
+            </div>
+        </span>
+    </div>
+    {#if selectedDecryptor}
+        <div class="qty">{1}</div>
+        <div class="graph">
+            <MarketOrdersBar compact extents={_extents} quantity={1} 
+                type_id={selectedDecryptor} 
+                bind:price={prices[selectedDecryptor]}
+                buyOverheadRate={brokerFeeRate}
+            />  
+        </div>
+    {:else}
+        <div></div>
+        <div class="graph"></div>
+    {/if}
+
+    <div>
+        <select bind:value={selectedIndustryType}>
+            {#each inputIndustryTypes as blueprint }
+                <option value={blueprint}>{$Universe.types[blueprint?.type_id]?.name}</option>
+            {/each}
+        </select>
+    </div>
+    {#if selectedIndustryTypeIsBlueprint}
+        <div></div>
+        <div class="graph">Blueprint cost per run <input type="number" bind:value={selectedIndustryTypeCost} /></div>
+    {:else}
+        <div class="qty">{1}</div>
+        <div class="graph">
+            <MarketOrdersBar compact extents={_extents} quantity={1} 
+                type_id={selectedIndustryType.type_id} 
+                bind:price={prices[selectedIndustryType.type_id]}
+                buyOverheadRate={brokerFeeRate}
+            />  
+        </div>
+    {/if}
 </div>
+
+<p>
+    Invention job cost: {FormatIskAmount(jobCost)}<br/>
+    Invention job duration: {FormatDuration(jobDuration)}<br/>
+    Invention cost per attempt: <b>{FormatIskAmount(totalCost)}</b> 
+</p>
+
+<p>
+    Chance of success: {inventionProbability*100}% <br/>
+    Expected invention attempts to get >=90% chance to get >=1 successes: {Math.ceil(Math.log(1-0.9)/Math.log(1-inventionProbability))} <br/>
+    Expected Runs: {expectedRuns}<br/>
+    Expected cost per run: <b>{FormatIskAmount(expectedCostPerRun)}</b>
+</p>

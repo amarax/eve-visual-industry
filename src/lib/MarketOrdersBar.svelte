@@ -10,6 +10,8 @@
     import { sum, minIndex } from "d3-array";
     import { line, curveStepAfter } from "d3-shape";
     import { ESIStoreStatus } from "$lib/eve-data/ESIStore";
+import { getContext, onDestroy, onMount } from "svelte";
+import type { Writable } from "svelte/store";
 
 
 
@@ -21,17 +23,19 @@
     export let extents: Array<number> = [0,1000];
 
     export let type_id: Type_Id = null;
-    export let marketFilterLocation: Location_Id = null;
+
+    let marketFilterLocation: Writable<Location_Id> = getContext('marketFilterLocation');
 
     $: marketType = type_id && getMarketType(type_id);
 
-    $: isOrderInFilteredLocation = o=>marketFilterLocation?o.location_id===marketFilterLocation:true
+    let isOrderInFilteredLocation: (order: MarketOrder)=>boolean = ()=>true;
+    $: isOrderInFilteredLocation = o=>$marketFilterLocation?o.location_id===$marketFilterLocation:true
 
 
-    function getFirstOrder(orders: Array<MarketOrder>, marketFilterLocation: Location_Id): MarketOrder {
+    function getFirstOrder(orders: Array<MarketOrder>, locationFilter: Location_Id): MarketOrder {
         if(!orders) return null;
 
-        if(marketFilterLocation) {
+        if(locationFilter) {
             return orders.filter(isOrderInFilteredLocation)[0];
         }
         return orders[0];
@@ -43,8 +47,8 @@
     let highestBuyOrder: MarketOrder = null;
     let lowestSellOrder: MarketOrder = null;
     $:{
-        highestBuyOrder = getFirstOrder( $marketType?.orders.buy, marketFilterLocation );
-        lowestSellOrder = getFirstOrder( $marketType?.orders.sell, marketFilterLocation );
+        highestBuyOrder = getFirstOrder( $marketType?.orders.buy, $marketFilterLocation );
+        lowestSellOrder = getFirstOrder( $marketType?.orders.sell, $marketFilterLocation );
     }
 
     // Expose key market prices for extents calculation
@@ -73,14 +77,13 @@
         _prevTypeId = type_id;
     }
 
-
     export let totalCost: number = null;
     $: unitCost = totalCost/quantity;
 
     export let quantity: number = 1;
 
     $: x = scaleLinear()
-        .domain([extents[0]/quantity, extents[1]/quantity])
+        .domain([extents[0], extents[1]])
         .range([0,width]);
 
     let topBottomMargin = 8;
@@ -97,7 +100,7 @@
         
     $: ordersGraph = line()
         .curve(curveStepAfter)
-        .x(d=>x(d.price))
+        .x(d=>x(d.price*quantity))
 
     $: cumulativeVolumeY = ()=>{
         let sum = 0;
@@ -151,7 +154,7 @@
         let mouseX = e.clientX - (e.target as SVGElement).getBoundingClientRect().left;
 
         // Snap the hover value to the closest related price
-        hoverIndex = minIndex(prices, p=>Math.abs(p.price-x.invert(mouseX)));
+        hoverIndex = minIndex( prices, p=>Math.abs(p.price*quantity-x.invert(mouseX))/quantity );
         hoverPrice = prices[hoverIndex]?.price;
     }
 
@@ -161,9 +164,23 @@
             marketPrice *= 1 + (prices[hoverIndex].is_buy_order ? buyOverheadRate : sellOverheadRate )
         }
     }
+
+    function onWindowResize(event) {
+        width = bar.getBoundingClientRect().width;
+    }
+
+    let bar: SVGElement;
+    onMount(()=>{
+        width = bar.getBoundingClientRect().width;
+        window.addEventListener('resize', onWindowResize);
+    })
+
+    onDestroy(()=>{
+        window.removeEventListener('resize', onWindowResize);
+    })    
 </script>
 
-<svg {width} {height} viewBox={`0 0 ${width} ${height}`} xmlns="http://www.w3.org/2000/svg">
+<svg bind:this={bar} {height} viewBox={`0 0 ${width} ${height}`} xmlns="http://www.w3.org/2000/svg">
     <rect class="graphArea" width={width} {...fillGraphHeight} />
     {#if validExtents}
         {#each scaleMarks as mark, i}
@@ -171,33 +188,31 @@
         {/each}
 
         {#if highestBuyOrder && highestBuyOrder.price !== null}
-            <!-- <rect class="mark buy" x={x(highestBuyOrder.price)} fill="red" width={1} {...fillGraphHeight} /> -->
             <path class="graph buy" d={ordersGraph.y(cumulativeVolumeY())( [{price:highestBuyOrder.price, volume_remain:0}, ...$marketType?.orders.buy.filter(isOrderInFilteredLocation)] )} />
             {#if buyOverheadRate != 0}
-                <rect class="overhead buy" x={x(highestBuyOrder.price*Math.min(1,1+buyOverheadRate))} width={x(Math.abs(buyOverheadRate*highestBuyOrder.price))} {...fillGraphHeight} />
+                <rect class="overhead buy" x={x(highestBuyOrder.price*Math.min(1,1+buyOverheadRate)*quantity)} width={x(Math.abs(buyOverheadRate*highestBuyOrder.price*quantity))} {...fillGraphHeight} />
             {/if}
         {/if}
         {#if lowestSellOrder && lowestSellOrder.price !== null}
-            <!-- <rect class="mark sell" x={x(lowestSellOrder.price)} fill="green" width={1} {...fillGraphHeight} /> -->
             <path class="graph sell" d={ordersGraph.y(cumulativeVolumeY())( [{price:lowestSellOrder.price, volume_remain:0}, ...$marketType?.orders.sell.filter(isOrderInFilteredLocation)] )} />
             {#if sellOverheadRate != 0}
-                <rect class="overhead sell" x={x(lowestSellOrder.price*Math.min(1,1+sellOverheadRate))} width={x(Math.abs(sellOverheadRate*lowestSellOrder.price))} {...fillGraphHeight} />
+                <rect class="overhead sell" x={x(lowestSellOrder.price*Math.min(1,1+sellOverheadRate)*quantity)} width={x(Math.abs(sellOverheadRate*lowestSellOrder.price*quantity))} {...fillGraphHeight} />
             {/if}
         {/if}
         {#if totalCost !== null}
-            <rect class="mark cost" x={x(unitCost)} width={1} height={height} />
+            <rect class="mark cost" x={x(totalCost)} width={1} height={height} />
             {#if price != 0}
-                <rect class={`difference profit ${unitCost>price?"negative":"positive"}`} x={Math.min(x(unitCost), x(price))} width={Math.abs(x(unitCost)-x(price))} y={y(0.5)} height={1} />
+                <rect class={`difference profit ${unitCost>price?"negative":"positive"}`} x={Math.min(x(totalCost), x(price*quantity))} width={Math.abs(x(totalCost)-x(price*quantity))} y={y(0.5)} height={1} />
             {/if}
         {/if}
         {#if type_id}
-            <circle class="mark price" cx={x(price)} cy={y(0.5)} r={2} />
+            <circle class="mark price" cx={x(price*quantity)} cy={y(0.5)} r={2} />
         {/if}
     {/if}
 
     {#if hover}
-        <text class="hover" style={translateX(hoverPrice)} y={y(0)} dy={8} text-anchor="middle">{FormatIskAmount(hoverPrice*quantity)} @{FormatIskAmount(hoverPrice)}</text>
-        <circle class="hover" style={translateX(hoverPrice)} cx={0} cy={y(0.5)} r={4} />
+        <text class="hover" style={translateX(hoverPrice*quantity)} y={y(0)} dy={8} text-anchor="middle">{FormatIskAmount(hoverPrice*quantity)} @{FormatIskAmount(hoverPrice)}</text>
+        <circle class="hover" style={translateX(hoverPrice*quantity)} cx={0} cy={y(0.5)} r={4} />
     {/if}
 
     <rect class="hitArea" width={width} y={y(1)} height={y(0)-y(1)} 
@@ -207,6 +222,11 @@
 </svg>
 
 <style lang="scss">
+    svg {
+        width: 100%;
+        // max-width: 500px;
+    }
+
     .mark, .overhead, .difference {
         transition: x 100ms ease-out, transform 100ms ease-out, width 100ms ease-out;
     }
@@ -227,6 +247,8 @@
         &.sell {
             stroke: #0f0;
         }
+
+        transition: 100ms ease-out;
     }
 
     rect.mark {

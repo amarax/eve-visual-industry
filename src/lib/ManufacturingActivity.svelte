@@ -1,9 +1,9 @@
 <script lang="ts">
     import { Universe } from "$lib/eve-data/EveData";
-    import { MANUFACTURING_ACTIVITY_ID, Industry, GetBlueprintToManufacture, GetInventableBlueprint, ADVANCED_INDUSTRY_SKILL_ID, IndustrySystems } from "$lib/eve-data/EveIndustry";
+    import { MANUFACTURING_ACTIVITY_ID, Industry, GetBlueprintToManufacture, GetInventableBlueprint, ADVANCED_INDUSTRY_SKILL_ID, IndustrySystems, GetReactionActivity } from "$lib/eve-data/EveIndustry";
     import { IskAmount, MarketPrices } from "$lib/eve-data/EveMarkets";
     import { IndustryDogmaAttributes } from "$lib/eve-data/EveDogma";
-    import { CharacterSkills } from "$lib/eve-data/EveCharacter";
+    import { CharacterSkills, Character_Id } from "$lib/eve-data/EveCharacter";
 
     import type { Location_Id, EntityCollection, Type_Id } from "$lib/eve-data/EveData";
     import type { IndustryActivity } from "$lib/eve-data/EveIndustry";
@@ -13,6 +13,9 @@
     import { FormatDuration, FormatIskAmount, FormatIskChange } from "$lib/Format";
     import InventionActivity from "./InventionActivity.svelte";
     import LocationSelector from "./LocationSelector.svelte";
+import ReactionActivity from "./ReactionActivity.svelte";
+import { getContext } from "svelte";
+import type { Readable } from "svelte/store";
 
 
 
@@ -37,32 +40,20 @@
     type ItemPickedList = {
         [id: Type_Id]: boolean
     }
-    export let manufacturedItems: ItemPickedList = {};
+    export let producedItems: ItemPickedList = {};
 
 
     let manufacturing: IndustryActivity = null;
-    $: {
-        let nextManufacturing = blueprint?.activities[MANUFACTURING_ACTIVITY_ID];
+    $: manufacturing = blueprint?.activities[MANUFACTURING_ACTIVITY_ID];
 
-        if(nextManufacturing != manufacturing) {
-            manufacturing = nextManufacturing;
 
-            if(manufacturing) {
-                // Initialise runs to default to the amount required to produce the quantity
-                if(requiredQuantity)
-                    runs = Math.ceil( requiredQuantity / manufacturing.products[selectedProductId].quantity );
-            }
-        }
+    let overrideRequiredQuantity: boolean = false;
+    $: if(requiredQuantity !== null && !overrideRequiredQuantity && manufacturing) {
+        runs = Math.ceil( requiredQuantity / manufacturing.products[selectedProductId].quantity );
     }
 
-    // Currently it's safer to just have the runs defined by quantity,
-    // if not I'll forget it's a bug
-    $: if(requiredQuantity) {
-        //runs = Math.ceil( requiredQuantity / manufacturing?.products[selectedProductId].quantity );
-    }
-    
 
-
+    // TODO this needs to be re-thought
     export let selectedLocationId: Location_Id = null;
 
     let activitySystemCostIndex, activityTax, structureRoleBonuses, structureRigBonuses;
@@ -92,11 +83,9 @@
     $: {
         // Reset items that are not marked as manufactured
         for(let type_id in manufacturedUnitCostPrices) {
-            if(!manufacturedItems[type_id]) manufacturedUnitCostPrices[type_id] = undefined;
+            if(!producedItems[type_id]) manufacturedUnitCostPrices[type_id] = undefined;
         }
     }
-
-    export let marketFilterLocation: Location_Id = null;
 
     let totalAdjustedCostPrice = 0;
     $: {
@@ -112,7 +101,7 @@
 
     $: manufacturingJobCost = totalAdjustedCostPrice * activitySystemCostIndex * (1+(structureRoleBonuses?.jobCostModifier ?? 0)/100) * (1+activityTax/100) * runs;
 
-    $: characterSkills = CharacterSkills[selectedCharacterId];
+    $: characterSkills = CharacterSkills[$currentCharacter];
 
     // TODO list all contributing skills
     $: skillTimeModifier = manufacturing ? [...Object.values(manufacturing.requiredSkills || {}).map(s=>s.type_id), ADVANCED_INDUSTRY_SKILL_ID]
@@ -138,7 +127,7 @@
         unitCost = manufacturing ? totalCost/producedQty : null;
     }
 
-    // export let compact: boolean = false;
+    export let compact: boolean = false;
 
     let inventing = false;
     let inventedRuns: number = 10;
@@ -153,7 +142,7 @@
         }
     }
 
-    export let selectedCharacterId;
+    let currentCharacter = getContext('currentCharacter') as Readable<Character_Id>;
 
 
     export let extents: Array<number> = null;
@@ -170,40 +159,25 @@
         }
     }
 
-
+    let canBeProduced: (type_id: Type_Id)=>boolean = ()=>false;
+    $: canBeProduced = (type_id)=>{
+        return GetBlueprintToManufacture($Industry, type_id) != null 
+            || GetReactionActivity(type_id, $Industry).activity != undefined;
+    }
 </script>
 
 <style lang="scss">
-    div.breakdown {
-        display: grid;
-        grid-template-columns: 1fr 80px 500px;
 
-        max-width: 800px;
 
-        .itemName {
-            overflow-x: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+    .summary {
+        position: sticky;
+        top: 0;
+        padding-top: 8px;
+        padding-bottom: 8px;
 
-        }
+        z-index: var(--zindex-overlay);
 
-        .qty {
-            text-align: right;
-            margin-right: 10px;
-        }
-
-    }
-
-    .subItem {
-        grid-column: span 3;
-
-        $divider: 1px solid #ccc;
-
-        border-top: $divider;
-        border-bottom: $divider;
-
-        margin-bottom: 4px;
-        margin-left:24px;
+        background-color: rgba(24,24,24,0.9);
     }
 
     .combinedInput input[type='number'] {
@@ -216,7 +190,36 @@
 No blueprint selected yet
 {:else}
 
-<div class="combinedInput">Runs <input type="range" bind:value={runs} min={1} max={inventing ? inventedRuns : blueprint?.maxProductionLimit} /> <input type="number" bind:value={runs} /></div>
+<div class={`breakdown ${!compact?"summary":""}`}>
+    <div class="itemName" title={`${$Universe.types[selectedProductId]?.name} [${selectedProductId}]`}>{$Universe.types[selectedProductId]?.name}</div>
+    <div class="qty">{producedQty}</div>
+    <div class="graph">
+        Unit price
+        {FormatIskAmount(sellingPrice)}
+        Total Profit 
+        {FormatIskChange(profit)} 
+        <br/>
+
+        <MarketOrdersBar extents={_extents} quantity={producedQty} 
+            type_id={selectedProductId}
+            bind:price={itemPrices[selectedProductId]}
+            buyOverheadRate={-salesTaxRate} sellOverheadRate={-brokerFeeRate-salesTaxRate}
+            {totalCost}
+            bind:lowestSellPrice bind:highestBuyPrice
+        />
+        <br/>
+
+        Unit cost {FormatIskAmount(unitCost)} Total cost {FormatIskAmount(totalCost)}
+
+    </div>
+</div>
+
+<div class="combinedInput">
+    Runs <input type="range" bind:value={runs} min={1} max={inventing ? inventedRuns : blueprint?.maxProductionLimit} disabled={requiredQuantity !== null && !overrideRequiredQuantity} /> <input type="number" bind:value={runs} disabled={requiredQuantity !== null && !overrideRequiredQuantity} /> 
+    {#if requiredQuantity !== null}
+        <label><input type="checkbox" bind:checked={overrideRequiredQuantity} /> Override</label> 
+    {/if}
+</div>
 <p>
     <b>Blueprint</b> <br/>
 
@@ -224,8 +227,7 @@ No blueprint selected yet
 
     {#if inventing}
         <div class="subItem">
-            <InventionActivity {selectedCharacterId} blueprintToInvent={blueprint} 
-                {marketFilterLocation}
+            <InventionActivity blueprintToInvent={blueprint} 
                 bind:expectedCostPerRun={blueprintCostPerRun} bind:productME={materialEfficiency} bind:productTE={timeEfficiency} bind:productRuns={inventedRuns}
             />
         </div>
@@ -252,57 +254,42 @@ No blueprint selected yet
     <dd>{FormatIskAmount(manufacturingJobCost)}</dd>
 </dl>
 
+
 <div class="breakdown">
-    <div class="itemName" title={`${$Universe.types[selectedProductId]?.name} [${selectedProductId}]`}>{$Universe.types[selectedProductId]?.name}</div>
-    <div class="qty">{producedQty}</div>
-    <div>
-        Unit price
-        {FormatIskAmount(sellingPrice)}
-        Total Profit 
-        {FormatIskChange(profit)} 
-        <br/>
-
-        <MarketOrdersBar extents={_extents} quantity={producedQty} 
-            type_id={selectedProductId} {marketFilterLocation}
-            bind:price={itemPrices[selectedProductId]}
-            buyOverheadRate={-salesTaxRate} sellOverheadRate={-brokerFeeRate-salesTaxRate}
-            {totalCost}
-            bind:lowestSellPrice bind:highestBuyPrice
-        />
-        <br/>
-
-        Unit cost {FormatIskAmount(unitCost)} Total cost {FormatIskAmount(totalCost)}
-
-    </div>
-
     <div>Job cost</div><div></div>
-    <div>
+    <div class="graph">
         <MarketOrdersBar compact extents={_extents} quantity={producedQty} totalCost={manufacturingJobCost} />
     </div>
-    {#each Object.keys(manufacturing.materials) as type_id}
+    {#each Object.keys(manufacturing.materials).map(id=>parseInt(id)) as type_id}
         <div class="itemName">
             <label>
-                <input type="checkbox" bind:checked={manufacturedItems[type_id]} disabled={GetBlueprintToManufacture($Industry, parseInt(type_id)) == null} /> 
+                <input type="checkbox" bind:checked={producedItems[type_id]} disabled={!canBeProduced(type_id)} /> 
                 <span title={`${$Universe.types[type_id]?.name} [${type_id}]`}>{$Universe.types[type_id]?.name}</span>
             </label>
         </div>
         <div class="qty">{materialQty(manufacturing.materials[type_id].quantity)}</div>
-        <div>
+        <div class="graph">
             <MarketOrdersBar extents={_extents} quantity={materialQty(manufacturing.materials[type_id].quantity)} 
-                type_id={parseInt(type_id)} {marketFilterLocation} 
+                {type_id} 
                 bind:price={itemPrices[type_id]} overridePrice={manufacturedUnitCostPrices[type_id]}
                 buyOverheadRate={brokerFeeRate}
                 totalCost={manufacturedUnitCostPrices[type_id] ? manufacturedUnitCostPrices[type_id]*materialQty(manufacturing.materials[type_id].quantity) : null}
                 compact
             />
         </div>
-        {#if manufacturedItems[type_id]}
+        {#if producedItems[type_id]}
             <div class="subItem">
-                <svelte:self selectedProductId={type_id} requiredQuantity={materialQty(manufacturing.materials[type_id].quantity)} {manufacturedItems}
-                    bind:unitCost={manufacturedUnitCostPrices[type_id]} 
-                    materialEfficiency={10} timeEfficiency={20}
-                    {selectedCharacterId} {selectedLocationId} {marketFilterLocation}
-                    compact />
+                {#if GetBlueprintToManufacture($Industry, type_id)}
+                    <svelte:self selectedProductId={type_id} requiredQuantity={materialQty(manufacturing.materials[type_id].quantity)} {producedItems}
+                        bind:unitCost={manufacturedUnitCostPrices[type_id]} 
+                        materialEfficiency={10} timeEfficiency={20}
+                        {selectedLocationId}
+                        compact />
+                {:else if GetReactionActivity(type_id, $Industry).activity}
+                    <ReactionActivity productTypeId={type_id} requiredQuantity={materialQty(manufacturing.materials[type_id].quantity)} />
+                {:else}
+                    Could not find industry details for {$Universe.types[type_id]?.name}
+                {/if}
             </div>
         {/if}
     {/each}

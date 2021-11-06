@@ -1,11 +1,27 @@
 @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;600&display=swap');
 
+$breakpoint-mobile: 800px;
+
 :root {
 	font-family: 'Rubik', sans-serif;
 	font-weight: 300;
 
 	background-color: #181818;
 	color: #eee;
+
+	@media screen and (max-width: 800px) {
+
+		html {
+			max-width: 100%;
+			// overflow-x: hidden;
+	
+		}
+	}
+
+	--zindex-sticky: 1;
+	--zindex-overlay: 10;
+
+
 }
 
 select, input {
@@ -37,4 +53,110 @@ dt {
 
 dd {
 	margin-inline-start: 10px;
+}
+
+
+div.breakdown {
+	display: grid;
+	grid-template-columns: 1fr 80px 500px;
+
+	max-width: 800px;
+
+	@media screen and (max-width: $breakpoint-mobile) {
+		grid-template-columns: auto 80px;
+
+		max-width: 100%;
+
+		.graph, .subItem {
+			grid-column: span 2;
+		}
+	}
+
+	.itemName {
+		overflow-x: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+
+	}
+
+	.qty {
+		text-align: right;
+		margin-right: 10px;
+	}
+
+	.subItem {
+        grid-column: span 3;
+
+		@media screen and (max-width: $breakpoint-mobile) {
+			grid-column: span 2;
+		}
+
+        $divider: 1px solid #ccc;
+
+        border-top: $divider;
+        border-bottom: $divider;
+
+        margin-bottom: 4px;
+        margin-left:24px;
+    }
+}
+
+
+
+.overlay-parent {
+	display: inline-flex;
+	flex-flow: row nowrap;
+
+	position: relative;
+
+	.overlay {
+		visibility: hidden;
+
+		position: absolute;
+		z-index: var(--zindex-overlay);
+
+		top: 0px;
+		left: calc(100% + 4px);
+
+		@media screen and (max-width: $breakpoint-mobile) {
+			top: unset;
+			left: unset;
+			bottom: calc(100% + 4px);
+			right: 0;
+		}
+
+		border: 1px solid #444;
+		background: #1c1c1c;
+		padding: 2px 8px 2px 8px;
+		
+		font-size: 0.75rem;
+		line-height: 1.25rem;
+
+		dl {
+			grid-template-columns: 125px auto;
+
+			margin-bottom: 0px;
+
+			font-weight: 400;
+
+			.full-width {
+				grid-column: span 2;
+			}
+
+			dt {
+				color: #aaa;
+			}
+
+			dd {
+				text-align: end;
+				margin-bottom: 4px;
+			}
+		}
+	}
+
+	&:hover {
+		.overlay {
+			visibility: inherit;
+		}
+	}
 }

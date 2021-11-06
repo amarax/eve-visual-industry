@@ -12,13 +12,12 @@
 
     import type { Type_Id, Type } from "$lib/eve-data/EveData";
     import LocationSelector from "$lib/LocationSelector.svelte";
-import { onDestroy, setContext } from "svelte";
-import { CharacterBlueprints } from "$lib/eve-data/EveCharacter";
-import { Unsubscriber, writable } from "svelte/store";
+
+    import { getContext, onDestroy, onMount, setContext } from "svelte";
+    import { CharacterBlueprints, Character_Id } from "$lib/eve-data/EveCharacter";
+    import { Unsubscriber, writable } from "svelte/store";
 
     
-
-    let selectedCharacterId;
 
     $: selectedTypeId = parseInt( $page.params['type'] ) || null;
 
@@ -40,13 +39,12 @@ import { Unsubscriber, writable } from "svelte/store";
         selectableTypes = selectableTypeIDs.filter(id=>$Universe.types[id]!==undefined).map(id=>$Universe.types[id]);
     }
 
-    let marketFilterLocation: Location_Id;
-
-    $: blueprints = CharacterBlueprints[ selectedCharacterId ];
+    $: blueprints = CharacterBlueprints[ $currentCharacter ];
 
     const TradeHubs = [
         60003760,   // Jita IV - Moon 4 - Caldari Navy Assembly Plant
-        // Currently only Jita is supported because market region is hard-coded to The Forge
+        1028858195912,   // Perimeter Tranquility Trading Tower
+        // Currently only Jita/Perimeter is supported because market region is hard-coded to The Forge
         
         // 60008494,   // Amarr VIII (Oris) - Emperor Family Academy
         // 60004588,   // Rens VI - Moon 8 - Brutor Tribe Treasury
@@ -57,7 +55,7 @@ import { Unsubscriber, writable } from "svelte/store";
     // Set the locations context for all location selectors below
     let _unsubscribes: Array<Unsubscriber>=[];
     let locations = writable({});
-    $: {
+    $: if(mounted) {    // Ensure that subscribes run only if the component is mounted
         _unsubscribes.forEach(u=>u());
         _unsubscribes = [];
 
@@ -82,9 +80,18 @@ import { Unsubscriber, writable } from "svelte/store";
         })
     }
 
+    let mounted = false;
+    onMount(()=>{mounted = true})
+
     onDestroy(()=>{_unsubscribes.forEach(u=>u&&u())})
 
     setContext('locations', locations);
+
+    let marketFilterLocation = writable<Location_Id>(null);
+    setContext('marketFilterLocation', marketFilterLocation);
+
+    let currentCharacter = writable<Character_Id>(null);
+    setContext('currentCharacter', currentCharacter);
 </script>
 
 
@@ -93,11 +100,11 @@ import { Unsubscriber, writable } from "svelte/store";
 </svelte:head>
 
 
-<CharacterSelector bind:value={selectedCharacterId} /><br/>
-Filter market <LocationSelector allowUnselected bind:value={marketFilterLocation} />
+<CharacterSelector bind:value={$currentCharacter} /><br/>
+Filter market <LocationSelector allowUnselected bind:value={$marketFilterLocation} />
 
 
 <TypeSelector {selectedTypeId} on:change={event=>{goto(`${event.detail}`, {keepfocus:true})}} {selectableTypes} />
 
-<p/><ManufacturingActivity selectedProductId={selectedTypeId} {selectedCharacterId} {marketFilterLocation} />
+<p/><ManufacturingActivity selectedProductId={selectedTypeId} />
     

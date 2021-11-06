@@ -13,7 +13,6 @@
         value = parseInt( Object.keys($locations)[0] );
     }
 
-
     export let selectedLocation: EveLocation = null;
     $: selectedLocation = $locations[value];
 
@@ -109,7 +108,7 @@
     } = null;
     $: if(locationIsStructure) {
         structureRigBonuses = {
-            materialReductionBonus: 0,
+            materialReductionBonus: -2,
             timeReductionBonus: 0,
             costReductionBonus: 0,
         }
@@ -130,54 +129,13 @@
 
 
 <style lang="scss">
-
     .overlay-parent {
-        position: relative;
-
-        .overlay {
-            visibility: hidden;
-
-            position: absolute;
-            z-index: 1;
-
-            top: 0px;
-            left: calc(100% + 4px);
-
-            border: 1px solid #444;
-            background: #1c1c1c;
-            padding: 2px 8px 2px 8px;
-            
-            font-size: 0.75rem;
-            line-height: 1.25rem;
-
-            dl {
-            	grid-template-columns: 125px auto;
-
-                margin-bottom: 0px;
-
-                font-weight: 400;
-
-                .full-width {
-                    grid-column: span 2;
-                }
-
-                dt {
-                    color: #aaa;
-                }
-
-                dd {
-                    text-align: end;
-                    margin-bottom: 4px;
-                }
-            }
-        }
-
-        &:hover {
-            .overlay {
-                visibility: inherit;
-            }
+        select {
+            flex-shrink: 1;
+            width: 100%;
         }
     }
+
 </style>
 
 
