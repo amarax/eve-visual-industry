@@ -1,5 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;600&display=swap');
 
+$breakpoint-mobile: 800px;
+
 :root {
 	font-family: 'Rubik', sans-serif;
 	font-weight: 300;
@@ -18,6 +20,8 @@
 
 	--zindex-sticky: 1;
 	--zindex-overlay: 10;
+
+
 }
 
 select, input {
@@ -58,7 +62,7 @@ div.breakdown {
 
 	max-width: 800px;
 
-	@media screen and (max-width: 800px) {
+	@media screen and (max-width: $breakpoint-mobile) {
 		grid-template-columns: auto 80px;
 
 		max-width: 100%;
@@ -83,7 +87,7 @@ div.breakdown {
 	.subItem {
         grid-column: span 3;
 
-		@media screen and (max-width: 800px) {
+		@media screen and (max-width: $breakpoint-mobile) {
 			grid-column: span 2;
 		}
 
@@ -95,4 +99,64 @@ div.breakdown {
         margin-bottom: 4px;
         margin-left:24px;
     }
+}
+
+
+
+.overlay-parent {
+	display: inline-flex;
+	flex-flow: row nowrap;
+
+	position: relative;
+
+	.overlay {
+		visibility: hidden;
+
+		position: absolute;
+		z-index: var(--zindex-overlay);
+
+		top: 0px;
+		left: calc(100% + 4px);
+
+		@media screen and (max-width: $breakpoint-mobile) {
+			top: unset;
+			left: unset;
+			bottom: calc(100% + 4px);
+			right: 0;
+		}
+
+		border: 1px solid #444;
+		background: #1c1c1c;
+		padding: 2px 8px 2px 8px;
+		
+		font-size: 0.75rem;
+		line-height: 1.25rem;
+
+		dl {
+			grid-template-columns: 125px auto;
+
+			margin-bottom: 0px;
+
+			font-weight: 400;
+
+			.full-width {
+				grid-column: span 2;
+			}
+
+			dt {
+				color: #aaa;
+			}
+
+			dd {
+				text-align: end;
+				margin-bottom: 4px;
+			}
+		}
+	}
+
+	&:hover {
+		.overlay {
+			visibility: inherit;
+		}
+	}
 }

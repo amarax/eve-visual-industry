@@ -245,6 +245,8 @@ import { onDestroy, onMount } from "svelte";
         &.sell {
             stroke: #0f0;
         }
+
+        transition: 100ms ease-out;
     }
 
     rect.mark {

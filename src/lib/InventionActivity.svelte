@@ -40,37 +40,12 @@
 
     let prices: EntityCollection<IskAmount> = {};
 
-    $: {
-        if(inventionActivity) {
-            // materials (datacores)
-
-            // blueprint
-
-            // decryptor
-        } else {
-            prices = {}
-        }
-    }
-
-
-
     export let brokerFeeRate = 0.0151114234532; // Aqua Silentium's broker fee
 
     $: selectedIndustryTypeIsBlueprint = isBlueprint(selectedIndustryType?.type_id);
 
 
     let selectedDecryptor: Type_Id;
-
-    let breakdownItems: Array<Type_Id> = [];
-    $: {
-        breakdownItems = [];
-        if(inventionActivity) {
-            if(!selectedIndustryTypeIsBlueprint) breakdownItems.push(selectedIndustryType.type_id);
-            breakdownItems.push( ...Object.keys(inventionActivity.materials).map(string=>parseInt(string)) );
-            if(selectedDecryptor) breakdownItems.push(selectedDecryptor);
-        }
-    }
-
 
     let selectedIndustryTypeCost: IskAmount = 0;
     $: { 
@@ -208,30 +183,33 @@
     export let extents: Array<IskAmount> = null;
     let _extents = [0,1000000];
     $:{
-        _extents = extents || [0,totalCost*1.1];
+        _extents = extents || [0,totalCost*1.5];
     }
 
 
     export let marketFilterLocation: Location_Id = null;
 
+    function formatChange(value:number) {
+        return `${value>=0?"+":""}${Math.round(value)}`;
+    }
 </script>
 
-<style lang="scss"></style>
+<style lang="scss">
+    select {
+        width: 100%;
+    }
 
-<select bind:value={selectedIndustryType}>
-    {#each inputIndustryTypes as blueprint }
-        <option value={blueprint}>{$Universe.types[blueprint?.type_id]?.name}</option>
-    {/each}
-</select>
+    .overlay dl {
+        grid-template-columns: 70px auto;
+    }
 
-<select bind:value={selectedDecryptor}>
-    <option value={null}>No decryptor</option>
-    {#each Object.values($Decryptors) as decryptorType }
-        <option value={decryptorType.type_id}>{decryptorType.name}</option>
-    {/each}
-</select>
-Runs +{decrpytorRunModifier} ME {decryptorMEModifier} TE {decryptorTEModifier} Probability {decryptorProbabilityModifier*100-100}%
-<br/>
+    .graph {
+        height: 28px;
+    }
+</style>
+
+
+
 
 <label>
     {skill1?.name} 
@@ -260,25 +238,69 @@ Runs +{decrpytorRunModifier} ME {decryptorMEModifier} TE {decryptorTEModifier} P
         <MarketOrdersBar compact extents={_extents} quantity={1} totalCost={jobCost} />
     </div>
 
-    {#each breakdownItems as type_id}
+    {#each Object.keys(inventionActivity.materials).map(k=>parseInt(k)) as type_id}
         <div class="itemName" title={`${$Universe.types[type_id].name} [${type_id}]`}>{$Universe.types[type_id].name}</div>
-        <div class="qty">{inventionActivity.materials[type_id]?.quantity || 1}</div>
+        <div class="qty">{inventionActivity.materials[type_id]?.quantity}</div>
         <div class="graph">
-            <MarketOrdersBar compact extents={_extents} quantity={inventionActivity.materials[type_id]?.quantity || 1} 
+            <MarketOrdersBar compact extents={_extents} quantity={inventionActivity.materials[type_id]?.quantity} 
                 {type_id} {marketFilterLocation} 
                 bind:price={prices[type_id]}
                 buyOverheadRate={brokerFeeRate}
             />
         </div>
     {/each}
-    {#if !selectedDecryptor}
-        <div class="itemName">No decryptor</div>
-        <div style={`height:${24}px`}></div><div class="graph"></div>
+
+    <div>
+        <span class="overlay-parent">
+            <select bind:value={selectedDecryptor}>
+                <option value={null}>No decryptor</option>
+                {#each Object.values($Decryptors) as decryptorType }
+                    <option value={decryptorType.type_id}>{decryptorType.name}</option>
+                {/each}
+            </select>
+            <div class="overlay">
+                <dl>
+                    <dt>Runs</dt><dd>{formatChange(decrpytorRunModifier)}</dd>
+                    <dt>ME</dt><dd>{formatChange(decryptorMEModifier)}</dd>
+                    <dt>TE</dt><dd>{formatChange(decryptorTEModifier)}</dd>
+                    <dt>Probability</dt><dd>{formatChange(100-decryptorProbabilityModifier*100)}%</dd>
+                </dl>
+            </div>
+        </span>
+    </div>
+    {#if selectedDecryptor}
+        <div class="qty">{1}</div>
+        <div class="graph">
+            <MarketOrdersBar compact extents={_extents} quantity={1} 
+                type_id={selectedDecryptor} {marketFilterLocation} 
+                bind:price={prices[selectedDecryptor]}
+                buyOverheadRate={brokerFeeRate}
+            />  
+        </div>
+    {:else}
+        <div></div>
+        <div class="graph"></div>
     {/if}
+
+    <div>
+        <select bind:value={selectedIndustryType}>
+            {#each inputIndustryTypes as blueprint }
+                <option value={blueprint}>{$Universe.types[blueprint?.type_id]?.name}</option>
+            {/each}
+        </select>
+    </div>
     {#if selectedIndustryTypeIsBlueprint}
-        <div class="itemName">Blueprint copy cost per run</div>
-        <div></div>            
-        <div class="graph"><input type="number" bind:value={selectedIndustryTypeCost} /></div>
+        <div></div>
+        <div class="graph">Blueprint cost per run <input type="number" bind:value={selectedIndustryTypeCost} /></div>
+    {:else}
+        <div class="qty">{1}</div>
+        <div class="graph">
+            <MarketOrdersBar compact extents={_extents} quantity={1} 
+                type_id={selectedIndustryType.type_id} {marketFilterLocation} 
+                bind:price={prices[selectedIndustryType.type_id]}
+                buyOverheadRate={brokerFeeRate}
+            />  
+        </div>
     {/if}
 </div>
 

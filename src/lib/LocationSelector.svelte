@@ -130,69 +130,13 @@
 
 
 <style lang="scss">
-
     .overlay-parent {
-        display: inline-flex;
-        flex-flow: row nowrap;
-
-        position: relative;
-
         select {
             flex-shrink: 1;
             width: 100%;
         }
-
-        .overlay {
-            visibility: hidden;
-
-            position: absolute;
-            z-index: var(--zindex-overlay);
-
-            top: 0px;
-            left: calc(100% + 4px);
-
-            @media screen and (max-width: 800px) {
-                top: unset;
-                left: unset;
-                bottom: calc(100% + 4px);
-                right: 0;
-            }
-
-            border: 1px solid #444;
-            background: #1c1c1c;
-            padding: 2px 8px 2px 8px;
-            
-            font-size: 0.75rem;
-            line-height: 1.25rem;
-
-            dl {
-            	grid-template-columns: 125px auto;
-
-                margin-bottom: 0px;
-
-                font-weight: 400;
-
-                .full-width {
-                    grid-column: span 2;
-                }
-
-                dt {
-                    color: #aaa;
-                }
-
-                dd {
-                    text-align: end;
-                    margin-bottom: 4px;
-                }
-            }
-        }
-
-        &:hover {
-            .overlay {
-                visibility: inherit;
-            }
-        }
     }
+
 </style>
 
 
