@@ -125,7 +125,7 @@
         unitCost = manufacturing ? totalCost/producedQty : null;
     }
 
-    // export let compact: boolean = false;
+    export let compact: boolean = false;
 
     let inventing = false;
     let inventedRuns: number = 10;
@@ -161,46 +161,17 @@
 </script>
 
 <style lang="scss">
-    div.breakdown {
-        display: grid;
-        grid-template-columns: 1fr 80px 500px;
 
-        max-width: 800px;
 
-        @media screen and (max-width: 800px) {
-            grid-template-columns: auto 80px;
+    .summary {
+        position: sticky;
+        top: 0;
+        padding-top: 8px;
+        padding-bottom: 8px;
 
-            max-width: 100%;
+        z-index: var(--zindex-overlay);
 
-            .graph, .subItem {
-                grid-column: span 2;
-            }
-        }
-
-        .itemName {
-            overflow-x: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-
-        }
-
-        .qty {
-            text-align: right;
-            margin-right: 10px;
-        }
-
-    }
-
-    .subItem {
-        grid-column: span 3;
-
-        $divider: 1px solid #ccc;
-
-        border-top: $divider;
-        border-bottom: $divider;
-
-        margin-bottom: 4px;
-        margin-left:24px;
+        background-color: rgba(24,24,24,0.9);
     }
 
     .combinedInput input[type='number'] {
@@ -212,6 +183,30 @@
 {#if !blueprint}
 No blueprint selected yet
 {:else}
+
+<div class={`breakdown ${!compact?"summary":""}`}>
+    <div class="itemName" title={`${$Universe.types[selectedProductId]?.name} [${selectedProductId}]`}>{$Universe.types[selectedProductId]?.name}</div>
+    <div class="qty">{producedQty}</div>
+    <div class="graph">
+        Unit price
+        {FormatIskAmount(sellingPrice)}
+        Total Profit 
+        {FormatIskChange(profit)} 
+        <br/>
+
+        <MarketOrdersBar extents={_extents} quantity={producedQty} 
+            type_id={selectedProductId} {marketFilterLocation}
+            bind:price={itemPrices[selectedProductId]}
+            buyOverheadRate={-salesTaxRate} sellOverheadRate={-brokerFeeRate-salesTaxRate}
+            {totalCost}
+            bind:lowestSellPrice bind:highestBuyPrice
+        />
+        <br/>
+
+        Unit cost {FormatIskAmount(unitCost)} Total cost {FormatIskAmount(totalCost)}
+
+    </div>
+</div>
 
 <div class="combinedInput">
     Runs <input type="range" bind:value={runs} min={1} max={inventing ? inventedRuns : blueprint?.maxProductionLimit} disabled={requiredQuantity !== null && !overrideRequiredQuantity} /> <input type="number" bind:value={runs} disabled={requiredQuantity !== null && !overrideRequiredQuantity} /> 
@@ -254,29 +249,8 @@ No blueprint selected yet
     <dd>{FormatIskAmount(manufacturingJobCost)}</dd>
 </dl>
 
+
 <div class="breakdown">
-    <div class="itemName" title={`${$Universe.types[selectedProductId]?.name} [${selectedProductId}]`}>{$Universe.types[selectedProductId]?.name}</div>
-    <div class="qty">{producedQty}</div>
-    <div class="graph">
-        Unit price
-        {FormatIskAmount(sellingPrice)}
-        Total Profit 
-        {FormatIskChange(profit)} 
-        <br/>
-
-        <MarketOrdersBar extents={_extents} quantity={producedQty} 
-            type_id={selectedProductId} {marketFilterLocation}
-            bind:price={itemPrices[selectedProductId]}
-            buyOverheadRate={-salesTaxRate} sellOverheadRate={-brokerFeeRate-salesTaxRate}
-            {totalCost}
-            bind:lowestSellPrice bind:highestBuyPrice
-        />
-        <br/>
-
-        Unit cost {FormatIskAmount(unitCost)} Total cost {FormatIskAmount(totalCost)}
-
-    </div>
-
     <div>Job cost</div><div></div>
     <div class="graph">
         <MarketOrdersBar compact extents={_extents} quantity={producedQty} totalCost={manufacturingJobCost} />

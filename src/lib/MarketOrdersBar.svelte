@@ -10,7 +10,7 @@
     import { sum, minIndex } from "d3-array";
     import { line, curveStepAfter } from "d3-shape";
     import { ESIStoreStatus } from "$lib/eve-data/ESIStore";
-import { onMount } from "svelte";
+import { onDestroy, onMount } from "svelte";
 
 
 
@@ -163,10 +163,19 @@ import { onMount } from "svelte";
         }
     }
 
+    function onWindowResize(event) {
+        width = bar.getBoundingClientRect().width;
+    }
+
     let bar: SVGElement;
     onMount(()=>{
         width = bar.getBoundingClientRect().width;
+        window.addEventListener('resize', onWindowResize);
     })
+
+    onDestroy(()=>{
+        window.removeEventListener('resize', onWindowResize);
+    })    
 </script>
 
 <svg bind:this={bar} {height} viewBox={`0 0 ${width} ${height}`} xmlns="http://www.w3.org/2000/svg">
@@ -213,7 +222,7 @@ import { onMount } from "svelte";
 <style lang="scss">
     svg {
         width: 100%;
-        max-width: 500px;
+        // max-width: 500px;
     }
 
     .mark, .overhead, .difference {

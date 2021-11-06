@@ -216,103 +216,81 @@
 
 </script>
 
-<style lang="scss">
-    div.breakdown {
-        display: grid;
-        grid-template-columns: 1fr 80px 500px;
+<style lang="scss"></style>
 
-        max-width: 800px;
+<select bind:value={selectedIndustryType}>
+    {#each inputIndustryTypes as blueprint }
+        <option value={blueprint}>{$Universe.types[blueprint?.type_id]?.name}</option>
+    {/each}
+</select>
 
-        .itemName {
-            overflow-x: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+<select bind:value={selectedDecryptor}>
+    <option value={null}>No decryptor</option>
+    {#each Object.values($Decryptors) as decryptorType }
+        <option value={decryptorType.type_id}>{decryptorType.name}</option>
+    {/each}
+</select>
+Runs +{decrpytorRunModifier} ME {decryptorMEModifier} TE {decryptorTEModifier} Probability {decryptorProbabilityModifier*100-100}%
+<br/>
 
-        }
+<label>
+    {skill1?.name} 
+    <input bind:value={skill1Level} type="range" min={0} max={5} />
+</label>
+<br />
+<label>
+    {skill2?.name}
+    <input bind:value={skill2Level} type="range" min={0} max={5} />
+</label>
+<br />
+<label>
+    {encryptionSkill?.name}
+    <input bind:value={encryptionSkillLevel} type="range" min={0} max={5} />
+</label>
 
-        .qty {
-            text-align: right;
-            margin-right: 10px;
-        }
+<p>
+    <LocationSelector activity={INVENTION_ACTIVITY_ID}
+        bind:activitySystemCostIndex bind:activityTax bind:structureRoleBonuses bind:structureRigBonuses /><br/>
+</p>
 
-
-        margin-top: 16px;
-        margin-bottom: 16px;
-    }
-</style>
-
-<div>
-    <select bind:value={selectedIndustryType}>
-        {#each inputIndustryTypes as blueprint }
-            <option value={blueprint}>{$Universe.types[blueprint?.type_id]?.name}</option>
-        {/each}
-    </select>
-
-    <select bind:value={selectedDecryptor}>
-        <option value={null}>No decryptor</option>
-        {#each Object.values($Decryptors) as decryptorType }
-            <option value={decryptorType.type_id}>{decryptorType.name}</option>
-        {/each}
-    </select>
-    Runs +{decrpytorRunModifier} ME {decryptorMEModifier} TE {decryptorTEModifier} Probability {decryptorProbabilityModifier*100-100}%
-    <br/>
-
-    <label>
-        {skill1?.name} 
-        <input bind:value={skill1Level} type="range" min={0} max={5} />
-    </label>
-    <br />
-    <label>
-        {skill2?.name}
-        <input bind:value={skill2Level} type="range" min={0} max={5} />
-    </label>
-    <br />
-    <label>
-        {encryptionSkill?.name}
-        <input bind:value={encryptionSkillLevel} type="range" min={0} max={5} />
-    </label>
-
-    <p>
-        <LocationSelector activity={INVENTION_ACTIVITY_ID}
-            bind:activitySystemCostIndex bind:activityTax bind:structureRoleBonuses bind:structureRigBonuses /><br/>
-    </p>
-    
-    <div class="breakdown">
-        <div class="itemName">Job cost</div>
-        <div class="qty"></div>
-        <div>
-            <MarketOrdersBar compact extents={_extents} quantity={1} totalCost={jobCost} />
-        </div>
-
-        {#each breakdownItems as type_id}
-            <div class="itemName" title={`${$Universe.types[type_id].name} [${type_id}]`}>{$Universe.types[type_id].name}</div>
-            <div class="qty">{inventionActivity.materials[type_id]?.quantity || 1}</div>
-            <div>
-                <MarketOrdersBar compact extents={_extents} quantity={inventionActivity.materials[type_id]?.quantity || 1} 
-                    {type_id} {marketFilterLocation} 
-                    bind:price={prices[type_id]}
-                    buyOverheadRate={brokerFeeRate}
-                />
-            </div>
-        {/each}
-        {#if !selectedDecryptor}
-            <div class="itemName">No decryptor</div>
-            <div style={`height:${24}px`}></div><div></div>
-        {/if}
-        {#if selectedIndustryTypeIsBlueprint}
-            <div class="itemName">Blueprint copy cost per run</div>
-            <div></div>
-            <div><input type="number" bind:value={selectedIndustryTypeCost} /></div>            
-        {/if}
+<div class="breakdown">
+    <div class="itemName">Job cost</div>
+    <div class="qty"></div>
+    <div class="graph">
+        <MarketOrdersBar compact extents={_extents} quantity={1} totalCost={jobCost} />
     </div>
-    
 
-    Invention job cost: {FormatIskAmount(jobCost)}<br/>
-    Invention job duration: {FormatDuration(jobDuration)}
-
-    <p>
-        Invention Cost per run: <b>{FormatIskAmount(totalCost)}</b> Chance of success: <b>{inventionProbability*100}%</b> <br/>
-        Expected invention attempts to get >=90% chance to get >=1 successes: {Math.ceil(Math.log(1-0.9)/Math.log(1-inventionProbability))} <br/>
-        Expected Runs: {expectedRuns}  Expected cost per run: {FormatIskAmount(expectedCostPerRun)}
-    </p>
+    {#each breakdownItems as type_id}
+        <div class="itemName" title={`${$Universe.types[type_id].name} [${type_id}]`}>{$Universe.types[type_id].name}</div>
+        <div class="qty">{inventionActivity.materials[type_id]?.quantity || 1}</div>
+        <div class="graph">
+            <MarketOrdersBar compact extents={_extents} quantity={inventionActivity.materials[type_id]?.quantity || 1} 
+                {type_id} {marketFilterLocation} 
+                bind:price={prices[type_id]}
+                buyOverheadRate={brokerFeeRate}
+            />
+        </div>
+    {/each}
+    {#if !selectedDecryptor}
+        <div class="itemName">No decryptor</div>
+        <div style={`height:${24}px`}></div><div class="graph"></div>
+    {/if}
+    {#if selectedIndustryTypeIsBlueprint}
+        <div class="itemName">Blueprint copy cost per run</div>
+        <div></div>            
+        <div class="graph"><input type="number" bind:value={selectedIndustryTypeCost} /></div>
+    {/if}
 </div>
+
+<p>
+    Invention job cost: {FormatIskAmount(jobCost)}<br/>
+    Invention job duration: {FormatDuration(jobDuration)}<br/>
+    Invention cost per attempt: <b>{FormatIskAmount(totalCost)}</b> 
+</p>
+
+<p>
+    Chance of success: {inventionProbability*100}% <br/>
+    Expected invention attempts to get >=90% chance to get >=1 successes: {Math.ceil(Math.log(1-0.9)/Math.log(1-inventionProbability))} <br/>
+    Expected Runs: {expectedRuns}<br/>
+    Expected cost per run: <b>{FormatIskAmount(expectedCostPerRun)}</b>
+</p>

@@ -146,7 +146,7 @@
             visibility: hidden;
 
             position: absolute;
-            z-index: 1;
+            z-index: var(--zindex-overlay);
 
             top: 0px;
             left: calc(100% + 4px);
