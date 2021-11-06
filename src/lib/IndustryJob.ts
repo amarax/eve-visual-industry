@@ -1,8 +1,10 @@
+import { GetReactionActivity } from "$lib/eve-data/EveIndustry"
+import { writable } from "svelte/store";
+
+import type { Readable } from "svelte/store";
 import type { EntityCollection, Type_Id } from "$lib/eve-data/EveData"
-import { GetReactionActivity, IndustryActivity, IndustryStore } from "$lib/eve-data/EveIndustry"
+import type { IndustryActivity, IndustryStore } from "$lib/eve-data/EveIndustry"
 import type { DurationSeconds, IskAmount, MarketPrices, Quantity } from "$lib/eve-data/EveMarkets"
-import { REACTION_ACTIVITY_ID } from "$lib/eve-data/EveIndustry"
-import { Readable, writable } from "svelte/store";
 
 // Get all the computed details for a facility that affect this job
 export type IndustryFacilityModifiers = {
@@ -175,7 +177,7 @@ interface IndustryJobStore extends Readable<IndustryJob> {
     })
 }
 
-export function CreateIndustryJobStore(activity: IndustryActivity, selectedProduct: Required<Type_Id>): IndustryJobStore {
+export function CreateIndustryJobStore(activity: IndustryActivity, selectedProduct: Type_Id): IndustryJobStore {
     let job = new IndustryJob(activity, selectedProduct);
 
     let { subscribe, set } = writable(job);
@@ -184,14 +186,21 @@ export function CreateIndustryJobStore(activity: IndustryActivity, selectedProdu
         subscribe,
         update: (changes)=>{
             for(let change in changes) {
-                job[change] = changes[change];
+                if(!job[change] || typeof changes[change] !== 'object') {
+                    job[change] = changes[change];
+                } else {
+                    // For now we only update one level because that's what we have so far
+                    for(let c in changes[change]) {
+                        job[change][c] = changes[change][c]   
+                    }
+                }
             }
             set(job);
         }
     }
 }
 
-export function CreateReactionJobStore(selectedProduct: Required<Type_Id>, industry: Required<IndustryStore>): IndustryJobStore {
+export function CreateReactionJobStore(selectedProduct: Type_Id, industry: Required<IndustryStore>): IndustryJobStore {
     let {activity} = GetReactionActivity(selectedProduct, industry);
 
     return CreateIndustryJobStore(activity, selectedProduct);

@@ -249,10 +249,11 @@ export function GetCostIndex(industrySystems:Array<IndustrySystem>, location: Ev
         ?.cost_indices.find(value=>ActivityIdMapToCostIndexActivity[value.activity]==activity_id )?.cost_index
 }
 
-export function GetReactionActivity(type_id: Type_Id, industry: IndustryStore): {type:IndustryType, activity:IndustryActivity} {
+export function GetReactionActivity(type_id: Type_Id, industry: IndustryStore): {type:IndustryType | undefined, activity:IndustryActivity | undefined} {
     let type = Object.values(industry.types)
         .find(type=>type.activities[REACTION_ACTIVITY_ID]?.products[type_id]);
 
+    // Always return an object so we can deconstruct easily
     return {
         type,
         activity: type?.activities[REACTION_ACTIVITY_ID],

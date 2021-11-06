@@ -1,6 +1,6 @@
 <script lang="ts">
     import { Universe } from "$lib/eve-data/EveData";
-    import { MANUFACTURING_ACTIVITY_ID, Industry, GetBlueprintToManufacture, GetInventableBlueprint, ADVANCED_INDUSTRY_SKILL_ID, IndustrySystems } from "$lib/eve-data/EveIndustry";
+    import { MANUFACTURING_ACTIVITY_ID, Industry, GetBlueprintToManufacture, GetInventableBlueprint, ADVANCED_INDUSTRY_SKILL_ID, IndustrySystems, GetReactionActivity } from "$lib/eve-data/EveIndustry";
     import { IskAmount, MarketPrices } from "$lib/eve-data/EveMarkets";
     import { IndustryDogmaAttributes } from "$lib/eve-data/EveDogma";
     import { CharacterSkills } from "$lib/eve-data/EveCharacter";
@@ -13,6 +13,7 @@
     import { FormatDuration, FormatIskAmount, FormatIskChange } from "$lib/Format";
     import InventionActivity from "./InventionActivity.svelte";
     import LocationSelector from "./LocationSelector.svelte";
+import ReactionActivity from "./ReactionActivity.svelte";
 
 
 
@@ -37,7 +38,7 @@
     type ItemPickedList = {
         [id: Type_Id]: boolean
     }
-    export let manufacturedItems: ItemPickedList = {};
+    export let producedItems: ItemPickedList = {};
 
 
     let manufacturing: IndustryActivity = null;
@@ -79,7 +80,7 @@
     $: {
         // Reset items that are not marked as manufactured
         for(let type_id in manufacturedUnitCostPrices) {
-            if(!manufacturedItems[type_id]) manufacturedUnitCostPrices[type_id] = undefined;
+            if(!producedItems[type_id]) manufacturedUnitCostPrices[type_id] = undefined;
         }
     }
 
@@ -157,7 +158,11 @@
         }
     }
 
-
+    let canBeProduced: (type_id: Type_Id)=>boolean = ()=>false;
+    $: canBeProduced = (type_id)=>{
+        return GetBlueprintToManufacture($Industry, type_id) != null 
+            || GetReactionActivity(type_id, $Industry).activity != undefined;
+    }
 </script>
 
 <style lang="scss">
@@ -255,30 +260,36 @@ No blueprint selected yet
     <div class="graph">
         <MarketOrdersBar compact extents={_extents} quantity={producedQty} totalCost={manufacturingJobCost} />
     </div>
-    {#each Object.keys(manufacturing.materials) as type_id}
+    {#each Object.keys(manufacturing.materials).map(id=>parseInt(id)) as type_id}
         <div class="itemName">
             <label>
-                <input type="checkbox" bind:checked={manufacturedItems[type_id]} disabled={GetBlueprintToManufacture($Industry, parseInt(type_id)) == null} /> 
+                <input type="checkbox" bind:checked={producedItems[type_id]} disabled={!canBeProduced(type_id)} /> 
                 <span title={`${$Universe.types[type_id]?.name} [${type_id}]`}>{$Universe.types[type_id]?.name}</span>
             </label>
         </div>
         <div class="qty">{materialQty(manufacturing.materials[type_id].quantity)}</div>
         <div class="graph">
             <MarketOrdersBar extents={_extents} quantity={materialQty(manufacturing.materials[type_id].quantity)} 
-                type_id={parseInt(type_id)} {marketFilterLocation} 
+                {type_id} {marketFilterLocation} 
                 bind:price={itemPrices[type_id]} overridePrice={manufacturedUnitCostPrices[type_id]}
                 buyOverheadRate={brokerFeeRate}
                 totalCost={manufacturedUnitCostPrices[type_id] ? manufacturedUnitCostPrices[type_id]*materialQty(manufacturing.materials[type_id].quantity) : null}
                 compact
             />
         </div>
-        {#if manufacturedItems[type_id]}
+        {#if producedItems[type_id]}
             <div class="subItem">
-                <svelte:self selectedProductId={type_id} requiredQuantity={materialQty(manufacturing.materials[type_id].quantity)} {manufacturedItems}
-                    bind:unitCost={manufacturedUnitCostPrices[type_id]} 
-                    materialEfficiency={10} timeEfficiency={20}
-                    {selectedCharacterId} {selectedLocationId} {marketFilterLocation}
-                    compact />
+                {#if GetBlueprintToManufacture($Industry, type_id)}
+                    <svelte:self selectedProductId={type_id} requiredQuantity={materialQty(manufacturing.materials[type_id].quantity)} {producedItems}
+                        bind:unitCost={manufacturedUnitCostPrices[type_id]} 
+                        materialEfficiency={10} timeEfficiency={20}
+                        {selectedCharacterId} {selectedLocationId} {marketFilterLocation}
+                        compact />
+                {:else if GetReactionActivity(type_id, $Industry).activity}
+                    <ReactionActivity productTypeId={type_id} />
+                {:else}
+                    Could not find industry details for {$Universe.types[type_id]?.name}
+                {/if}
             </div>
         {/if}
     {/each}
