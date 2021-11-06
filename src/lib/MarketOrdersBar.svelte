@@ -77,7 +77,6 @@ import type { Writable } from "svelte/store";
         _prevTypeId = type_id;
     }
 
-
     export let totalCost: number = null;
     $: unitCost = totalCost/quantity;
 

@@ -53,6 +53,7 @@ import type { Readable } from "svelte/store";
     }
 
 
+    // TODO this needs to be re-thought
     export let selectedLocationId: Location_Id = null;
 
     let activitySystemCostIndex, activityTax, structureRoleBonuses, structureRigBonuses;
@@ -285,7 +286,7 @@ No blueprint selected yet
                         {selectedLocationId}
                         compact />
                 {:else if GetReactionActivity(type_id, $Industry).activity}
-                    <ReactionActivity productTypeId={type_id} />
+                    <ReactionActivity productTypeId={type_id} requiredQuantity={materialQty(manufacturing.materials[type_id].quantity)} />
                 {:else}
                     Could not find industry details for {$Universe.types[type_id]?.name}
                 {/if}

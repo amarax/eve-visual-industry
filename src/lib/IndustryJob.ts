@@ -1,5 +1,5 @@
 import { GetReactionActivity } from "$lib/eve-data/EveIndustry"
-import { writable } from "svelte/store";
+import { get, writable } from "svelte/store";
 
 import type { Readable } from "svelte/store";
 import type { EntityCollection, Type_Id } from "$lib/eve-data/EveData"
@@ -29,7 +29,7 @@ function addModifier(source: number, target: number): number {
 
 function applyModifiers(base: number, modifiers: Array<{value:number}>): number {
     let out = base;
-    modifiers.forEach(m=>{out = addModifier(m.value, out)});
+    modifiers.forEach(m=>{out = m.value == undefined ? addModifier(m.value, out) : out});
     return out;
 }
 
@@ -57,7 +57,7 @@ export class IndustryJob {
     // Permissive constructor that really only requires an activity
     constructor(activity: IndustryActivity, selectedProduct?: Type_Id) {
         this.activity = activity;
-        this.selectedProduct = this.activity?.products[selectedProduct]?.type_id ?? Object.values(this.activity.products)[0].type_id;
+        this.selectedProduct = this.activity?.products[selectedProduct]?.type_id ?? Object.values(this.activity?.products ?? {})[0]?.type_id ?? null;
 
         this.facilityModifiers = {taxRate:10, systemCostIndex:0.05};
         this.prices = {};
@@ -71,9 +71,15 @@ export class IndustryJob {
         return this.activity?.products[this.selectedProduct].quantity * this.runs;
     }
 
+    set requiredQuantity(value: Quantity) {
+        this.runs = Math.ceil( value / this.activity?.products[this.selectedProduct]?.quantity );
+    }
+
     // #region Cost metrics
 
     qty(baseQuantity: Quantity) : Quantity {
+        if(baseQuantity == undefined) return 0;
+
         let qty = applyModifiers(
             baseQuantity * this.runs,
             [
@@ -84,6 +90,10 @@ export class IndustryJob {
         )
 
         return Math.max(this.runs, Math.ceil(qty));
+    }
+
+    materialQuantity(type_id: Type_Id): Quantity {
+        return this.qty(this.activity?.materials[type_id]?.quantity);
     }
 
     get estimatedItemValue(): IskAmount {
@@ -114,16 +124,16 @@ export class IndustryJob {
         for(let type_id in (this.activity?.materials ?? [])) {
             let materialQuantity = this.qty(this.activity.materials[type_id].quantity);
 
-            totalCost += materialQuantity * this.prices[type_id];
+            totalCost += materialQuantity * (this.prices[type_id] ?? 0);
         }
         totalCost += this.jobCost;
-        totalCost += this.blueprintCostPerRun * this.runs;
+        totalCost += (this.blueprintCostPerRun ?? 0) * this.runs;
 
         return totalCost;
     }
 
     get unitCost(): IskAmount {
-        return this.producedQuantity * this.totalCost;
+        return this.totalCost / this.producedQuantity;
     }
     // #endregion
 
@@ -174,6 +184,7 @@ interface IndustryJobStore extends Readable<IndustryJob> {
         indexPrices?: EntityCollection<MarketPrices>
     
         runs?: number
+        requiredQuantity?: number
     })
 }
 

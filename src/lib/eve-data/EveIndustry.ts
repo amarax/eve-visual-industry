@@ -259,3 +259,9 @@ export function GetReactionActivity(type_id: Type_Id, industry: IndustryStore): 
         activity: type?.activities[REACTION_ACTIVITY_ID],
     }
 }
+
+
+export function CanBeProduced(type_id: Type_Id, industry: IndustryStore): boolean {
+    return GetBlueprintToManufacture(industry, type_id) != null 
+        || GetReactionActivity(type_id, industry).activity != undefined;
+}
