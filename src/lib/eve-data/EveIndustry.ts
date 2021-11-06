@@ -248,3 +248,13 @@ export function GetCostIndex(industrySystems:Array<IndustrySystem>, location: Ev
         ?.find(system=>system.solar_system_id === (location?.solar_system_id ?? location?.system_id))   // Need to accommodate for both stations and structures
         ?.cost_indices.find(value=>ActivityIdMapToCostIndexActivity[value.activity]==activity_id )?.cost_index
 }
+
+export function GetReactionActivity(type_id: Type_Id, industry: IndustryStore): {type:IndustryType, activity:IndustryActivity} {
+    let type = Object.values(industry.types)
+        .find(type=>type.activities[REACTION_ACTIVITY_ID]?.products[type_id]);
+
+    return {
+        type,
+        activity: type?.activities[REACTION_ACTIVITY_ID],
+    }
+}

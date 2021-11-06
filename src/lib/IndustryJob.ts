@@ -1,5 +1,5 @@
 import type { EntityCollection, Type_Id } from "$lib/eve-data/EveData"
-import type { IndustryActivity, IndustryStore } from "$lib/eve-data/EveIndustry"
+import { GetReactionActivity, IndustryActivity, IndustryStore } from "$lib/eve-data/EveIndustry"
 import type { DurationSeconds, IskAmount, MarketPrices, Quantity } from "$lib/eve-data/EveMarkets"
 import { REACTION_ACTIVITY_ID } from "$lib/eve-data/EveIndustry"
 import { Readable, writable } from "svelte/store";
@@ -53,9 +53,9 @@ export class IndustryJob {
     runs: number
 
     // Permissive constructor that really only requires an activity
-    constructor(activity: Required<IndustryActivity>, selectedProduct: Type_Id) {
+    constructor(activity: IndustryActivity, selectedProduct?: Type_Id) {
         this.activity = activity;
-        this.selectedProduct = this.activity.products[selectedProduct]?.type_id ?? Object.values(this.activity.products)[0].type_id;
+        this.selectedProduct = this.activity?.products[selectedProduct]?.type_id ?? Object.values(this.activity.products)[0].type_id;
 
         this.facilityModifiers = {taxRate:10, systemCostIndex:0.05};
         this.prices = {};
@@ -66,7 +66,7 @@ export class IndustryJob {
     }
 
     get producedQuantity(): Quantity {
-        return this.activity.products[this.selectedProduct].quantity * this.runs;
+        return this.activity?.products[this.selectedProduct].quantity * this.runs;
     }
 
     // #region Cost metrics
@@ -86,7 +86,7 @@ export class IndustryJob {
 
     get estimatedItemValue(): IskAmount {
         let total = 0;
-        for(let type_id in this.activity.materials) {
+        for(let type_id in (this.activity?.materials ?? [])) {
             // If the adjusted price is not available, treat the price as 0
             // Verified behaviour on Tranquility on 1 Nov 2021
             total += this.activity.materials[type_id].quantity * (this.indexPrices[type_id]?.adjusted_price ?? 0);
@@ -109,7 +109,7 @@ export class IndustryJob {
 
     get totalCost(): IskAmount {
         let totalCost = 0;
-        for(let type_id in this.activity.materials) {
+        for(let type_id in (this.activity?.materials ?? [])) {
             let materialQuantity = this.qty(this.activity.materials[type_id].quantity);
 
             totalCost += materialQuantity * this.prices[type_id];
@@ -175,8 +175,9 @@ interface IndustryJobStore extends Readable<IndustryJob> {
     })
 }
 
-export function CreateIndustryJobStore(activity: Required<IndustryActivity>, selectedProduct: Required<Type_Id>): IndustryJobStore {
+export function CreateIndustryJobStore(activity: IndustryActivity, selectedProduct: Required<Type_Id>): IndustryJobStore {
     let job = new IndustryJob(activity, selectedProduct);
+
     let { subscribe, set } = writable(job);
 
     return {
@@ -190,9 +191,8 @@ export function CreateIndustryJobStore(activity: Required<IndustryActivity>, sel
     }
 }
 
-export function CreateReactionJobStore(industry: Required<IndustryStore>, selectedProduct: Required<Type_Id>): IndustryJobStore {
-    let activity = Object.values(industry.types)
-        .find(type=>type.activities[REACTION_ACTIVITY_ID]?.products[selectedProduct])?.activities[REACTION_ACTIVITY_ID];
+export function CreateReactionJobStore(selectedProduct: Required<Type_Id>, industry: Required<IndustryStore>): IndustryJobStore {
+    let {activity} = GetReactionActivity(selectedProduct, industry);
 
     return CreateIndustryJobStore(activity, selectedProduct);
 }
