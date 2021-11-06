@@ -1,6 +1,6 @@
 <script lang="ts">
-    import { EntityCollection, Universe } from "$lib/eve-data/EveData";
-    import { CanBeProduced, GetReactionActivity, Industry } from "$lib/eve-data/EveIndustry";
+    import { EntityCollection, Location_Id, Universe } from "$lib/eve-data/EveData";
+    import { CanBeProduced, GetReactionActivity, Industry, REACTION_ACTIVITY_ID } from "$lib/eve-data/EveIndustry";
     import { CreateReactionJobStore } from "$lib/IndustryJob";
     import { MarketPrices } from "./eve-data/EveMarkets";
 
@@ -9,6 +9,7 @@
 
     import { FormatIskAmount, FormatIskChange } from "./Format";
     import MarketOrdersBar from "./MarketOrdersBar.svelte";
+import LocationSelector from "./LocationSelector.svelte";
 
 
     export let productTypeId: Type_Id = null;
@@ -17,10 +18,6 @@
 
     export let requiredQuantity: Quantity = null; 
     $: job.update({requiredQuantity});
-
-    export let unitCost: IskAmount = 0;
-    $: unitCost = $job.unitCost;
-    $:console.log($job, $job.unitCost, unitCost);
 
     type ItemPickedList = {
         [id: Type_Id]: boolean
@@ -31,16 +28,53 @@
     export let producedItems: ItemPickedList = {};
     let producedPrices: EntityCollection<IskAmount> = {};
 
+
+    export let locationId: Location_Id = null;
+    let activitySystemCostIndex, activityTax, structureRoleBonuses, structureRigBonuses;
+    $: job.update({
+        facilityModifiers: {
+            systemCostIndex: activitySystemCostIndex,
+            taxRate: activityTax,
+        }
+    });
+    $: if(structureRoleBonuses) {
+        job.update({
+            facilityModifiers: {
+                roleModifiers: {
+                    jobDuration: structureRoleBonuses.jobDurationModifier,
+                    materialConsumption: structureRoleBonuses.materialConsumptionModifier,
+                    jobCost: structureRoleBonuses.jobCostModifier,
+                }
+            }
+        });
+    }
+    $: if(structureRigBonuses) {
+        job.update({
+            facilityModifiers: {
+                rigModifiers: {
+                    materialReduction: structureRigBonuses.materialReductionBonus,
+                    timeReduction: structureRigBonuses.timeReductionBonus,
+                    costReduction: structureRigBonuses.costReductionBonus,
+                }
+            }
+        });
+    }
+
     // HACK to force prices to re-evaluate after a binding
     $: {
         for(let type_id in prices) {
             prices[type_id] = prices[type_id];
         }
         prices = prices;
+        job.update({prices});
     }
 
-    $: job.update({indexPrices:$MarketPrices})
-    $: job.update({prices});
+    // Force recalculation of job when any changes happen
+    $: job.update({indexPrices:$MarketPrices});
+
+    export let unitCost: IskAmount = 0;
+    $: unitCost = $job.unitCost;
+
 
     export let salesTaxRate = 0.036;
     export let brokerFeeRate = 0.0113709973928; // Selene's broker fee
@@ -56,6 +90,7 @@
     $: {
         if(extents === null) {
             _extents[1] = 1.1*Math.max(prices[productTypeId] ?? 0, unitCost ?? 0, lowestSellPrice ?? 0, highestBuyPrice ?? 0)*$job.producedQuantity;
+            if(_extents[1] == 0) _extents[1] = 1000;
         } else {
             _extents = extents;
         }
@@ -88,6 +123,12 @@
 
     </div>
 </div>
+
+<p>
+    <b>Facility</b>
+    <LocationSelector value={locationId} activity={REACTION_ACTIVITY_ID}
+        bind:activitySystemCostIndex bind:activityTax bind:structureRoleBonuses bind:structureRigBonuses />
+</p>
 
 <div class="breakdown">
     <div>Job cost</div><div></div>

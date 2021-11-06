@@ -18,8 +18,8 @@ export type IndustryFacilityModifiers = {
         timeReduction: number,
         costReduction: number,
     },
-    taxRate: number,
-    systemCostIndex: number,
+    taxRate?: number,
+    systemCostIndex?: number,
 }
 
 // Temporary implementation of a Eve Dogma operator
@@ -29,7 +29,7 @@ function addModifier(source: number, target: number): number {
 
 function applyModifiers(base: number, modifiers: Array<{value:number}>): number {
     let out = base;
-    modifiers.forEach(m=>{out = m.value == undefined ? addModifier(m.value, out) : out});
+    modifiers.forEach(m=>{out = !isNaN(m.value) ? addModifier(m.value, out) : out});
     return out;
 }
 
