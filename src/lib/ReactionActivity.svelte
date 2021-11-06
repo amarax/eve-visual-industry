@@ -7,9 +7,9 @@
     import type { Type_Id } from "$lib/eve-data/EveData";
     import type { IskAmount, Quantity } from "./eve-data/EveMarkets";
 
-    import { FormatIskAmount, FormatIskChange } from "./Format";
+    import { FormatDuration, FormatIskAmount, FormatIskChange } from "./Format";
     import MarketOrdersBar from "./MarketOrdersBar.svelte";
-import LocationSelector from "./LocationSelector.svelte";
+    import LocationSelector from "./LocationSelector.svelte";
 
 
     export let productTypeId: Type_Id = null;
@@ -30,13 +30,15 @@ import LocationSelector from "./LocationSelector.svelte";
 
 
     export let locationId: Location_Id = null;
-    let activitySystemCostIndex, activityTax, structureRoleBonuses, structureRigBonuses;
+    let activitySystemCostIndex = 0.05, activityTax = 10;
     $: job.update({
         facilityModifiers: {
             systemCostIndex: activitySystemCostIndex,
             taxRate: activityTax,
         }
     });
+
+    let structureRoleBonuses, structureRigBonuses;
     $: if(structureRoleBonuses) {
         job.update({
             facilityModifiers: {
@@ -75,7 +77,6 @@ import LocationSelector from "./LocationSelector.svelte";
     export let unitCost: IskAmount = 0;
     $: unitCost = $job.unitCost;
 
-
     export let salesTaxRate = 0.036;
     export let brokerFeeRate = 0.0113709973928; // Selene's broker fee
 
@@ -90,12 +91,11 @@ import LocationSelector from "./LocationSelector.svelte";
     $: {
         if(extents === null) {
             _extents[1] = 1.1*Math.max(prices[productTypeId] ?? 0, unitCost ?? 0, lowestSellPrice ?? 0, highestBuyPrice ?? 0)*$job.producedQuantity;
-            if(_extents[1] == 0) _extents[1] = 1000;
+            if(_extents[1] == 0 || isNaN(_extents[1])) _extents[1] = 1000;
         } else {
             _extents = extents;
         }
     }
-
 
     // #endregion
 </script>
@@ -130,6 +130,12 @@ import LocationSelector from "./LocationSelector.svelte";
         bind:activitySystemCostIndex bind:activityTax bind:structureRoleBonuses bind:structureRigBonuses />
 </p>
 
+<b>Production</b>
+<dl>
+    <dt>Time</dt>
+    <dd title={`${$job.jobDuration}s`}>{FormatDuration($job.jobDuration)}</dd>
+</dl>
+
 <div class="breakdown">
     <div>Job cost</div><div></div>
     <div class="graph">
@@ -159,6 +165,7 @@ import LocationSelector from "./LocationSelector.svelte";
             {#if GetReactionActivity(type_id, $Industry).activity}
                 <svelte:self productTypeId={type_id} requiredQuantity={$job.materialQuantity(type_id)} 
                     bind:unitCost={producedPrices[type_id]}
+                    {locationId}
                 />
             {:else}
                 Could not find industry details for {$Universe.types[type_id]?.name}

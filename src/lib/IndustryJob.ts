@@ -141,7 +141,7 @@ export class IndustryJob {
 
     get jobDuration(): DurationSeconds {
         return applyModifiers(
-            this.activity.time * this.runs,
+            this.activity?.time * this.runs,
             [
                 {value: -this.blueprintModifiers?.timeEfficiency},
                 {value: this.characterModifiers?.skill_jobDuration},
