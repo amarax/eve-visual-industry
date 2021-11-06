@@ -14,12 +14,10 @@
     import LocationSelector from "$lib/LocationSelector.svelte";
 
     import { getContext, onDestroy, onMount, setContext } from "svelte";
-    import { CharacterBlueprints } from "$lib/eve-data/EveCharacter";
+    import { CharacterBlueprints, Character_Id } from "$lib/eve-data/EveCharacter";
     import { Unsubscriber, writable } from "svelte/store";
 
     
-
-    let selectedCharacterId;
 
     $: selectedTypeId = parseInt( $page.params['type'] ) || null;
 
@@ -41,7 +39,7 @@
         selectableTypes = selectableTypeIDs.filter(id=>$Universe.types[id]!==undefined).map(id=>$Universe.types[id]);
     }
 
-    $: blueprints = CharacterBlueprints[ selectedCharacterId ];
+    $: blueprints = CharacterBlueprints[ $currentCharacter ];
 
     const TradeHubs = [
         60003760,   // Jita IV - Moon 4 - Caldari Navy Assembly Plant
@@ -90,7 +88,10 @@
     setContext('locations', locations);
 
     let marketFilterLocation = writable<Location_Id>(null);
-    setContext('marketFilterLocation', marketFilterLocation)
+    setContext('marketFilterLocation', marketFilterLocation);
+
+    let currentCharacter = writable<Character_Id>(null);
+    setContext('currentCharacter', currentCharacter);
 </script>
 
 
@@ -99,11 +100,11 @@
 </svelte:head>
 
 
-<CharacterSelector bind:value={selectedCharacterId} /><br/>
+<CharacterSelector bind:value={$currentCharacter} /><br/>
 Filter market <LocationSelector allowUnselected bind:value={$marketFilterLocation} />
 
 
 <TypeSelector {selectedTypeId} on:change={event=>{goto(`${event.detail}`, {keepfocus:true})}} {selectableTypes} />
 
-<p/><ManufacturingActivity selectedProductId={selectedTypeId} {selectedCharacterId} />
+<p/><ManufacturingActivity selectedProductId={selectedTypeId} />
     

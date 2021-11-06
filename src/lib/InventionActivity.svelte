@@ -10,12 +10,14 @@
     import { sum } from "$lib/Utilities";
     import { FormatDuration, FormatIskAmount } from "$lib/Format";
     
-    import { CharacterSkills } from "$lib/eve-data/EveCharacter";
+    import { CharacterSkills, Character_Id } from "$lib/eve-data/EveCharacter";
     import type { ESIStore } from "$lib/eve-data/ESIStore";
     import LocationSelector from "./LocationSelector.svelte";
+import { getContext } from "svelte";
+import type { Readable } from "svelte/store";
 
 
-    export let selectedCharacterId = null;
+    let currentCharacter = getContext('currentCharacter') as Readable<Character_Id>;
 
 
     
@@ -88,8 +90,8 @@
     let skill1Level = 3, skill2Level =3, encryptionSkillLevel =3;
     $: {
         let characterChanged = false;
-        if(characterSkills !== CharacterSkills[selectedCharacterId]) {
-            characterSkills = CharacterSkills[selectedCharacterId];
+        if(characterSkills !== CharacterSkills[$currentCharacter]) {
+            characterSkills = CharacterSkills[$currentCharacter];
             characterChanged = true;    // Hidden bug over here where if the contents of the skills change, this isn't triggered
         }
 

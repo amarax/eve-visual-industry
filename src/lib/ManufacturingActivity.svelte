@@ -3,7 +3,7 @@
     import { MANUFACTURING_ACTIVITY_ID, Industry, GetBlueprintToManufacture, GetInventableBlueprint, ADVANCED_INDUSTRY_SKILL_ID, IndustrySystems, GetReactionActivity } from "$lib/eve-data/EveIndustry";
     import { IskAmount, MarketPrices } from "$lib/eve-data/EveMarkets";
     import { IndustryDogmaAttributes } from "$lib/eve-data/EveDogma";
-    import { CharacterSkills } from "$lib/eve-data/EveCharacter";
+    import { CharacterSkills, Character_Id } from "$lib/eve-data/EveCharacter";
 
     import type { Location_Id, EntityCollection, Type_Id } from "$lib/eve-data/EveData";
     import type { IndustryActivity } from "$lib/eve-data/EveIndustry";
@@ -14,6 +14,8 @@
     import InventionActivity from "./InventionActivity.svelte";
     import LocationSelector from "./LocationSelector.svelte";
 import ReactionActivity from "./ReactionActivity.svelte";
+import { getContext } from "svelte";
+import type { Readable } from "svelte/store";
 
 
 
@@ -98,7 +100,7 @@ import ReactionActivity from "./ReactionActivity.svelte";
 
     $: manufacturingJobCost = totalAdjustedCostPrice * activitySystemCostIndex * (1+(structureRoleBonuses?.jobCostModifier ?? 0)/100) * (1+activityTax/100) * runs;
 
-    $: characterSkills = CharacterSkills[selectedCharacterId];
+    $: characterSkills = CharacterSkills[$currentCharacter];
 
     // TODO list all contributing skills
     $: skillTimeModifier = manufacturing ? [...Object.values(manufacturing.requiredSkills || {}).map(s=>s.type_id), ADVANCED_INDUSTRY_SKILL_ID]
@@ -139,7 +141,7 @@ import ReactionActivity from "./ReactionActivity.svelte";
         }
     }
 
-    export let selectedCharacterId;
+    let currentCharacter = getContext('currentCharacter') as Readable<Character_Id>;
 
 
     export let extents: Array<number> = null;
@@ -224,7 +226,7 @@ No blueprint selected yet
 
     {#if inventing}
         <div class="subItem">
-            <InventionActivity {selectedCharacterId} blueprintToInvent={blueprint} 
+            <InventionActivity blueprintToInvent={blueprint} 
                 bind:expectedCostPerRun={blueprintCostPerRun} bind:productME={materialEfficiency} bind:productTE={timeEfficiency} bind:productRuns={inventedRuns}
             />
         </div>
@@ -280,7 +282,7 @@ No blueprint selected yet
                     <svelte:self selectedProductId={type_id} requiredQuantity={materialQty(manufacturing.materials[type_id].quantity)} {producedItems}
                         bind:unitCost={manufacturedUnitCostPrices[type_id]} 
                         materialEfficiency={10} timeEfficiency={20}
-                        {selectedCharacterId} {selectedLocationId}
+                        {selectedLocationId}
                         compact />
                 {:else if GetReactionActivity(type_id, $Industry).activity}
                     <ReactionActivity productTypeId={type_id} />

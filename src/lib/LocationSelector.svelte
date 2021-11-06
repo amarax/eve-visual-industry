@@ -13,7 +13,6 @@
         value = parseInt( Object.keys($locations)[0] );
     }
 
-
     export let selectedLocation: EveLocation = null;
     $: selectedLocation = $locations[value];
 
