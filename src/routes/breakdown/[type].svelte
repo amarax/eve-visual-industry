@@ -12,9 +12,10 @@
 
     import type { Type_Id, Type } from "$lib/eve-data/EveData";
     import LocationSelector from "$lib/LocationSelector.svelte";
-import { onDestroy, setContext } from "svelte";
-import { CharacterBlueprints } from "$lib/eve-data/EveCharacter";
-import { Unsubscriber, writable } from "svelte/store";
+
+    import { onDestroy, onMount, setContext } from "svelte";
+    import { CharacterBlueprints } from "$lib/eve-data/EveCharacter";
+    import { Unsubscriber, writable } from "svelte/store";
 
     
 
@@ -58,7 +59,7 @@ import { Unsubscriber, writable } from "svelte/store";
     // Set the locations context for all location selectors below
     let _unsubscribes: Array<Unsubscriber>=[];
     let locations = writable({});
-    $: {
+    $: if(mounted) {    // Ensure that subscribes run only if the component is mounted
         _unsubscribes.forEach(u=>u());
         _unsubscribes = [];
 
@@ -82,6 +83,9 @@ import { Unsubscriber, writable } from "svelte/store";
 
         })
     }
+
+    let mounted = false;
+    onMount(()=>{mounted = true})
 
     onDestroy(()=>{_unsubscribes.forEach(u=>u&&u())})
 
