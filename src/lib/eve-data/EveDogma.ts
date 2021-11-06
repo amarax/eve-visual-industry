@@ -46,7 +46,8 @@ export const IndustryDogmaAttributes: Readable<{
             highIsGood,
             categoryID
         }>)=>{
-            data.filter(type=>type.attributeID!==null && (type.attributeName?.indexOf("Manufacturing Time Bonus")!=-1 || type.attributeName?.indexOf("Industry Job Length Bonus")!=-1))
+            // data.filter(type=>type.attributeID!==null && (type.attributeName?.indexOf("Manufacturing Time Bonus")!=-1 || type.attributeName?.indexOf("Industry Job Length Bonus")!=-1))
+            data
                 .forEach(type=>attributes[type.attributeID]=type);
         })
         .then(()=>LoadFromSDE("dgmIndustryTypeAttributes")) // This first load has a large impact on performance, need to figure out how to cut it down
@@ -70,3 +71,15 @@ export const IndustryDogmaAttributes: Readable<{
         .catch(error=>console.error(error))
 
 })
+
+
+// Temporary implementation of a Eve Dogma operator
+export function ModifierAdd(source: number, target: number): number {
+    return target * (1 + (source ?? 0)/100);
+}
+
+export function ApplyEffects(base: number, modifiers: Array<{value:number}>): number {
+    let out = base;
+    modifiers.forEach(m=>{out = !isNaN(m.value) ? ModifierAdd(m.value, out) : out});
+    return out;
+}

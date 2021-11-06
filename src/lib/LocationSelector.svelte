@@ -9,7 +9,7 @@
     $: locations = getContext('locations') as Readable<{[index:Location_Id]: EveLocation }>;
     export let allowUnselected: boolean = false;
 
-    $: if(!allowUnselected && value == null && Object.keys($locations).length>0) {
+    $: if(!allowUnselected && Object.keys($locations).length>0 && Object.keys($locations).map(id=>parseInt(id)).indexOf(value) < 0) {
         value = parseInt( Object.keys($locations)[0] );
     }
 
@@ -34,6 +34,7 @@
     const RAITARU_TYPE_ID = 35825;
     const AZBEL_TYPE_ID = 35826;
     const SOTIYO_TYPE_ID = 35827;
+    const ATHANOR_TYPE_ID = 35835;
 
     export let structureRoleBonuses: {
         jobDurationModifier: number,
@@ -70,6 +71,13 @@
                 }
                 if(activity === MANUFACTURING_ACTIVITY_ID || activity === REACTION_ACTIVITY_ID) {
                     structureRoleBonuses.materialConsumptionModifier = -1;
+                }
+                break;
+            case ATHANOR_TYPE_ID:
+                structureRoleBonuses = {
+                    jobDurationModifier: 0,
+                    materialConsumptionModifier: 0,
+                    jobCostModifier: 0
                 }
                 break;
             default:
@@ -147,8 +155,10 @@
         {#each _locations as location}
             <option value={location.location_id}>{location.name ?? location.location_id}</option>
         {/each}
-    </select> 
-    <button on:click={()=>{collapsed = !collapsed}}>{collapsed?"+":"-"}</button>
+    </select>
+    {#if _activity}
+        <button on:click={()=>{collapsed = !collapsed}}>{collapsed?"+":"-"}</button>
+    {/if}
     {#if _activity && collapsed}
     <div class="overlay">
         <dl>
@@ -178,7 +188,7 @@
 {#if _activity && !collapsed}
 <dl>
     <dt>System cost index</dt> <dd>{activitySystemCostIndex*100}%</dd>
-    <dt>Tax for {_activity.activityName}</dt> <dd><input type="range" min={0} max={15} step={0.5} value={activityTax} on:input={onChangeFacilityTax} disabled={IsLocationStation(value)} /> {activityTax}</dd>
+    <dt>Tax for {_activity.activityName}</dt> <dd><input type="range" min={0} max={20} step={0.5} value={activityTax} on:input={onChangeFacilityTax} disabled={IsLocationStation(value)} /> {activityTax}</dd>
     {#if locationIsStructure}
         <dt>Structure role bonuses</dt>
         <dd>ME {structureRoleBonuses.materialConsumptionModifier}% | Cost {structureRoleBonuses.jobCostModifier}% | TE {structureRoleBonuses.jobDurationModifier}%</dd>

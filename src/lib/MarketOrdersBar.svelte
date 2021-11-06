@@ -10,7 +10,7 @@
     import { sum, minIndex } from "d3-array";
     import { line, curveStepAfter } from "d3-shape";
     import { ESIStoreStatus } from "$lib/eve-data/ESIStore";
-import { getContext, onDestroy, onMount } from "svelte";
+import { afterUpdate, getContext, onDestroy, onMount } from "svelte";
 import type { Writable } from "svelte/store";
 
 
@@ -87,7 +87,7 @@ import type { Writable } from "svelte/store";
         .range([0,width]);
 
     let topBottomMargin = 8;
-    let yExtents = compact ? [0,height-topBottomMargin] : [topBottomMargin,height-2*topBottomMargin]
+    let yExtents = compact ? [0,height-topBottomMargin] : [0,height-2*topBottomMargin]
     $: y = scaleLinear()
         .domain([1,0])
         .range(yExtents)
@@ -177,7 +177,21 @@ import type { Writable } from "svelte/store";
 
     onDestroy(()=>{
         window.removeEventListener('resize', onWindowResize);
-    })    
+    })
+
+    let hoverText: SVGTextElement;
+    afterUpdate(()=>{
+        if(hoverText) {
+            let halfWidth = hoverText.getBBox().width/2;
+            let xPos = x(hoverPrice*quantity);
+
+            // Originally we set the text anchors, but we don't want to do that here because it will affect the tween
+            if(xPos - halfWidth < 0)
+                hoverText.setAttribute('style', `transform: translateX(${xPos+halfWidth}px)`);
+            else if(xPos + halfWidth > width)
+                hoverText.setAttribute('style', `transform: translateX(${xPos-halfWidth}px)`);
+        }
+    })
 </script>
 
 <svg bind:this={bar} {height} viewBox={`0 0 ${width} ${height}`} xmlns="http://www.w3.org/2000/svg">
@@ -199,7 +213,7 @@ import type { Writable } from "svelte/store";
                 <rect class="overhead sell" x={x(lowestSellOrder.price*Math.min(1,1+sellOverheadRate)*quantity)} width={x(Math.abs(sellOverheadRate*lowestSellOrder.price*quantity))} {...fillGraphHeight} />
             {/if}
         {/if}
-        {#if totalCost !== null}
+        {#if !isNaN(totalCost) && totalCost !== null}
             <rect class="mark cost" x={x(totalCost)} width={1} height={height} />
             {#if price != 0}
                 <rect class={`difference profit ${unitCost>price?"negative":"positive"}`} x={Math.min(x(totalCost), x(price*quantity))} width={Math.abs(x(totalCost)-x(price*quantity))} y={y(0.5)} height={1} />
@@ -211,12 +225,12 @@ import type { Writable } from "svelte/store";
     {/if}
 
     {#if hover}
-        <text class="hover" style={translateX(hoverPrice*quantity)} y={y(0)} dy={8} text-anchor="middle">{FormatIskAmount(hoverPrice*quantity)} @{FormatIskAmount(hoverPrice)}</text>
+        <text bind:this={hoverText} class="hover" style={translateX(hoverPrice*quantity)} y={y(0)} dy={8} text-anchor="middle">{FormatIskAmount(hoverPrice*quantity)} @{FormatIskAmount(hoverPrice)}</text>
         <circle class="hover" style={translateX(hoverPrice*quantity)} cx={0} cy={y(0.5)} r={4} />
     {/if}
 
     <rect class="hitArea" width={width} y={y(1)} height={y(0)-y(1)} 
-        on:mouseenter={event=>hover=true} on:mouseleave={event=>hover=false} on:mousemove={onHoverGraph} 
+        on:mouseenter={event=>{hover=true; onHoverGraph(event)}} on:mouseleave={event=>hover=false} on:mousemove={onHoverGraph} 
         on:click={onClickGraph}
     />
 </svg>
@@ -305,6 +319,10 @@ import type { Writable } from "svelte/store";
         stroke: none;
 
         cursor:crosshair;
+    }
+
+    .hover {
+        transition: transform 50ms ease-out;
     }
 
     text.hover {
