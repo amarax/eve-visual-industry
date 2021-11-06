@@ -287,8 +287,9 @@ No blueprint selected yet
                         compact />
                 {:else if GetReactionActivity(type_id, $Industry).activity}
                     <ReactionActivity productTypeId={type_id} requiredQuantity={materialQty(manufacturing.materials[type_id].quantity)} 
-                        bind:producedItems
-                        defaultLocationId={selectedLocationId} />
+                        bind:unitCost={manufacturedUnitCostPrices[type_id]} bind:producedItems
+                        defaultLocationId={selectedLocationId} 
+                        compact />
                 {:else}
                     Could not find industry details for {$Universe.types[type_id]?.name}
                 {/if}

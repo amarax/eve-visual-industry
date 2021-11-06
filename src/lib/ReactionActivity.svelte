@@ -5,16 +5,16 @@
     import { MarketPrices } from "./eve-data/EveMarkets";
     import { CharacterSkills } from "$lib/eve-data/EveCharacter";
 
-    import type { Type_Id } from "$lib/eve-data/EveData";
+    import type { Type_Id, EveLocation } from "$lib/eve-data/EveData";
     import type { IskAmount, Quantity } from "./eve-data/EveMarkets";
-    import type { Readable } from "svelte/store";
+    import { Readable, writable, Writable } from "svelte/store";
     import type { Character_Id } from "$lib/eve-data/EveCharacter";
 
     import { FormatDuration, FormatIskAmount, FormatIskChange } from "./Format";
     import MarketOrdersBar from "./MarketOrdersBar.svelte";
     import LocationSelector from "./LocationSelector.svelte";
-    import { getContext } from "svelte";
-import { ApplyEffects, IndustryDogmaAttributes } from "./eve-data/EveDogma";
+    import { getContext, setContext } from "svelte";
+    import { ApplyEffects, IndustryDogmaAttributes } from "./eve-data/EveDogma";
 
 
     export let productTypeId: Type_Id = null;
@@ -66,6 +66,20 @@ import { ApplyEffects, IndustryDogmaAttributes } from "./eve-data/EveDogma";
     // #endregion
 
     // #region Facility-related
+
+    let locations: Writable<EntityCollection<EveLocation>> = getContext('locations');   // This should be a collection of all locations
+    let _filteredLocations: Writable<EntityCollection<EveLocation>> = writable({});
+    setContext('locations', _filteredLocations);
+    $: if($locations) {
+        // For now we're just going to filter for Athanors
+        const ATHANOR_TYPE_ID = 35835;
+        
+        let entries = Object.values($locations)
+            .filter((location: EveLocation)=>location.type_id == ATHANOR_TYPE_ID)
+            .map((location: EveLocation)=>[location.type_id, location]);
+        
+        _filteredLocations.set( Object.fromEntries(entries) );
+    }
 
     export let defaultLocationId: Location_Id = null;
     let locationId: Location_Id = defaultLocationId;
@@ -142,7 +156,11 @@ import { ApplyEffects, IndustryDogmaAttributes } from "./eve-data/EveDogma";
 </script>
 
 <div class={`breakdown ${!compact?"summary":""}`}>
-    <div class="itemName" title={`${$Universe.types[productTypeId]?.name} [${productTypeId}]`}>{$Universe.types[productTypeId]?.name}</div>
+    {#if compact}
+        <div/>
+    {:else}
+        <div class="itemName" title={`${$Universe.types[productTypeId]?.name} [${productTypeId}]`}>{$Universe.types[productTypeId]?.name}</div>
+    {/if}
     <div class="qty">{$job.producedQuantity}</div>
     <div class="graph">
         Unit price
@@ -214,6 +232,7 @@ import { ApplyEffects, IndustryDogmaAttributes } from "./eve-data/EveDogma";
                 <svelte:self productTypeId={type_id} requiredQuantity={$job.materialQuantity(type_id)} 
                     bind:unitCost={producedPrices[type_id]} bind:producedItems
                     defaultLocationId={locationId}
+                    compact
                 />
             {:else}
                 Could not find industry details for {$Universe.types[type_id]?.name}

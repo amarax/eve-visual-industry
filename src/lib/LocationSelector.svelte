@@ -9,7 +9,7 @@
     $: locations = getContext('locations') as Readable<{[index:Location_Id]: EveLocation }>;
     export let allowUnselected: boolean = false;
 
-    $: if(!allowUnselected && value == null && Object.keys($locations).length>0) {
+    $: if(!allowUnselected && Object.keys($locations).length>0 && Object.keys($locations).map(id=>parseInt(id)).indexOf(value) < 0) {
         value = parseInt( Object.keys($locations)[0] );
     }
 
