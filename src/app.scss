@@ -6,6 +6,15 @@
 
 	background-color: #181818;
 	color: #eee;
+
+	@media screen and (max-width: 800px) {
+
+		html {
+			max-width: 100%;
+			// overflow-x: hidden;
+	
+		}
+	}
 }
 
 select, input {

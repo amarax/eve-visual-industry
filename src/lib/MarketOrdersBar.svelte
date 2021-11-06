@@ -10,6 +10,7 @@
     import { sum, minIndex } from "d3-array";
     import { line, curveStepAfter } from "d3-shape";
     import { ESIStoreStatus } from "$lib/eve-data/ESIStore";
+import { onMount } from "svelte";
 
 
 
@@ -161,9 +162,14 @@
             marketPrice *= 1 + (prices[hoverIndex].is_buy_order ? buyOverheadRate : sellOverheadRate )
         }
     }
+
+    let bar: SVGElement;
+    onMount(()=>{
+        width = bar.getBoundingClientRect().width;
+    })
 </script>
 
-<svg {width} {height} viewBox={`0 0 ${width} ${height}`} xmlns="http://www.w3.org/2000/svg">
+<svg bind:this={bar} {height} viewBox={`0 0 ${width} ${height}`} xmlns="http://www.w3.org/2000/svg">
     <rect class="graphArea" width={width} {...fillGraphHeight} />
     {#if validExtents}
         {#each scaleMarks as mark, i}
@@ -205,6 +211,11 @@
 </svg>
 
 <style lang="scss">
+    svg {
+        width: 100%;
+        max-width: 500px;
+    }
+
     .mark, .overhead, .difference {
         transition: x 100ms ease-out, transform 100ms ease-out, width 100ms ease-out;
     }

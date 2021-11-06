@@ -120,3 +120,9 @@ import { createEventDispatcher } from 'svelte';
         {/each}
     </select>
 </p>
+
+<style lang="scss">
+    select {
+        max-width: 100%;
+    }
+</style>

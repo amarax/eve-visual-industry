@@ -167,6 +167,16 @@
 
         max-width: 800px;
 
+        @media screen and (max-width: 800px) {
+            grid-template-columns: auto 80px;
+
+            max-width: 100%;
+
+            .graph, .subItem {
+                grid-column: span 2;
+            }
+        }
+
         .itemName {
             overflow-x: hidden;
             text-overflow: ellipsis;
@@ -247,7 +257,7 @@ No blueprint selected yet
 <div class="breakdown">
     <div class="itemName" title={`${$Universe.types[selectedProductId]?.name} [${selectedProductId}]`}>{$Universe.types[selectedProductId]?.name}</div>
     <div class="qty">{producedQty}</div>
-    <div>
+    <div class="graph">
         Unit price
         {FormatIskAmount(sellingPrice)}
         Total Profit 
@@ -268,7 +278,7 @@ No blueprint selected yet
     </div>
 
     <div>Job cost</div><div></div>
-    <div>
+    <div class="graph">
         <MarketOrdersBar compact extents={_extents} quantity={producedQty} totalCost={manufacturingJobCost} />
     </div>
     {#each Object.keys(manufacturing.materials) as type_id}
@@ -279,7 +289,7 @@ No blueprint selected yet
             </label>
         </div>
         <div class="qty">{materialQty(manufacturing.materials[type_id].quantity)}</div>
-        <div>
+        <div class="graph">
             <MarketOrdersBar extents={_extents} quantity={materialQty(manufacturing.materials[type_id].quantity)} 
                 type_id={parseInt(type_id)} {marketFilterLocation} 
                 bind:price={itemPrices[type_id]} overridePrice={manufacturedUnitCostPrices[type_id]}

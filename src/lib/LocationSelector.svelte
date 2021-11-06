@@ -132,7 +132,15 @@
 <style lang="scss">
 
     .overlay-parent {
+        display: inline-flex;
+        flex-flow: row nowrap;
+
         position: relative;
+
+        select {
+            flex-shrink: 1;
+            width: 100%;
+        }
 
         .overlay {
             visibility: hidden;
@@ -142,6 +150,13 @@
 
             top: 0px;
             left: calc(100% + 4px);
+
+            @media screen and (max-width: 800px) {
+                top: unset;
+                left: unset;
+                bottom: calc(100% + 4px);
+                right: 0;
+            }
 
             border: 1px solid #444;
             background: #1c1c1c;
