@@ -5,6 +5,7 @@ import type { Readable } from "svelte/store";
 import type { EntityCollection, Type_Id } from "$lib/eve-data/EveData"
 import type { IndustryActivity, IndustryStore } from "$lib/eve-data/EveIndustry"
 import type { DurationSeconds, IskAmount, MarketPrices, Quantity } from "$lib/eve-data/EveMarkets"
+import { ApplyEffects } from "$lib/eve-data/EveDogma";
 
 // Get all the computed details for a facility that affect this job
 export type IndustryFacilityModifiers = {
@@ -22,16 +23,7 @@ export type IndustryFacilityModifiers = {
     systemCostIndex?: number,
 }
 
-// Temporary implementation of a Eve Dogma operator
-function addModifier(source: number, target: number): number {
-    return target * (1 + (source ?? 0)/100);
-}
 
-function applyModifiers(base: number, modifiers: Array<{value:number}>): number {
-    let out = base;
-    modifiers.forEach(m=>{out = !isNaN(m.value) ? addModifier(m.value, out) : out});
-    return out;
-}
 
 // Purely functional class that has all the calculations
 export class IndustryJob {
@@ -80,7 +72,7 @@ export class IndustryJob {
     qty(baseQuantity: Quantity) : Quantity {
         if(baseQuantity == undefined) return 0;
 
-        let qty = applyModifiers(
+        let qty = ApplyEffects(
             baseQuantity * this.runs,
             [
                 {value: -this.blueprintModifiers?.materialEfficiency},
@@ -108,7 +100,7 @@ export class IndustryJob {
     }
 
     get jobCost(): IskAmount {
-        let cost = applyModifiers(
+        let cost = ApplyEffects(
             this.estimatedItemValue * this.facilityModifiers.systemCostIndex * this.runs,
             [
                 {value: this.facilityModifiers.roleModifiers?.jobCost},
@@ -140,7 +132,7 @@ export class IndustryJob {
     // #region Duration metrics
 
     get jobDuration(): DurationSeconds {
-        return applyModifiers(
+        return ApplyEffects(
             this.activity?.time * this.runs,
             [
                 {value: -this.blueprintModifiers?.timeEfficiency},

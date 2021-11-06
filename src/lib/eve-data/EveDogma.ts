@@ -70,3 +70,15 @@ export const IndustryDogmaAttributes: Readable<{
         .catch(error=>console.error(error))
 
 })
+
+
+// Temporary implementation of a Eve Dogma operator
+export function ModifierAdd(source: number, target: number): number {
+    return target * (1 + (source ?? 0)/100);
+}
+
+export function ApplyEffects(base: number, modifiers: Array<{value:number}>): number {
+    let out = base;
+    modifiers.forEach(m=>{out = !isNaN(m.value) ? ModifierAdd(m.value, out) : out});
+    return out;
+}
