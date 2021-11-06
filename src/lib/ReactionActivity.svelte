@@ -3,13 +3,17 @@
     import { CanBeProduced, GetReactionActivity, Industry, REACTION_ACTIVITY_ID } from "$lib/eve-data/EveIndustry";
     import { CreateReactionJobStore } from "$lib/IndustryJob";
     import { MarketPrices } from "./eve-data/EveMarkets";
+    import { CharacterSkills } from "$lib/eve-data/EveCharacter";
 
     import type { Type_Id } from "$lib/eve-data/EveData";
     import type { IskAmount, Quantity } from "./eve-data/EveMarkets";
+    import type { Readable } from "svelte/store";
+    import type { Character_Id } from "$lib/eve-data/EveCharacter";
 
     import { FormatDuration, FormatIskAmount, FormatIskChange } from "./Format";
     import MarketOrdersBar from "./MarketOrdersBar.svelte";
     import LocationSelector from "./LocationSelector.svelte";
+    import { getContext } from "svelte";
 
 
     export let productTypeId: Type_Id = null;
@@ -17,7 +21,14 @@
     $: job = CreateReactionJobStore(productTypeId, $Industry);
 
     export let requiredQuantity: Quantity = null; 
-    $: job.update({requiredQuantity});
+    let runs: number = 1;
+    let overrideRequiredQuantity: boolean = false;
+    $: if(overrideRequiredQuantity) { 
+        job.update({runs});
+    } else {
+        job.update({requiredQuantity});
+        runs = $job.runs;
+    }
 
     type ItemPickedList = {
         [id: Type_Id]: boolean
@@ -28,8 +39,18 @@
     export let producedItems: ItemPickedList = {};
     let producedPrices: EntityCollection<IskAmount> = {};
 
+    // #region Character-related
 
-    export let locationId: Location_Id = null;
+    let currentCharacter = getContext('currentCharacter') as Readable<Character_Id>;
+    $: characterSkills = CharacterSkills[$currentCharacter];
+    
+
+    // #endregion
+
+    // #region Facility-related
+
+    export let defaultLocationId: Location_Id = null;
+    let locationId: Location_Id = defaultLocationId;
     let activitySystemCostIndex = 0.05, activityTax = 10;
     $: job.update({
         facilityModifiers: {
@@ -62,6 +83,8 @@
         });
     }
 
+    // #endregion
+
     // HACK to force prices to re-evaluate after a binding
     $: {
         for(let type_id in prices) {
@@ -80,7 +103,7 @@
     export let salesTaxRate = 0.036;
     export let brokerFeeRate = 0.0113709973928; // Selene's broker fee
 
-    // #region Appearance-related script
+    // #region Appearance-related
 
     export let compact = false;
 
@@ -124,9 +147,16 @@
     </div>
 </div>
 
+<div class="combinedInput">
+    Runs <input type="range" bind:value={runs} min={1} disabled={requiredQuantity !== null && !overrideRequiredQuantity} /> <input type="number" bind:value={runs} disabled={requiredQuantity !== null && !overrideRequiredQuantity} /> 
+    {#if requiredQuantity !== null}
+        <label><input type="checkbox" bind:checked={overrideRequiredQuantity} /> Override</label> 
+    {/if}
+</div>
+
 <p>
     <b>Facility</b>
-    <LocationSelector value={locationId} activity={REACTION_ACTIVITY_ID}
+    <LocationSelector bind:value={locationId} activity={REACTION_ACTIVITY_ID}
         bind:activitySystemCostIndex bind:activityTax bind:structureRoleBonuses bind:structureRigBonuses />
 </p>
 
@@ -165,7 +195,7 @@
             {#if GetReactionActivity(type_id, $Industry).activity}
                 <svelte:self productTypeId={type_id} requiredQuantity={$job.materialQuantity(type_id)} 
                     bind:unitCost={producedPrices[type_id]}
-                    {locationId}
+                    defaultLocationId={locationId}
                 />
             {:else}
                 Could not find industry details for {$Universe.types[type_id]?.name}
