@@ -155,8 +155,10 @@
         {#each _locations as location}
             <option value={location.location_id}>{location.name ?? location.location_id}</option>
         {/each}
-    </select> 
-    <button on:click={()=>{collapsed = !collapsed}}>{collapsed?"+":"-"}</button>
+    </select>
+    {#if _activity}
+        <button on:click={()=>{collapsed = !collapsed}}>{collapsed?"+":"-"}</button>
+    {/if}
     {#if _activity && collapsed}
     <div class="overlay">
         <dl>

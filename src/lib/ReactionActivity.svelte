@@ -212,7 +212,7 @@ import { ApplyEffects, IndustryDogmaAttributes } from "./eve-data/EveDogma";
         <div class="subItem">
             {#if GetReactionActivity(type_id, $Industry).activity}
                 <svelte:self productTypeId={type_id} requiredQuantity={$job.materialQuantity(type_id)} 
-                    bind:unitCost={producedPrices[type_id]}
+                    bind:unitCost={producedPrices[type_id]} bind:producedItems
                     defaultLocationId={locationId}
                 />
             {:else}

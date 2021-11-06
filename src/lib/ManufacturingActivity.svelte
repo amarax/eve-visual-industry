@@ -280,13 +280,14 @@ No blueprint selected yet
         {#if producedItems[type_id]}
             <div class="subItem">
                 {#if GetBlueprintToManufacture($Industry, type_id)}
-                    <svelte:self selectedProductId={type_id} requiredQuantity={materialQty(manufacturing.materials[type_id].quantity)} {producedItems}
-                        bind:unitCost={manufacturedUnitCostPrices[type_id]} 
+                    <svelte:self selectedProductId={type_id} requiredQuantity={materialQty(manufacturing.materials[type_id].quantity)}
+                        bind:unitCost={manufacturedUnitCostPrices[type_id]} bind:producedItems
                         materialEfficiency={10} timeEfficiency={20}
                         {selectedLocationId}
                         compact />
                 {:else if GetReactionActivity(type_id, $Industry).activity}
                     <ReactionActivity productTypeId={type_id} requiredQuantity={materialQty(manufacturing.materials[type_id].quantity)} 
+                        bind:producedItems
                         defaultLocationId={selectedLocationId} />
                 {:else}
                     Could not find industry details for {$Universe.types[type_id]?.name}
