@@ -46,7 +46,8 @@ export const IndustryDogmaAttributes: Readable<{
             highIsGood,
             categoryID
         }>)=>{
-            data.filter(type=>type.attributeID!==null && (type.attributeName?.indexOf("Manufacturing Time Bonus")!=-1 || type.attributeName?.indexOf("Industry Job Length Bonus")!=-1))
+            // data.filter(type=>type.attributeID!==null && (type.attributeName?.indexOf("Manufacturing Time Bonus")!=-1 || type.attributeName?.indexOf("Industry Job Length Bonus")!=-1))
+            data
                 .forEach(type=>attributes[type.attributeID]=type);
         })
         .then(()=>LoadFromSDE("dgmIndustryTypeAttributes")) // This first load has a large impact on performance, need to figure out how to cut it down

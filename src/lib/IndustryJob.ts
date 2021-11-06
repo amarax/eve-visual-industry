@@ -162,8 +162,8 @@ interface IndustryJobStore extends Readable<IndustryJob> {
         selectedProduct?: Type_Id
     
         characterModifiers?: {
-            skill_jobDuration: number,
-            implant_jobDuration: number,
+            skill_jobDuration?: number,
+            implant_jobDuration?: number,
         }
         facilityModifiers?: IndustryFacilityModifiers
         blueprintModifiers?: {

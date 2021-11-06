@@ -14,6 +14,7 @@
     import MarketOrdersBar from "./MarketOrdersBar.svelte";
     import LocationSelector from "./LocationSelector.svelte";
     import { getContext } from "svelte";
+import { ApplyEffects, IndustryDogmaAttributes } from "./eve-data/EveDogma";
 
 
     export let productTypeId: Type_Id = null;
@@ -44,6 +45,23 @@
     let currentCharacter = getContext('currentCharacter') as Readable<Character_Id>;
     $: characterSkills = CharacterSkills[$currentCharacter];
     
+    const REACTION_TIME_ATTRIBUTE_ID = 2660;
+    $: {
+        let affectingSkills = Object.values( $job.activity?.requiredSkills ?? {} )
+            .map(s=>s.type_id)
+            .filter((s: Type_Id)=>$IndustryDogmaAttributes.types[s] != undefined)
+            .filter((s: Type_Id)=>$IndustryDogmaAttributes.types[s][REACTION_TIME_ATTRIBUTE_ID] != undefined)
+
+        let skillModifiers = affectingSkills
+            .map( (s:Type_Id) => ({value:$IndustryDogmaAttributes.types[s][REACTION_TIME_ATTRIBUTE_ID].value
+                * ($characterSkills?.skills.find(c=>c.skill_id==s)?.active_skill_level ?? 0)}) )
+
+        let skill_jobDuration = ApplyEffects(1, skillModifiers)*100 -100;
+
+        job.update({characterModifiers:{
+            skill_jobDuration
+        }})
+    }
 
     // #endregion
 
@@ -169,7 +187,7 @@
 <div class="breakdown">
     <div>Job cost</div><div></div>
     <div class="graph">
-        <MarketOrdersBar compact extents={_extents} quantity={$job.producedQuantity} totalCost={$job.totalCost} />
+        <MarketOrdersBar compact extents={_extents} quantity={$job.producedQuantity} totalCost={$job.jobCost} />
     </div>
 
     {#each Object.keys($job.activity.materials).map(id=>parseInt(id)) as type_id}
