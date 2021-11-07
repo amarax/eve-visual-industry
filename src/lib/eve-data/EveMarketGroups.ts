@@ -29,6 +29,3 @@ export default readable<{[index:EveMarketGroupId]:EveMarketGroup}>(marketGroups,
     }
 })
 
-export function GetTypesInGroup(groupId: EveMarketGroupId, ): Array<Type_Id> {
-
-}

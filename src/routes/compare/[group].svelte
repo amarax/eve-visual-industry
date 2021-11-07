@@ -31,7 +31,7 @@
     {/each}
 </select>
 
-<!-- <LocationSelector bind:value={locationId} activity={REACTION_ACTIVITY_ID} /> -->
+<LocationSelector bind:value={locationId} activity={REACTION_ACTIVITY_ID} />
 
 
 {#each selectedTypes as type}
