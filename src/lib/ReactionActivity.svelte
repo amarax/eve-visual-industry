@@ -208,7 +208,7 @@
         <MarketOrdersBar compact extents={_extents} quantity={$job.producedQuantity} totalCost={$job.jobCost} />
     </div>
 
-    {#each Object.keys($job.activity.materials).map(id=>parseInt(id)) as type_id}
+    {#each Object.keys($job.activity?.materials || {}).map(id=>parseInt(id)) as type_id}
         <div class="itemName">
             <label>
                 <input type="checkbox" bind:checked={producedItems[type_id]} disabled={!CanBeProduced(type_id, $Industry)} /> 
