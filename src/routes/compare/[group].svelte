@@ -11,12 +11,10 @@
     import type { EntityCollection } from "$lib/eve-data/EveData";
 
     import ComparedActivity from "$lib/ComparedActivity.svelte";
-    import ReactionActivity from "$lib/ReactionActivity.svelte";
     import FacilitySelector from "$lib/FacilitySelector.svelte";
     import type { IndustryFacilityModifiers } from "$lib/IndustryJob";
     import { getMarketType, IskAmount } from "$lib/eve-data/EveMarkets";
 
-    import { max } from "d3-array";
 
 
     $: selectedGroup = parseInt($page.params['group']) || null as EveMarketGroupId;
@@ -25,9 +23,11 @@
         .filter(group=>group.hasTypes)
         .sort((a,b)=>a.name.localeCompare(b.name));
 
-    $: selectedTypes = Object.values($Universe.types ?? {}).filter((type: Type)=>type.market_group_id===selectedGroup)
+    $: selectedTypes = Object.values($Universe.types ?? {})
+        .filter((type: Type)=>type.market_group_id===selectedGroup)
+        .sort((a,b)=>metrics[currentMetric][b.type_id]-metrics[currentMetric][a.type_id])
 
-    let locationId: Location_Id;
+    let locationId: Location_Id = null;
 
     let facilityModifiers: IndustryFacilityModifiers;
 
@@ -53,9 +53,23 @@
         }
     }
 
+
+    let metrics = {
+        profitRatio: {} as EntityCollection<number>,
+        profitPerDay: {} as EntityCollection<number>,
+    }
+    let currentMetric = 'profitRatio';
+    
+
+
     // $: extents = [0, max(selectedTypes, (type:Type)=>prices[type.type_id])]
     let extents = [0, 2e7]
 </script>
+
+<svelte:head>
+	<title>{($EveMarketGroups && $EveMarketGroups[selectedGroup]) ? `${$EveMarketGroups[selectedGroup].name} - ` : "" }EVE Online Visual Industry Calculator</title>
+</svelte:head>
+
 
 <select value={selectedGroup} on:change={(event)=>goto(`${event.currentTarget.value}`, {keepfocus:true})}>
     <option value={null}></option>
@@ -67,10 +81,46 @@
 <FacilitySelector bind:value={locationId} activity={REACTION_ACTIVITY_ID} bind:facilityModifiers />
 
 
-{#each selectedTypes as type}
+<style lang="scss">
+    .compare {
+        display: grid;
+        grid-template-columns: auto min-content min-content 500px;
+        column-gap: 8px;
+     
+        .metricSelector {
+            grid-column: span 2;
+        }
+
+        @media screen and (max-width: 800px) {
+            grid-template-columns: auto min-content min-content;
+
+            max-width: 100%;
+
+            :global(.graph), :global(.subItem) {
+                grid-column: span 3;
+            }
+        }
+    }
+</style>
+
+<div class="compare">
+    <div class="itemName"></div>
+    <div class="metricSelector">
+        <select bind:value={currentMetric}>
+            <option value="profitRatio">Profit Ratio</option>
+            <option value="profitPerDay">Profit per Day</option>
+        </select>
+    </div>
+    <div class="graph"> </div>
+
+
+{#each selectedTypes as type (type.type_id)}
     <!-- <ReactionActivity productTypeId={type.type_id} defaultLocationId={locationId} /> -->
     <ComparedActivity productTypeId={type.type_id} {facilityModifiers} {prices} 
+        bind:profitRatio={metrics.profitRatio[type.type_id]}
+        bind:profitPerDay={metrics.profitPerDay[type.type_id]}
         {extents} />
 {/each}
+</div>
 
 <slot />

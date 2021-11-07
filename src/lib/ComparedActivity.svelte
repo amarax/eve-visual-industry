@@ -8,7 +8,7 @@
     import { CreateReactionJobStore, IndustryFacilityModifiers } from "$lib/IndustryJob";
     import { IskAmount, MarketPrices } from "$lib/eve-data/EveMarkets";
     import MarketOrdersBar from "./MarketOrdersBar.svelte";
-import { FormatPercentageChange } from "./Format";
+import { FormatIskChange, FormatPercentageChange } from "./Format";
 
 
 
@@ -25,21 +25,34 @@ import { FormatPercentageChange } from "./Format";
     export let salesTaxRate = 0.036;
     export let brokerFeeRate = 0.0113709973928; // Selene's broker fee
 
-    export let profitRatio: number;
+    export let profitRatio: number = 0;
     $: profitRatio = $job?.profit / $job?.totalCost;
     
+    export let profitPerDay: number = 0;
+    $: profitPerDay = $job?.profit / ($job?.jobDuration/(24*60*60))
 
     export let extents: Array<number> = [0,1000]
 </script>
 
-<div class="breakdown">
-    <div class="itemName" title={`${$Universe.types[productTypeId]?.name} [${productTypeId}]`}>{$Universe.types[productTypeId]?.name}</div>
-    <div class="qty">{FormatPercentageChange(profitRatio)}</div>
-    <div class="graph">
-        <MarketOrdersBar type_id={productTypeId} 
-            quantity={$job.producedQuantity} totalCost={$job.totalCost} 
-            bind:price={prices[productTypeId]}
-            buyOverheadRate={-salesTaxRate} sellOverheadRate={-brokerFeeRate-salesTaxRate}
-            {extents} />
-    </div>
+<style lang="scss">
+    .itemName { 
+		overflow-x: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+    }
+
+    .metric {
+        text-align: end;
+    }
+</style>
+
+<div class="itemName" title={`${$Universe.types[productTypeId]?.name} [${productTypeId}]`}><a href={`/breakdown/${productTypeId}`}>{$Universe.types[productTypeId]?.name}</a></div>
+<div class="metric">{FormatPercentageChange(profitRatio)}</div>
+<div class="metric">{FormatIskChange(profitPerDay)}</div>
+<div class="graph">
+    <MarketOrdersBar type_id={productTypeId} 
+        quantity={$job.producedQuantity} totalCost={$job.totalCost} 
+        bind:price={prices[productTypeId]}
+        buyOverheadRate={-salesTaxRate} sellOverheadRate={-brokerFeeRate-salesTaxRate}
+        {extents} />
 </div>
