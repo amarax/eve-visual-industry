@@ -3,6 +3,7 @@
     import { getContext } from "svelte";
     import type { Readable } from "svelte/store";
     import { Activity_Id, GetCostIndex, Industry, IndustrySystems, MANUFACTURING_ACTIVITY_ID, REACTION_ACTIVITY_ID } from "./eve-data/EveIndustry";
+import { FormatPercentage } from "$lib/Format";
 
     export let value: Location_Id = null;
 
@@ -162,7 +163,7 @@
     {#if _activity && collapsed}
     <div class="overlay">
         <dl>
-            <dt>System cost index</dt> <dd>{activitySystemCostIndex*100}%</dd>
+            <dt>System cost index</dt> <dd>{FormatPercentage(activitySystemCostIndex)}</dd>
             <dt>Tax for {_activity.activityName}</dt> <dd>{activityTax}%</dd>
             {#if locationIsStructure}
             <dt class="full-width">Structure role bonuses</dt>
@@ -187,7 +188,7 @@
 
 {#if _activity && !collapsed}
 <dl>
-    <dt>System cost index</dt> <dd>{activitySystemCostIndex*100}%</dd>
+    <dt>System cost index</dt> <dd>{FormatPercentage(activitySystemCostIndex)}</dd>
     <dt>Tax for {_activity.activityName}</dt> <dd><input type="range" min={0} max={20} step={0.5} value={activityTax} on:input={onChangeFacilityTax} disabled={IsLocationStation(value)} /> {activityTax}</dd>
     {#if locationIsStructure}
         <dt>Structure role bonuses</dt>

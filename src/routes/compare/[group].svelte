@@ -54,7 +54,7 @@
     }
 
     // $: extents = [0, max(selectedTypes, (type:Type)=>prices[type.type_id])]
-    let extents = [0, 10000000]
+    let extents = [0, 2e7]
 </script>
 
 <select value={selectedGroup} on:change={(event)=>goto(`${event.currentTarget.value}`, {keepfocus:true})}>
