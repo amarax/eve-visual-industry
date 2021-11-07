@@ -1,20 +1,37 @@
 <script lang="ts">
 
 
-    import { Universe } from "$lib/eve-data/EveData";
+    import { EntityCollection, Universe } from "$lib/eve-data/EveData";
     import type { Type_Id } from "$lib/eve-data/EveData";
 
     import { Industry } from "$lib/eve-data/EveIndustry";
-    import { CreateReactionJobStore } from "$lib/IndustryJob";
+    import { CreateReactionJobStore, IndustryFacilityModifiers } from "$lib/IndustryJob";
+    import { IskAmount, MarketPrices } from "$lib/eve-data/EveMarkets";
+    import MarketOrdersBar from "./MarketOrdersBar.svelte";
 
 
 
     export let productTypeId: Type_Id = null;
     $: job = CreateReactionJobStore(productTypeId, $Industry);
+    $: job.update({indexPrices:$MarketPrices});
 
+    export let prices: EntityCollection<IskAmount>;
+    $: job.update({prices});
+
+    export let facilityModifiers: IndustryFacilityModifiers;
+    $: if(facilityModifiers) job.update({facilityModifiers})
+
+
+    export let extents: Array<number> = [0,1000]
 </script>
 
-<div>
-    <div>{$Universe.types[productTypeId]?.name}</div>
-    <div>{$job.profit}</div>
+<div class="breakdown">
+    <div class="itemName">{$Universe.types[productTypeId]?.name}</div>
+    <div class="qty">{$job.producedQuantity}</div>
+    <div>
+        <MarketOrdersBar type_id={productTypeId} 
+            quantity={$job.producedQuantity} totalCost={$job.totalCost} 
+            bind:price={prices[productTypeId]}
+            {extents} />
+    </div>
 </div>
