@@ -293,7 +293,7 @@ export const ProductToActivity = derived([Industry, EveTypes],([$Industry, $EveT
     let productMap: ProductToIndustryTypeMap = new Map();
 
     for(const typeId in $Industry.types) {
-        if(!$EveTypes[typeId]?.published) continue;
+        if(!$EveTypes.get(parseInt(typeId))?.published) continue;
 
         Object.keys($Industry.types[typeId].activities)
             .filter(activityId=>PRODUCTION_ACTIVITIES.includes(parseInt(activityId)))

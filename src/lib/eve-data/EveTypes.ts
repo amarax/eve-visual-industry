@@ -21,7 +21,9 @@ export type EveType = {
     dogma_attributes?: Array<{
         attribute_id: EveAttributeId,
         value: number
-    }>
+    }>,
+
+    published: boolean
 }
 
 let types: EveTypes = new Map<EveTypeId, EveType>()

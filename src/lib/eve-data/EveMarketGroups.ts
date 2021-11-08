@@ -7,7 +7,7 @@ export type EveMarketGroupId = number;
 
 export type EveMarketGroup = {
     market_group_id: EveMarketGroupId,
-    parent_group_id: EveMarketGroupId,
+    parent_group_id?: EveMarketGroupId,
     name: string,
     description: string,
     icon_id: number,
@@ -17,14 +17,20 @@ export type EveMarketGroup = {
 export default readable<Map<EveMarketGroupId, EveMarketGroup>>(marketGroups, (set)=>{
     if(marketGroups.size === 0) {
         LoadFromSDE("invMarketGroups")
-            .then((data:Array<EveMarketGroup>)=>{
+            .then((data:Array<{
+                market_group_id,parent_group_id,name,description,icon_id,hasTypes
+            }>)=>{
                 marketGroups.clear();
                 for(let group of data) {
+                    if(group.parent_group_id == 'None')
+                        delete group.parent_group_id;
+                        
                     marketGroups.set(group.market_group_id, group);
                 }
                 set(marketGroups);
             })
             .catch(error=>console.error(error));
     }
+
 })
 
