@@ -1,5 +1,7 @@
-import { readable } from "svelte/store";
+import { derived, readable } from "svelte/store";
 import { LoadFromSDE } from "$lib/eve-data/EveData";
+import { MarketGroupToTypes } from "./EveTypes";
+import { ProductToActivity } from "./EveIndustry";
 
 let marketGroups = new Map<EveMarketGroupId, EveMarketGroup>();
 
@@ -14,7 +16,7 @@ export type EveMarketGroup = {
     hasTypes: boolean
 }
 
-export default readable<Map<EveMarketGroupId, EveMarketGroup>>(marketGroups, (set)=>{
+let store = readable<Map<EveMarketGroupId, EveMarketGroup>>(marketGroups, (set)=>{
     if(marketGroups.size === 0) {
         LoadFromSDE("invMarketGroups")
             .then((data:Array<{
@@ -32,5 +34,57 @@ export default readable<Map<EveMarketGroupId, EveMarketGroup>>(marketGroups, (se
             .catch(error=>console.error(error));
     }
 
+});
+export default store;
+
+
+function getChildGroupIds(groupId: EveMarketGroupId, marketGroups): Set<EveMarketGroupId> {
+    let childGroups: Array<EveMarketGroupId> = [...marketGroups.keys()]
+        .filter(id=>marketGroups.get(id).parent_group_id==groupId);
+
+    let grandChildGroups = [];
+    for(const id of childGroups) {
+        grandChildGroups = [...grandChildGroups, ...getChildGroupIds(id, marketGroups)];
+    }
+
+    return new Set([...childGroups, ...grandChildGroups]);
+}
+export const DescendantGroups = derived(store, $EveMarketGroups=>{
+    let map: Map<EveMarketGroupId, Set<EveMarketGroupId>> = new Map();
+    for(const [groupId, group] of $EveMarketGroups) {
+        map.set(groupId, getChildGroupIds(groupId, $EveMarketGroups))
+    }
+    return map;
 })
 
+function getProducibleTypes(groupId: EveMarketGroupId, $DescendantGroups, $MarketGroupToTypes, $ProductToActivity) {
+    let proudcibleTypes = [];
+
+    [groupId, ...($DescendantGroups.get(groupId) ?? [])].forEach(groupId=>{
+        
+        proudcibleTypes = [...proudcibleTypes, 
+            ...($MarketGroupToTypes.get(groupId)?.filter(id=>$ProductToActivity.has(id)) ?? [])
+        ]
+    })
+}
+
+export const ProducableMarketGroups = derived([store, DescendantGroups, MarketGroupToTypes, ProductToActivity],
+    ([$EveMarketGroups, $DescendantGroups, $MarketGroupToTypes, $ProductToActivity])=>{
+        let map = new Map<EveMarketGroupId, EveMarketGroup>();
+        for(const [groupId, group] of $EveMarketGroups) {
+            let proudcibleTypes = [];
+
+            [groupId, ...($DescendantGroups.get(groupId) ?? [])].forEach(groupId=>{
+                
+                proudcibleTypes = [...proudcibleTypes, 
+                    ...($MarketGroupToTypes.get(groupId)?.filter(id=>$ProductToActivity.has(id)) ?? [])
+                ]
+            })
+
+            if(proudcibleTypes?.length > 0) {
+                map.set(groupId, group);
+            }
+        }
+        return map;
+    }
+)

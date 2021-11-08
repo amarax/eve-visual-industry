@@ -1,61 +1,23 @@
 <script lang="ts">
 
-import type { EveMarketGroup, EveMarketGroupId } from "$lib/eve-data/EveMarketGroups";
-import EveMarketGroups from "$lib/eve-data/EveMarketGroups";
-import { derived } from "svelte/store";
-import { GetProductionActivity, Industry, ProductToActivity } from "./eve-data/EveIndustry";
-import EveTypes, { MarketGroupToTypes } from "./eve-data/EveTypes";
+import { DescendantGroups, EveMarketGroup, EveMarketGroupId, ProducableMarketGroups } from "$lib/eve-data/EveMarketGroups";
 
-
-
-    function getChildGroupIds(groupId: EveMarketGroupId, marketGroups): Set<EveMarketGroupId> {
-        let childGroups: Array<EveMarketGroupId> = [...marketGroups.keys()]
-            .filter(id=>marketGroups.get(id).parent_group_id==groupId);
-
-        let grandChildGroups = [];
-        for(const id of childGroups) {
-            grandChildGroups = [...grandChildGroups, ...getChildGroupIds(id, marketGroups)];
-        }
-
-        return new Set([...childGroups, ...grandChildGroups]);
-    }
-    let descendantGroups = derived(EveMarketGroups, $EveMarketGroups=>{
-        let map: Map<EveMarketGroupId, Set<EveMarketGroupId>> = new Map();
-        for(const [groupId, group] of $EveMarketGroups) {
-            map.set(groupId, getChildGroupIds(groupId, $EveMarketGroups))
-        }
-        return map;
-    })
-
-    let selectableMarketGroupIds = derived([EveMarketGroups, descendantGroups],
-        ([$EveMarketGroups, $descendantGroups])=>{
-            let map = new Map<EveMarketGroupId, EveMarketGroup>();
-            for(const [groupId, group] of $EveMarketGroups) {
-                let proudcibleTypes = [];
-
-                $descendantGroups.get(groupId).forEach(groupId=>{
-                    
-                    proudcibleTypes = [...proudcibleTypes, 
-                        ...($MarketGroupToTypes.get(groupId)?.filter(id=>$ProductToActivity.has(id)) ?? [])
-                    ]
-                })
-
-                if(proudcibleTypes?.length > 0) {
-                    map.set(groupId, group);
-                }
-            }
-            return map;
-        }
-    )
 
     let groupTreeBranches:Array<Array<EveMarketGroup>>;
     let selectedGroupTreeBranches = [null];
 
+    function getChildren(groupId:EveMarketGroupId, groups:Map<EveMarketGroupId, EveMarketGroup>) {
+        return [...groups.values()].filter(g=>g.parent_group_id === groupId)
+    }
+
+    let hasChildren: (groupId:EveMarketGroupId) => boolean;
+    $: hasChildren = (groupId) => $DescendantGroups.get(groupId)?.size > 0;
+
     $: {
-        groupTreeBranches = [ [...$selectableMarketGroupIds.values()].filter(group=>group.parent_group_id == undefined) ]
+        groupTreeBranches = [ [...$ProducableMarketGroups.values()].filter(group=>group.parent_group_id == undefined) ]
         for(const selectedBranch of selectedGroupTreeBranches) {
-            if(selectedBranch !== null && $descendantGroups.has(selectedBranch)) {
-                groupTreeBranches = [...groupTreeBranches, [...$selectableMarketGroupIds.values()].filter(group=>group.parent_group_id == selectedBranch) ]
+            if(hasChildren(selectedBranch)) {
+                groupTreeBranches = [...groupTreeBranches, getChildren(selectedBranch, $ProducableMarketGroups) ]
             }   
         }
     }
@@ -67,8 +29,9 @@ import EveTypes, { MarketGroupToTypes } from "./eve-data/EveTypes";
 <p>
     {#each groupTreeBranches as marketGroup, i}
         <select name={i.toString()} bind:value={selectedGroupTreeBranches[i]} on:change={(event)=>{
-            if($descendantGroups.has(parseInt(event.currentTarget.value))) {
-                selectedGroupTreeBranches = [...selectedGroupTreeBranches.slice(0, i+1), null];
+            selectedGroupTreeBranches = selectedGroupTreeBranches.slice(0, i+1);
+            if(hasChildren(parseInt(event.currentTarget.value))) {
+                selectedGroupTreeBranches = [...selectedGroupTreeBranches, null];
             }
         }}>
             <option value={null}></option>
