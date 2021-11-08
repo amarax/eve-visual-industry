@@ -83,7 +83,8 @@
     let currentMetric = 'profitRatio';
     
 
-    $: extents = [0, max(selectedTypeIds, (typeId)=>prices[typeId]) * 1.2]
+    let bounds = {};
+    $: extents = [0, max(Object.values(bounds)) * 1.1]
     // let extents = [0, 2e7]
 
     let selectedGroup: EveMarketGroupId = currentGroup;
@@ -137,7 +138,7 @@
     <ComparedActivity productTypeId={typeId} {facilityModifiers} {prices} 
         bind:profitRatio={metrics.profitRatio[typeId]}
         bind:profitPerDay={metrics.profitPerDay[typeId]}
-        {extents} />
+        {extents} bind:priceUpperBound={bounds[typeId]} />
 {/each}
 </div>
 

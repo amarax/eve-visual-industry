@@ -34,6 +34,9 @@
 
     export let extents: Array<number> = [0,1000]
 
+    export let priceUpperBound: IskAmount = 0;
+    let lowestSellPrice: IskAmount;
+    $: priceUpperBound = Math.max( $job?.totalCost, prices[productTypeId] * $job?.producedQuantity ?? 0, lowestSellPrice )
 
     // TODO factor in character skills
 </script>
@@ -58,5 +61,6 @@
         quantity={$job.producedQuantity} totalCost={$job.totalCost} 
         bind:price={prices[productTypeId]}
         buyOverheadRate={-salesTaxRate} sellOverheadRate={-brokerFeeRate-salesTaxRate}
+        bind:lowestSellPrice
         {extents} />
 </div>
