@@ -4,6 +4,7 @@ import type { Readable } from "svelte/store";
 import type { EveLocation, EntityCollection, Type, Type_Id, UniverseStore } from "./EveData";
 import CreateESIStore  from "./ESIStore";
 import type { ESIStore } from "./ESIStore";
+import EveTypes from "./EveTypes";
 
 export type Activity_Id = number;
 
@@ -283,3 +284,32 @@ export function CanBeProduced(type_id: Type_Id, industry: IndustryStore): boolea
     return GetBlueprintToManufacture(industry, type_id) != null 
         || GetReactionActivity(type_id, industry).activity != undefined;
 }
+
+
+type ProductToIndustryTypeMap = Map<Type_Id, {type:IndustryType, activity:IndustryActivity}>;
+
+const PRODUCTION_ACTIVITIES = [MANUFACTURING_ACTIVITY_ID, REACTION_ACTIVITY_ID];
+export const ProductToActivity = derived([Industry, EveTypes],([$Industry, $EveTypes])=>{
+    let productMap: ProductToIndustryTypeMap = new Map();
+
+    for(const typeId in $Industry.types) {
+        if(!$EveTypes[typeId]?.published) continue;
+
+        Object.keys($Industry.types[typeId].activities)
+            .filter(activityId=>PRODUCTION_ACTIVITIES.includes(parseInt(activityId)))
+            .forEach(activityId=>{
+                for(const productId in $Industry.types[typeId].activities[activityId].products) {
+                    if(productMap.has(parseInt(productId))) 
+                        console.warn("Product already produced in activity", productId, $Industry.types[typeId], activityId)
+
+                    productMap.set(parseInt(productId), {
+                        type:$Industry.types[typeId], 
+                        activity:$Industry.types[typeId].activities[activityId]
+                    })
+                }
+        
+            })
+    }
+
+    return productMap;
+})

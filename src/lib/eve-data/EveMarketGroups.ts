@@ -1,8 +1,7 @@
 import { readable } from "svelte/store";
 import { LoadFromSDE } from "$lib/eve-data/EveData";
-import type { Type_Id } from "$lib/eve-data/EveData";
 
-let marketGroups = null;
+let marketGroups = new Map<EveMarketGroupId, EveMarketGroup>();
 
 export type EveMarketGroupId = number;
 
@@ -15,13 +14,13 @@ export type EveMarketGroup = {
     hasTypes: boolean
 }
 
-export default readable<{[index:EveMarketGroupId]:EveMarketGroup}>(marketGroups, (set)=>{
-    if(marketGroups == null) {
+export default readable<Map<EveMarketGroupId, EveMarketGroup>>(marketGroups, (set)=>{
+    if(marketGroups.size === 0) {
         LoadFromSDE("invMarketGroups")
             .then((data:Array<EveMarketGroup>)=>{
-                marketGroups = {};
+                marketGroups.clear();
                 for(let group of data) {
-                    marketGroups[group.market_group_id] = group;
+                    marketGroups.set(group.market_group_id, group);
                 }
                 set(marketGroups);
             })

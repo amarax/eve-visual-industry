@@ -7,19 +7,20 @@
     import { Universe } from "$lib/eve-data/EveData";
     import { Activity_Id, GetProductionActivity, Industry, IndustryActivity } from "$lib/eve-data/EveIndustry";
 
-    import type { Type_Id, Location_Id, Type } from "$lib/eve-data/EveData";
+    import type { Location_Id, Type } from "$lib/eve-data/EveData";
     import type { EntityCollection } from "$lib/eve-data/EveData";
 
     import ComparedActivity from "$lib/ComparedActivity.svelte";
     import FacilitySelector from "$lib/FacilitySelector.svelte";
     import type { IndustryFacilityModifiers } from "$lib/IndustryJob";
     import { getMarketType, IskAmount } from "$lib/eve-data/EveMarkets";
+import MarketGroupSelector from "$lib/MarketGroupSelector.svelte";
 
 
 
     $: selectedGroup = parseInt($page.params['group']) || null as EveMarketGroupId;
 
-    $: selectibleMarketGroups = Object.values($EveMarketGroups ?? {})
+    $: selectibleMarketGroups = [...$EveMarketGroups.values()]
         .filter(group=>group.hasTypes)
         .sort((a,b)=>a.name.localeCompare(b.name));
 
@@ -71,6 +72,8 @@
 	<title>{($EveMarketGroups && $EveMarketGroups[selectedGroup]) ? `${$EveMarketGroups[selectedGroup].name} - ` : "" }EVE Online Visual Industry Calculator</title>
 </svelte:head>
 
+
+<p><MarketGroupSelector bind:value={selectedGroup} /></p>
 
 <select value={selectedGroup} on:change={(event)=>goto(`${event.currentTarget.value}`, {keepfocus:true})}>
     <option value={null}></option>
