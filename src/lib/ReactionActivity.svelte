@@ -1,6 +1,6 @@
 <script lang="ts">
     import { EntityCollection, Location_Id, Universe } from "$lib/eve-data/EveData";
-    import { CanBeProduced, GetReactionActivity, Industry, REACTION_ACTIVITY_ID } from "$lib/eve-data/EveIndustry";
+    import { CanBeProduced, GetReactionActivity, Industry, ProductToActivity, REACTION_ACTIVITY_ID } from "$lib/eve-data/EveIndustry";
     import { CreateProductionJobStore } from "$lib/IndustryJob";
     import { MarketPrices } from "./eve-data/EveMarkets";
     import { CharacterSkills } from "$lib/eve-data/EveCharacter";
@@ -19,7 +19,7 @@
 
     export let productTypeId: Type_Id = null;
 
-    $: job = CreateProductionJobStore(productTypeId, $Industry);
+    $: job = CreateProductionJobStore(productTypeId, $ProductToActivity);
 
     export let requiredQuantity: Quantity = null; 
     let runs: number = 1;

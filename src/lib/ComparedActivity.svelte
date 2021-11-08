@@ -4,7 +4,7 @@
     import { EntityCollection, Universe } from "$lib/eve-data/EveData";
     import type { Type_Id } from "$lib/eve-data/EveData";
 
-    import { Industry } from "$lib/eve-data/EveIndustry";
+    import { Industry, ProductToActivity } from "$lib/eve-data/EveIndustry";
     import { CreateProductionJobStore, IndustryFacilityModifiers } from "$lib/IndustryJob";
     import { IskAmount, MarketPrices } from "$lib/eve-data/EveMarkets";
     import MarketOrdersBar from "./MarketOrdersBar.svelte";
@@ -14,7 +14,7 @@
 
 
     export let productTypeId: Type_Id = null;
-    $: job = CreateProductionJobStore(productTypeId, $Industry);
+    $: job = CreateProductionJobStore(productTypeId, $ProductToActivity);
     $: job.update({indexPrices:$MarketPrices});
 
     export let prices: EntityCollection<IskAmount>;

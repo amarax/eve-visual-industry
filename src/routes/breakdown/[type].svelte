@@ -3,7 +3,7 @@
     import { page } from "$app/stores";
 
     import { Universe } from "$lib/eve-data/EveData";
-    import { GetProductionActivity, Industry, REACTION_ACTIVITY_ID } from "$lib/eve-data/EveIndustry";
+    import { Industry, ProductToActivity, REACTION_ACTIVITY_ID } from "$lib/eve-data/EveIndustry";
     import { MANUFACTURING_ACTIVITY_ID } from "$lib/eve-data/EveIndustry";
 
     import type { Type_Id, Type } from "$lib/eve-data/EveData";
@@ -14,6 +14,7 @@
     
 
     $: selectedProductId = parseInt( $page.params['type'] ) || null;
+    $: console.log(selectedProductId, selectedActivityId);
 
 
     // Only pick types that can be manufactured
@@ -34,7 +35,7 @@
         selectableTypes = selectableTypeIDs.filter(id=>$Universe.types[id]!==undefined).map(id=>$Universe.types[id]);
     }
 
-    $: selectedActivityId = GetProductionActivity(selectedProductId, $Industry).activity?.activity.activityID;
+    $: selectedActivityId = $ProductToActivity.get(selectedProductId)?.activity.activity.activityID;
 </script>
 
 

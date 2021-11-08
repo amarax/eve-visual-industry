@@ -262,30 +262,13 @@ export function GetReactionActivity(type_id: Type_Id, industry: IndustryStore): 
 }
 
 
-export function GetProductionActivity(type_id: Type_Id, industry: IndustryStore): {type:IndustryType | undefined, activity:IndustryActivity | undefined} {
-    let type = get(ProductToActivity)?.get(type_id)?.type;
-
-    let activity = undefined;
-    if(type) {
-        activity = type.activities[MANUFACTURING_ACTIVITY_ID]?.products[type_id] ? 
-            type.activities[MANUFACTURING_ACTIVITY_ID] :
-            type.activities[REACTION_ACTIVITY_ID]
-    }
-
-    // Always return an object so we can deconstruct easily
-    return {
-        type,
-        activity,
-    }
-}
-
 export function CanBeProduced(type_id: Type_Id, industry: IndustryStore): boolean {
     return GetBlueprintToManufacture(industry, type_id) != null 
         || GetReactionActivity(type_id, industry).activity != undefined;
 }
 
 
-type ProductToIndustryTypeMap = Map<Type_Id, {type:IndustryType, activity:IndustryActivity}>;
+export type ProductToIndustryTypeMap = Map<Type_Id, {type:IndustryType, activity:IndustryActivity}>;
 
 const PRODUCTION_ACTIVITIES = [MANUFACTURING_ACTIVITY_ID, REACTION_ACTIVITY_ID];
 export const ProductToActivity = derived([Industry, EveTypes],([$Industry, $EveTypes])=>{
