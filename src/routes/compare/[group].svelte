@@ -45,7 +45,7 @@
         relatedMarketTypes.clear();
         selectedTypeIds.forEach(typeId=>relatedMarketTypes.set(typeId,null));
 
-        selectedTypeIds.map(typeId=>GetProductionActivity(typeId, $Industry).activity)
+        selectedTypeIds.map(typeId=>$ProductToActivity.get(typeId).activity)
             .filter(activity=>activity!==undefined)
             .forEach((activity:IndustryActivity)=>{
                 for(const materialId in activity.materials) {
@@ -133,8 +133,7 @@
     <div class="graph"> </div>
 
 
-{#each selectedTypeIds as typeId}
-    <!-- <ReactionActivity productTypeId={type.type_id} defaultLocationId={locationId} /> -->
+{#each selectedTypeIds as typeId (typeId)}
     <ComparedActivity productTypeId={typeId} {facilityModifiers} {prices} 
         bind:profitRatio={metrics.profitRatio[typeId]}
         bind:profitPerDay={metrics.profitPerDay[typeId]}

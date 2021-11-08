@@ -148,6 +148,7 @@ export class IndustryJob {
 
     // #region Profit metrics
     
+    // Removing profit because it may cause infinite loops as it may indirectly affect price
     get profit(): IskAmount {
         return this.prices[this.selectedProduct] * this.producedQuantity - this.totalCost;
     }
@@ -189,6 +190,12 @@ export function CreateIndustryJobStore(activity: IndustryActivity, selectedProdu
         subscribe,
         update: (changes)=>{
             for(let change in changes) {
+                if(change=="indexPrices") {
+                    job[change] = changes[change];
+                    continue;
+                }
+
+
                 if(!job[change] || typeof changes[change] !== 'object') {
                     job[change] = changes[change];
                 } else {

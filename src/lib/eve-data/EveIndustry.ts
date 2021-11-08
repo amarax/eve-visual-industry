@@ -1,4 +1,4 @@
-import { derived, readable } from "svelte/store";
+import { derived, get, readable } from "svelte/store";
 import { LoadFromESI, LoadFromSDE, Universe } from "./EveData";
 import type { Readable } from "svelte/store";
 import type { EveLocation, EntityCollection, Type, Type_Id, UniverseStore } from "./EveData";
@@ -263,8 +263,7 @@ export function GetReactionActivity(type_id: Type_Id, industry: IndustryStore): 
 
 
 export function GetProductionActivity(type_id: Type_Id, industry: IndustryStore): {type:IndustryType | undefined, activity:IndustryActivity | undefined} {
-    let type = Object.values(industry.types)
-        .find(type=>type.activities[MANUFACTURING_ACTIVITY_ID]?.products[type_id] ?? type.activities[REACTION_ACTIVITY_ID]?.products[type_id]);
+    let type = get(ProductToActivity)?.get(type_id)?.type;
 
     let activity = undefined;
     if(type) {
