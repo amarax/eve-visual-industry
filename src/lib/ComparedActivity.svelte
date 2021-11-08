@@ -9,7 +9,7 @@
     import { IskAmount, MarketPrices } from "$lib/eve-data/EveMarkets";
     import MarketOrdersBar from "./MarketOrdersBar.svelte";
 
-    import { FormatIskAmount, FormatIskChange, FormatPercentageChange } from "./Format";
+    import { FormatIskChange, FormatPercentageChange } from "./Format";
 
 
 
@@ -33,6 +33,9 @@
     $: profitPerDay = $job?.profit * (24*60*60)/$job?.jobDuration;
 
     export let extents: Array<number> = [0,1000]
+
+
+    // TODO factor in character skills
 </script>
 
 <style lang="scss">
