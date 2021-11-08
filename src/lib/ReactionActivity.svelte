@@ -1,7 +1,7 @@
 <script lang="ts">
     import { EntityCollection, Location_Id, Universe } from "$lib/eve-data/EveData";
     import { CanBeProduced, GetReactionActivity, Industry, REACTION_ACTIVITY_ID } from "$lib/eve-data/EveIndustry";
-    import { CreateReactionJobStore } from "$lib/IndustryJob";
+    import { CreateProductionJobStore } from "$lib/IndustryJob";
     import { MarketPrices } from "./eve-data/EveMarkets";
     import { CharacterSkills } from "$lib/eve-data/EveCharacter";
 
@@ -19,12 +19,12 @@
 
     export let productTypeId: Type_Id = null;
 
-    $: job = CreateReactionJobStore(productTypeId, $Industry);
+    $: job = CreateProductionJobStore(productTypeId, $Industry);
 
     export let requiredQuantity: Quantity = null; 
     let runs: number = 1;
     let overrideRequiredQuantity: boolean = false;
-    $: if(overrideRequiredQuantity) { 
+    $: if(requiredQuantity === null || overrideRequiredQuantity) { 
         job.update({runs});
     } else {
         job.update({requiredQuantity});
@@ -75,8 +75,8 @@
         const ATHANOR_TYPE_ID = 35835;
         
         let entries = Object.values($locations)
-            .filter((location: EveLocation)=>location.type_id == ATHANOR_TYPE_ID)
-            .map((location: EveLocation)=>[location.type_id, location]);
+            .filter((location: EveLocation)=>location?.type_id == ATHANOR_TYPE_ID)
+            .map((location: EveLocation)=>[location?.type_id, location]);
         
         _filteredLocations.set( Object.fromEntries(entries) );
     }

@@ -1,4 +1,4 @@
-import { GetReactionActivity } from "$lib/eve-data/EveIndustry"
+import { GetProductionActivity, GetReactionActivity } from "$lib/eve-data/EveIndustry"
 import { get, writable } from "svelte/store";
 
 import type { Readable } from "svelte/store";
@@ -203,8 +203,8 @@ export function CreateIndustryJobStore(activity: IndustryActivity, selectedProdu
     }
 }
 
-export function CreateReactionJobStore(selectedProduct: Type_Id, industry: Required<IndustryStore>): IndustryJobStore {
-    let {activity} = GetReactionActivity(selectedProduct, industry);
+export function CreateProductionJobStore(selectedProduct: Type_Id, industry: Required<IndustryStore>): IndustryJobStore {
+    let {activity} = GetProductionActivity(selectedProduct, industry);
 
     return CreateIndustryJobStore(activity, selectedProduct);
 }

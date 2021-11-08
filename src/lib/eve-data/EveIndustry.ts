@@ -261,6 +261,24 @@ export function GetReactionActivity(type_id: Type_Id, industry: IndustryStore): 
 }
 
 
+export function GetProductionActivity(type_id: Type_Id, industry: IndustryStore): {type:IndustryType | undefined, activity:IndustryActivity | undefined} {
+    let type = Object.values(industry.types)
+        .find(type=>type.activities[MANUFACTURING_ACTIVITY_ID]?.products[type_id] ?? type.activities[REACTION_ACTIVITY_ID]?.products[type_id]);
+
+    let activity = undefined;
+    if(type) {
+        activity = type.activities[MANUFACTURING_ACTIVITY_ID]?.products[type_id] ? 
+            type.activities[MANUFACTURING_ACTIVITY_ID] :
+            type.activities[REACTION_ACTIVITY_ID]
+    }
+
+    // Always return an object so we can deconstruct easily
+    return {
+        type,
+        activity,
+    }
+}
+
 export function CanBeProduced(type_id: Type_Id, industry: IndustryStore): boolean {
     return GetBlueprintToManufacture(industry, type_id) != null 
         || GetReactionActivity(type_id, industry).activity != undefined;

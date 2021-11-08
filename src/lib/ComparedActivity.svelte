@@ -5,15 +5,16 @@
     import type { Type_Id } from "$lib/eve-data/EveData";
 
     import { Industry } from "$lib/eve-data/EveIndustry";
-    import { CreateReactionJobStore, IndustryFacilityModifiers } from "$lib/IndustryJob";
+    import { CreateProductionJobStore, IndustryFacilityModifiers } from "$lib/IndustryJob";
     import { IskAmount, MarketPrices } from "$lib/eve-data/EveMarkets";
     import MarketOrdersBar from "./MarketOrdersBar.svelte";
-import { FormatIskChange, FormatPercentageChange } from "./Format";
+
+    import { FormatIskAmount, FormatIskChange, FormatPercentageChange } from "./Format";
 
 
 
     export let productTypeId: Type_Id = null;
-    $: job = CreateReactionJobStore(productTypeId, $Industry);
+    $: job = CreateProductionJobStore(productTypeId, $Industry);
     $: job.update({indexPrices:$MarketPrices});
 
     export let prices: EntityCollection<IskAmount>;
@@ -29,7 +30,7 @@ import { FormatIskChange, FormatPercentageChange } from "./Format";
     $: profitRatio = $job?.profit / $job?.totalCost;
     
     export let profitPerDay: number = 0;
-    $: profitPerDay = $job?.profit / ($job?.jobDuration/(24*60*60))
+    $: profitPerDay = $job?.profit * (24*60*60)/$job?.jobDuration;
 
     export let extents: Array<number> = [0,1000]
 </script>

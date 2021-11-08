@@ -5,7 +5,7 @@
 
     import EveMarketGroups, { EveMarketGroupId } from "$lib/eve-data/EveMarketGroups";
     import { Universe } from "$lib/eve-data/EveData";
-    import { GetReactionActivity, Industry, IndustryActivity, REACTION_ACTIVITY_ID } from "$lib/eve-data/EveIndustry";
+    import { Activity_Id, GetProductionActivity, Industry, IndustryActivity } from "$lib/eve-data/EveIndustry";
 
     import type { Type_Id, Location_Id, Type } from "$lib/eve-data/EveData";
     import type { EntityCollection } from "$lib/eve-data/EveData";
@@ -33,14 +33,17 @@
 
     let prices: EntityCollection<IskAmount> = {};
     
+    let selectedActivityId: Activity_Id = null;
+
     let relatedMarketTypes = {}
     $: {
         relatedMarketTypes = Object.fromEntries(selectedTypes.map((type:Type)=>[type.type_id]));
 
-        selectedTypes.map((type:Type)=>GetReactionActivity(type.type_id, $Industry).activity)
+        selectedTypes.map((type:Type)=>GetProductionActivity(type.type_id, $Industry).activity)
             .filter(activity=>activity!==undefined)
             .forEach((activity:IndustryActivity)=>{
                 Object.assign(relatedMarketTypes, Object.fromEntries( Object.keys(activity.materials).map(typeId=>[typeId]) ));
+                selectedActivityId = activity.activity.activityID;
             })
 
         for(let typeId in relatedMarketTypes) {
@@ -53,14 +56,12 @@
         }
     }
 
-
     let metrics = {
         profitRatio: {} as EntityCollection<number>,
         profitPerDay: {} as EntityCollection<number>,
     }
     let currentMetric = 'profitRatio';
     
-
 
     // $: extents = [0, max(selectedTypes, (type:Type)=>prices[type.type_id])]
     let extents = [0, 2e7]
@@ -78,7 +79,7 @@
     {/each}
 </select>
 
-<FacilitySelector bind:value={locationId} activity={REACTION_ACTIVITY_ID} bind:facilityModifiers />
+<FacilitySelector bind:value={locationId} activity={selectedActivityId} bind:facilityModifiers />
 
 
 <style lang="scss">
