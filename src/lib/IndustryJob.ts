@@ -1,4 +1,4 @@
-import { GetReactionActivity } from "$lib/eve-data/EveIndustry"
+import { GetProductionActivity, GetReactionActivity } from "$lib/eve-data/EveIndustry"
 import { get, writable } from "svelte/store";
 
 import type { Readable } from "svelte/store";
@@ -148,6 +148,7 @@ export class IndustryJob {
 
     // #region Profit metrics
     
+    // Removing profit because it may cause infinite loops as it may indirectly affect price
     get profit(): IskAmount {
         return this.prices[this.selectedProduct] * this.producedQuantity - this.totalCost;
     }
@@ -189,6 +190,12 @@ export function CreateIndustryJobStore(activity: IndustryActivity, selectedProdu
         subscribe,
         update: (changes)=>{
             for(let change in changes) {
+                if(change=="indexPrices") {
+                    job[change] = changes[change];
+                    continue;
+                }
+
+
                 if(!job[change] || typeof changes[change] !== 'object') {
                     job[change] = changes[change];
                 } else {
@@ -203,8 +210,8 @@ export function CreateIndustryJobStore(activity: IndustryActivity, selectedProdu
     }
 }
 
-export function CreateReactionJobStore(selectedProduct: Type_Id, industry: Required<IndustryStore>): IndustryJobStore {
-    let {activity} = GetReactionActivity(selectedProduct, industry);
+export function CreateProductionJobStore(selectedProduct: Type_Id, industry: Required<IndustryStore>): IndustryJobStore {
+    let {activity} = GetProductionActivity(selectedProduct, industry);
 
     return CreateIndustryJobStore(activity, selectedProduct);
 }

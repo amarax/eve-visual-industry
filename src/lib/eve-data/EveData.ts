@@ -10,6 +10,7 @@ import type { ESIStore } from "./ESIStore";
 
 import { base as basePath } from '$app/paths';
 import type { Activity_Id } from "./EveIndustry";
+import type { EveMarketGroupId } from "./EveMarketGroups";
 
 interface ESIOptions {
     dev?: any,
@@ -27,6 +28,7 @@ export type Type = {
     name: string;
 
     group_id: number;
+    market_group_id: EveMarketGroupId;
 
     dogma_attributes?: Array<{
         attribute_id: number,
@@ -141,7 +143,7 @@ async function loadMarketsStatic() {
     return data;
 }
 
-export function LoadFromSDE( route: string ):Promise<Object> {
+export function LoadFromSDE( route: string ):Promise<Array<Object>> {
 
     let parseOptions = (resolve) => ({
         header: true,

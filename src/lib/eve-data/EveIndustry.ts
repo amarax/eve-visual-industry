@@ -1,9 +1,10 @@
-import { derived, readable } from "svelte/store";
+import { derived, get, readable } from "svelte/store";
 import { LoadFromESI, LoadFromSDE, Universe } from "./EveData";
 import type { Readable } from "svelte/store";
 import type { EveLocation, EntityCollection, Type, Type_Id, UniverseStore } from "./EveData";
 import CreateESIStore  from "./ESIStore";
 import type { ESIStore } from "./ESIStore";
+import EveTypes from "./EveTypes";
 
 export type Activity_Id = number;
 
@@ -261,7 +262,53 @@ export function GetReactionActivity(type_id: Type_Id, industry: IndustryStore): 
 }
 
 
+export function GetProductionActivity(type_id: Type_Id, industry: IndustryStore): {type:IndustryType | undefined, activity:IndustryActivity | undefined} {
+    let type = get(ProductToActivity)?.get(type_id)?.type;
+
+    let activity = undefined;
+    if(type) {
+        activity = type.activities[MANUFACTURING_ACTIVITY_ID]?.products[type_id] ? 
+            type.activities[MANUFACTURING_ACTIVITY_ID] :
+            type.activities[REACTION_ACTIVITY_ID]
+    }
+
+    // Always return an object so we can deconstruct easily
+    return {
+        type,
+        activity,
+    }
+}
+
 export function CanBeProduced(type_id: Type_Id, industry: IndustryStore): boolean {
     return GetBlueprintToManufacture(industry, type_id) != null 
         || GetReactionActivity(type_id, industry).activity != undefined;
 }
+
+
+type ProductToIndustryTypeMap = Map<Type_Id, {type:IndustryType, activity:IndustryActivity}>;
+
+const PRODUCTION_ACTIVITIES = [MANUFACTURING_ACTIVITY_ID, REACTION_ACTIVITY_ID];
+export const ProductToActivity = derived([Industry, EveTypes],([$Industry, $EveTypes])=>{
+    let productMap: ProductToIndustryTypeMap = new Map();
+
+    for(const typeId in $Industry.types) {
+        if(!$EveTypes.get(parseInt(typeId))?.published) continue;
+
+        Object.keys($Industry.types[typeId].activities)
+            .filter(activityId=>PRODUCTION_ACTIVITIES.includes(parseInt(activityId)))
+            .forEach(activityId=>{
+                for(const productId in $Industry.types[typeId].activities[activityId].products) {
+                    if(productMap.has(parseInt(productId))) 
+                        console.warn("Product already produced in activity", productId, $Industry.types[typeId], activityId)
+
+                    productMap.set(parseInt(productId), {
+                        type:$Industry.types[typeId], 
+                        activity:$Industry.types[typeId].activities[activityId]
+                    })
+                }
+        
+            })
+    }
+
+    return productMap;
+})

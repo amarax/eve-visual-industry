@@ -36,6 +36,15 @@ select, input {
 	}
 }
 
+a {
+	color: rgb(255, 145, 0);
+	text-decoration: none;
+
+	&:hover {
+		text-decoration: underline;
+	}
+}
+
 
 dl {
 	display: grid;
