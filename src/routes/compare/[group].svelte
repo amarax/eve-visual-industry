@@ -14,9 +14,10 @@
     import FacilitySelector from "$lib/FacilitySelector.svelte";
     import type { IndustryFacilityModifiers } from "$lib/IndustryJob";
     import { getMarketType, IskAmount, MarketType } from "$lib/eve-data/EveMarkets";
-import MarketGroupSelector from "$lib/MarketGroupSelector.svelte";
-import EveTypes, { EveTypeId, MarketGroupToTypes } from "$lib/eve-data/EveTypes";
-import { amp } from "$app/env";
+    import MarketGroupSelector from "$lib/MarketGroupSelector.svelte";
+    import EveTypes, { EveTypeId, MarketGroupToTypes } from "$lib/eve-data/EveTypes";
+
+    import { max } from "d3-array";
 
 
 
@@ -82,11 +83,10 @@ import { amp } from "$app/env";
     let currentMetric = 'profitRatio';
     
 
-    // $: extents = [0, max(selectedTypes, (type:Type)=>prices[type.type_id])]
-    let extents = [0, 2e7]
+    $: extents = [0, max(selectedTypeIds, (typeId)=>prices[typeId]) * 1.2]
+    // let extents = [0, 2e7]
 
     let selectedGroup: EveMarketGroupId = currentGroup;
-    $: console.log(selectedGroup);
 </script>
 
 <svelte:head>

@@ -23,7 +23,6 @@ import { DescendantGroups, EveMarketGroup, EveMarketGroupId, ProducableMarketGro
             branches = [branch.market_group_id, ...branches];
             branch = $ProducableMarketGroups.get( branch.parent_group_id );
         }
-        console.log(value, branches);
         selectedGroupTreeBranches = branches;
     }
 
@@ -38,20 +37,17 @@ import { DescendantGroups, EveMarketGroup, EveMarketGroupId, ProducableMarketGro
 
 </script>
 
-<p>
-    {#each groupTreeBranches as marketGroup, i}
-        <select name={i.toString()} value={selectedGroupTreeBranches[i]} on:change={(event)=>{
-            if(event.currentTarget.value !== 'null')
-                value = parseInt(event.currentTarget.value)
-            else {
-                value = selectedGroupTreeBranches[i-1] ?? null;
-            }
-        }}>
-            <option value={null}></option>
-            {#each [...marketGroup] as {market_group_id, name} }
-                <option value={market_group_id}>{name}</option>
-            {/each}
-        </select>
-    {/each}
-</p>
-
+{#each groupTreeBranches as marketGroup, i}
+    <select name={i.toString()} value={selectedGroupTreeBranches[i]} on:change={(event)=>{
+        if(event.currentTarget.value !== 'null')
+            value = parseInt(event.currentTarget.value)
+        else {
+            value = selectedGroupTreeBranches[i-1] ?? null;
+        }
+    }}>
+        <option value={null}></option>
+        {#each [...marketGroup] as {market_group_id, name} }
+            <option value={market_group_id}>{name}</option>
+        {/each}
+    </select>
+{/each}
