@@ -13,6 +13,20 @@ import { DescendantGroups, EveMarketGroup, EveMarketGroupId, ProducableMarketGro
     let hasChildren: (groupId:EveMarketGroupId) => boolean;
     $: hasChildren = (groupId) => $DescendantGroups.get(groupId)?.size > 0;
 
+    export let value: EveMarketGroupId;
+
+    $: {
+        let branches = [];
+
+        let branch = $ProducableMarketGroups.get(value);
+        while(branch) {
+            branches = [branch.market_group_id, ...branches];
+            branch = $ProducableMarketGroups.get( branch.parent_group_id );
+        }
+        console.log(value, branches);
+        selectedGroupTreeBranches = branches;
+    }
+
     $: {
         groupTreeBranches = [ [...$ProducableMarketGroups.values()].filter(group=>group.parent_group_id == undefined) ]
         for(const selectedBranch of selectedGroupTreeBranches) {
@@ -22,16 +36,15 @@ import { DescendantGroups, EveMarketGroup, EveMarketGroupId, ProducableMarketGro
         }
     }
 
-    export let value: EveMarketGroupId;
-
 </script>
 
 <p>
     {#each groupTreeBranches as marketGroup, i}
-        <select name={i.toString()} bind:value={selectedGroupTreeBranches[i]} on:change={(event)=>{
-            selectedGroupTreeBranches = selectedGroupTreeBranches.slice(0, i+1);
-            if(hasChildren(parseInt(event.currentTarget.value))) {
-                selectedGroupTreeBranches = [...selectedGroupTreeBranches, null];
+        <select name={i.toString()} value={selectedGroupTreeBranches[i]} on:change={(event)=>{
+            if(event.currentTarget.value !== 'null')
+                value = parseInt(event.currentTarget.value)
+            else {
+                value = selectedGroupTreeBranches[i-1] ?? null;
             }
         }}>
             <option value={null}></option>
@@ -41,3 +54,4 @@ import { DescendantGroups, EveMarketGroup, EveMarketGroupId, ProducableMarketGro
         </select>
     {/each}
 </p>
+

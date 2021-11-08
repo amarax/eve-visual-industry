@@ -2,6 +2,7 @@ import { derived, readable } from "svelte/store";
 import { LoadFromSDE } from "$lib/eve-data/EveData";
 import { MarketGroupToTypes } from "./EveTypes";
 import { ProductToActivity } from "./EveIndustry";
+import type { EveTypeId } from "./EveTypes";
 
 let marketGroups = new Map<EveMarketGroupId, EveMarketGroup>();
 
@@ -57,29 +58,24 @@ export const DescendantGroups = derived(store, $EveMarketGroups=>{
     return map;
 })
 
-function getProducibleTypes(groupId: EveMarketGroupId, $DescendantGroups, $MarketGroupToTypes, $ProductToActivity) {
+export function GetProducibleTypes(groupId: EveMarketGroupId, descendantGroups, marketGroupToTypes, productToActivity): Array<EveTypeId> {
     let proudcibleTypes = [];
 
-    [groupId, ...($DescendantGroups.get(groupId) ?? [])].forEach(groupId=>{
+    [groupId, ...(descendantGroups.get(groupId) ?? [])].forEach(groupId=>{
         
         proudcibleTypes = [...proudcibleTypes, 
-            ...($MarketGroupToTypes.get(groupId)?.filter(id=>$ProductToActivity.has(id)) ?? [])
+            ...(marketGroupToTypes.get(groupId)?.filter(id=>productToActivity.has(id)) ?? [])
         ]
     })
+
+    return proudcibleTypes;
 }
 
 export const ProducableMarketGroups = derived([store, DescendantGroups, MarketGroupToTypes, ProductToActivity],
     ([$EveMarketGroups, $DescendantGroups, $MarketGroupToTypes, $ProductToActivity])=>{
         let map = new Map<EveMarketGroupId, EveMarketGroup>();
         for(const [groupId, group] of $EveMarketGroups) {
-            let proudcibleTypes = [];
-
-            [groupId, ...($DescendantGroups.get(groupId) ?? [])].forEach(groupId=>{
-                
-                proudcibleTypes = [...proudcibleTypes, 
-                    ...($MarketGroupToTypes.get(groupId)?.filter(id=>$ProductToActivity.has(id)) ?? [])
-                ]
-            })
+            let proudcibleTypes = GetProducibleTypes(groupId, $DescendantGroups, $MarketGroupToTypes, $ProductToActivity)
 
             if(proudcibleTypes?.length > 0) {
                 map.set(groupId, group);

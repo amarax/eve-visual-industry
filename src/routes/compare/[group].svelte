@@ -3,9 +3,9 @@
     import { page } from "$app/stores";
     import { goto } from "$app/navigation";
 
-    import EveMarketGroups, { EveMarketGroupId } from "$lib/eve-data/EveMarketGroups";
+    import EveMarketGroups, { DescendantGroups, EveMarketGroupId, GetProducibleTypes } from "$lib/eve-data/EveMarketGroups";
     import { Universe } from "$lib/eve-data/EveData";
-    import { Activity_Id, GetProductionActivity, Industry, IndustryActivity } from "$lib/eve-data/EveIndustry";
+    import { Activity_Id, GetProductionActivity, Industry, IndustryActivity, ProductToActivity } from "$lib/eve-data/EveIndustry";
 
     import type { Location_Id, Type } from "$lib/eve-data/EveData";
     import type { EntityCollection } from "$lib/eve-data/EveData";
@@ -13,20 +13,23 @@
     import ComparedActivity from "$lib/ComparedActivity.svelte";
     import FacilitySelector from "$lib/FacilitySelector.svelte";
     import type { IndustryFacilityModifiers } from "$lib/IndustryJob";
-    import { getMarketType, IskAmount } from "$lib/eve-data/EveMarkets";
+    import { getMarketType, IskAmount, MarketType } from "$lib/eve-data/EveMarkets";
 import MarketGroupSelector from "$lib/MarketGroupSelector.svelte";
+import EveTypes, { EveTypeId, MarketGroupToTypes } from "$lib/eve-data/EveTypes";
+import { amp } from "$app/env";
 
 
 
-    $: selectedGroup = parseInt($page.params['group']) || null as EveMarketGroupId;
+    let currentGroup: EveMarketGroupId;
+    $: { 
+        currentGroup = parseInt($page.params['group']) || null as EveMarketGroupId;
 
-    $: selectibleMarketGroups = [...$EveMarketGroups.values()]
-        .filter(group=>group.hasTypes)
-        .sort((a,b)=>a.name.localeCompare(b.name));
+        if(!selectedGroup && currentGroup)
+            selectedGroup = currentGroup;
+    }
 
-    $: selectedTypes = Object.values($Universe.types ?? {})
-        .filter((type: Type)=>type.market_group_id===selectedGroup)
-        .sort((a,b)=>metrics[currentMetric][b.type_id]-metrics[currentMetric][a.type_id])
+    $: selectedTypeIds = GetProducibleTypes(currentGroup, $DescendantGroups, $MarketGroupToTypes, $ProductToActivity)
+        .sort((a,b)=>metrics[currentMetric][b]-metrics[currentMetric][a])
 
     let locationId: Location_Id = null;
 
@@ -36,16 +39,31 @@ import MarketGroupSelector from "$lib/MarketGroupSelector.svelte";
     
     let selectedActivityId: Activity_Id = null;
 
-    let relatedMarketTypes = {}
+    let relatedMarketTypes: Map<EveTypeId, MarketType> = new Map()
     $: {
-        relatedMarketTypes = Object.fromEntries(selectedTypes.map((type:Type)=>[type.type_id]));
+        relatedMarketTypes.clear();
+        selectedTypeIds.forEach(typeId=>relatedMarketTypes.set(typeId,null));
 
-        selectedTypes.map((type:Type)=>GetProductionActivity(type.type_id, $Industry).activity)
+        selectedTypeIds.map(typeId=>GetProductionActivity(typeId, $Industry).activity)
             .filter(activity=>activity!==undefined)
             .forEach((activity:IndustryActivity)=>{
-                Object.assign(relatedMarketTypes, Object.fromEntries( Object.keys(activity.materials).map(typeId=>[typeId]) ));
+                for(const materialId in activity.materials) {
+                    relatedMarketTypes.set(parseInt(materialId), null);
+                }
+
+                // Assume that selection is homogeneous and we just pick the last activity type
                 selectedActivityId = activity.activity.activityID;
             })
+
+        relatedMarketTypes.forEach((value,typeId)=>{
+            getMarketType(typeId).subscribe(marketType=>{
+                relatedMarketTypes.set(typeId, marketType);
+
+                if(prices[typeId] === undefined) {
+                    prices[typeId] = marketType?.orders.sell[0]?.price
+                }
+            })
+        })
 
         for(let typeId in relatedMarketTypes) {
             getMarketType(parseInt(typeId)).subscribe(value=>{
@@ -66,21 +84,18 @@ import MarketGroupSelector from "$lib/MarketGroupSelector.svelte";
 
     // $: extents = [0, max(selectedTypes, (type:Type)=>prices[type.type_id])]
     let extents = [0, 2e7]
+
+    let selectedGroup: EveMarketGroupId = currentGroup;
+    $: console.log(selectedGroup);
 </script>
 
 <svelte:head>
-	<title>{($EveMarketGroups && $EveMarketGroups[selectedGroup]) ? `${$EveMarketGroups[selectedGroup].name} - ` : "" }EVE Online Visual Industry Calculator</title>
+	<title>{($EveMarketGroups && $EveMarketGroups[currentGroup]) ? `${$EveMarketGroups[currentGroup].name} - ` : "" }EVE Online Visual Industry Calculator</title>
 </svelte:head>
 
 
-<p><MarketGroupSelector bind:value={selectedGroup} /></p>
-
-<select value={selectedGroup} on:change={(event)=>goto(`${event.currentTarget.value}`, {keepfocus:true})}>
-    <option value={null}></option>
-    {#each selectibleMarketGroups as marketGroup}
-        <option value={marketGroup.market_group_id}>{marketGroup.name}</option>
-    {/each}
-</select>
+<p><MarketGroupSelector bind:value={selectedGroup} /><br/>
+<button on:click={event=>goto(`${selectedGroup}`, {keepfocus:true})}>Compare</button></p>
 
 <FacilitySelector bind:value={locationId} activity={selectedActivityId} bind:facilityModifiers />
 
@@ -118,11 +133,11 @@ import MarketGroupSelector from "$lib/MarketGroupSelector.svelte";
     <div class="graph"> </div>
 
 
-{#each selectedTypes as type (type.type_id)}
+{#each selectedTypeIds as typeId}
     <!-- <ReactionActivity productTypeId={type.type_id} defaultLocationId={locationId} /> -->
-    <ComparedActivity productTypeId={type.type_id} {facilityModifiers} {prices} 
-        bind:profitRatio={metrics.profitRatio[type.type_id]}
-        bind:profitPerDay={metrics.profitPerDay[type.type_id]}
+    <ComparedActivity productTypeId={typeId} {facilityModifiers} {prices} 
+        bind:profitRatio={metrics.profitRatio[typeId]}
+        bind:profitPerDay={metrics.profitPerDay[typeId]}
         {extents} />
 {/each}
 </div>
