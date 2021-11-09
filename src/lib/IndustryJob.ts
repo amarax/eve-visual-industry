@@ -1,9 +1,8 @@
-import { GetProductionActivity, GetReactionActivity } from "$lib/eve-data/EveIndustry"
 import { get, writable } from "svelte/store";
 
 import type { Readable } from "svelte/store";
 import type { EntityCollection, Type_Id } from "$lib/eve-data/EveData"
-import type { IndustryActivity, IndustryStore } from "$lib/eve-data/EveIndustry"
+import type { IndustryActivity, IndustryStore, ProductToIndustryTypeMap } from "$lib/eve-data/EveIndustry"
 import type { DurationSeconds, IskAmount, MarketPrices, Quantity } from "$lib/eve-data/EveMarkets"
 import { ApplyEffects } from "$lib/eve-data/EveDogma";
 
@@ -210,8 +209,8 @@ export function CreateIndustryJobStore(activity: IndustryActivity, selectedProdu
     }
 }
 
-export function CreateProductionJobStore(selectedProduct: Type_Id, industry: Required<IndustryStore>): IndustryJobStore {
-    let {activity} = GetProductionActivity(selectedProduct, industry);
+export function CreateProductionJobStore(selectedProduct: Type_Id, productToActivity: ProductToIndustryTypeMap): IndustryJobStore {
+    let activity = productToActivity.get(selectedProduct)?.activity;
 
     return CreateIndustryJobStore(activity, selectedProduct);
 }

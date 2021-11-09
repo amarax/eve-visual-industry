@@ -4,29 +4,25 @@
     import { goto } from "$app/navigation";
 
     import EveMarketGroups, { DescendantGroups, EveMarketGroupId, GetProducibleTypes } from "$lib/eve-data/EveMarketGroups";
-    import { Universe } from "$lib/eve-data/EveData";
-    import { Activity_Id, GetProductionActivity, Industry, IndustryActivity, ProductToActivity } from "$lib/eve-data/EveIndustry";
+    import { Activity_Id, IndustryActivity, ProductToActivity } from "$lib/eve-data/EveIndustry";
+    import { getMarketType, IskAmount, MarketType } from "$lib/eve-data/EveMarkets";
+    import { EveTypeId, MarketGroupToTypes } from "$lib/eve-data/EveTypes";
 
-    import type { Location_Id, Type } from "$lib/eve-data/EveData";
-    import type { EntityCollection } from "$lib/eve-data/EveData";
+    import type { Location_Id, EntityCollection } from "$lib/eve-data/EveData";
+    import type { IndustryFacilityModifiers } from "$lib/IndustryJob";
 
     import ComparedActivity from "$lib/ComparedActivity.svelte";
-    import FacilitySelector from "$lib/FacilitySelector.svelte";
-    import type { IndustryFacilityModifiers } from "$lib/IndustryJob";
-    import { getMarketType, IskAmount, MarketType } from "$lib/eve-data/EveMarkets";
-    import MarketGroupSelector from "$lib/MarketGroupSelector.svelte";
-    import EveTypes, { EveTypeId, MarketGroupToTypes } from "$lib/eve-data/EveTypes";
+    import FacilitySelector from "$lib/components/FacilitySelector.svelte";
+    import MarketGroupSelector from "$lib/components/MarketGroupSelector.svelte";
 
-    import { max } from "d3-array";
-
+    import { extent, max } from "d3-array";
 
 
     let currentGroup: EveMarketGroupId;
     $: { 
         currentGroup = parseInt($page.params['group']) || null as EveMarketGroupId;
 
-        if(!selectedGroup && currentGroup)
-            selectedGroup = currentGroup;
+        selectedGroup = currentGroup;
     }
 
     $: selectedTypeIds = GetProducibleTypes(currentGroup, $DescendantGroups, $MarketGroupToTypes, $ProductToActivity)
@@ -83,8 +79,22 @@
     let currentMetric = 'profitRatio';
     
 
-    $: extents = [0, max(selectedTypeIds, (typeId)=>prices[typeId]) * 1.2]
-    // let extents = [0, 2e7]
+    let bounds = {};
+    $: {
+        for(let typeId in bounds) {
+            if(!selectedTypeIds.includes(parseInt(typeId))) {
+                delete bounds[typeId];
+            }
+        }
+        bounds = bounds;
+    }
+
+    $: extents = {
+        profitRatio: extent(Object.values(metrics['profitRatio'])),
+        profitPerDay: extent(Object.values(metrics['profitPerDay'])),
+        graph: [0, max(Object.values(bounds)) * 1.1]
+    } 
+
 
     let selectedGroup: EveMarketGroupId = currentGroup;
 </script>
@@ -94,7 +104,7 @@
 </svelte:head>
 
 
-<p><MarketGroupSelector bind:value={selectedGroup} /><br/>
+<p><MarketGroupSelector value={selectedGroup} on:change={event=>selectedGroup = event.detail} /><br/>
 <button on:click={event=>goto(`${selectedGroup}`, {keepfocus:true})}>Compare</button></p>
 
 <FacilitySelector bind:value={locationId} activity={selectedActivityId} bind:facilityModifiers />
@@ -137,7 +147,7 @@
     <ComparedActivity productTypeId={typeId} {facilityModifiers} {prices} 
         bind:profitRatio={metrics.profitRatio[typeId]}
         bind:profitPerDay={metrics.profitPerDay[typeId]}
-        {extents} />
+        {extents} bind:priceUpperBound={bounds[typeId]} />
 {/each}
 </div>
 

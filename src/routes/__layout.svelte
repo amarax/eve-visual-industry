@@ -1,15 +1,21 @@
 <script lang="ts">
-import CharacterSelector from '$lib/CharacterSelector.svelte';
-import { CharacterBlueprints, Character_Id } from '$lib/eve-data/EveCharacter';
-import { GetLocationStore } from '$lib/eve-data/EveData';
-import LocationSelector from '$lib/LocationSelector.svelte';
-import { onMount, setContext } from 'svelte';
-import { writable } from 'svelte/store';
+    import CharacterSelector from '$lib/components/CharacterSelector.svelte';
+    import { CharacterBlueprints, Character_Id } from '$lib/eve-data/EveCharacter';
+    import { GetLocationStore } from '$lib/eve-data/EveData';
+    import LocationSelector from '$lib/components/LocationSelector.svelte';
+    import { onMount, setContext } from 'svelte';
+    import { writable } from 'svelte/store';
 
-import type { Location_Id } from '$lib/eve-data/EveData';
+    import type { Location_Id } from '$lib/eve-data/EveData';
+    
+    import EveTypes from '$lib/eve-data/EveTypes';
+    import EveMarketGroups from '$lib/eve-data/EveMarketGroups';
 
-import '../app.scss';
+    import '../app.scss';
 
+
+    $: loaded = $EveTypes.size > 0 && $EveMarketGroups.size > 0;
+    
 
     $: blueprints = CharacterBlueprints[ $currentCharacter ];
 
@@ -57,9 +63,13 @@ import '../app.scss';
     setContext('currentCharacter', currentCharacter);
 </script>
 
-<CharacterSelector bind:value={$currentCharacter} /><br/>
-Filter market <LocationSelector allowUnselected bind:value={$marketFilterLocation} />
+{#if loaded}
+    <CharacterSelector bind:value={$currentCharacter} /><br/>
+    Filter market <LocationSelector allowUnselected bind:value={$marketFilterLocation} />
 
-<main>
-	<slot />
-</main>
+    <main>
+        <slot />
+    </main>
+{:else}
+    Loading key data...
+{/if}

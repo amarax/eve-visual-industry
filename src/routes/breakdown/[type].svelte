@@ -1,52 +1,53 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
     import { page } from "$app/stores";
+    import { base as basePath } from '$app/paths';
 
-    import { Universe } from "$lib/eve-data/EveData";
-    import { GetProductionActivity, Industry, REACTION_ACTIVITY_ID } from "$lib/eve-data/EveIndustry";
-    import { MANUFACTURING_ACTIVITY_ID } from "$lib/eve-data/EveIndustry";
+    import { ProductToActivity } from "$lib/eve-data/EveIndustry";
+    import { MANUFACTURING_ACTIVITY_ID, REACTION_ACTIVITY_ID } from "$lib/eve-data/EveIndustry";
+    import { DescendantGroups, EveMarketGroupId, GetProducibleTypes } from "$lib/eve-data/EveMarketGroups";
+    import EveTypes, { MarketGroupToTypes } from "$lib/eve-data/EveTypes";
 
-    import type { Type_Id, Type } from "$lib/eve-data/EveData";
-
-    import TypeSelector from "$lib/TypeSelector.svelte";
+    import TypeSelector from "$lib/components/TypeSelector.svelte";
+    import MarketGroupSelector from "$lib/components/MarketGroupSelector.svelte";
     import ManufacturingActivity from "$lib/ManufacturingActivity.svelte";
     import ReactionActivity from "$lib/ReactionActivity.svelte";
     
-
     $: selectedProductId = parseInt( $page.params['type'] ) || null;
 
-
-    // Only pick types that can be manufactured
-    let selectableTypes: Array<Type> = null;
-
-    $: if($Industry.types && $Universe.types) {
-        function getManufacturedProducts(blueprint_id:Type_Id|string): Array<Type_Id> {
-            return Object.keys( $Industry.types[blueprint_id].activities[REACTION_ACTIVITY_ID]?.products ?? $Industry.types[blueprint_id].activities[MANUFACTURING_ACTIVITY_ID]?.products ?? {} )
-                .map(id=>parseInt(id));
+    let selectedGroup: EveMarketGroupId;
+    let _prevSelectedProductId;
+    $: {
+        // Only update selectedGroup if there is a change,
+        // so the user can select the group freely without being affected
+        if(selectedProductId !== _prevSelectedProductId) {
+            // Only change the group if the type is not producible in the current group,
+            // so that the list of types doesn't change 
+            if(!GetProducibleTypes(selectedGroup, $DescendantGroups, $MarketGroupToTypes, $ProductToActivity).includes(selectedProductId)) {
+                selectedGroup = $EveTypes.get(selectedProductId)?.market_group_id;
+            }
         }
-
-        let selectableTypeIDs = [];
-
-        Object.values($Industry.types).forEach(t=>{
-            selectableTypeIDs = [...selectableTypeIDs, ...getManufacturedProducts(t.type_id)]
-        })
-
-        selectableTypes = selectableTypeIDs.filter(id=>$Universe.types[id]!==undefined).map(id=>$Universe.types[id]);
+        _prevSelectedProductId = selectedProductId;
     }
 
-    $: selectedActivityId = GetProductionActivity(selectedProductId, $Industry).activity?.activity.activityID;
+    // Only pick types that can be manufactured
+    $: selectableTypes = GetProducibleTypes(selectedGroup, $DescendantGroups, $MarketGroupToTypes, $ProductToActivity);
+
+    $: selectedActivityId = $ProductToActivity.get(selectedProductId)?.activity.activity.activityID;
 </script>
 
 
 <svelte:head>
-	<title>{($Universe?.types && $Universe?.types[selectedProductId]) ? `${$Universe?.types[selectedProductId]?.name} - ` : "" }EVE Online Visual Industry Calculator</title>
+	<title>{$EveTypes.get(selectedProductId) ? `${$EveTypes.get(selectedProductId).name} - ` : "" }EVE Online Visual Industry Calculator</title>
 </svelte:head>
 
+<p>
+<MarketGroupSelector value={selectedGroup} on:change={event=>{selectedGroup = event.detail}} /> 
+<a href={`${basePath}/compare/${selectedGroup}`}>Compare group</a><br/>
+<TypeSelector selectedTypeId={selectedProductId} {selectableTypes}
+    on:change={event=>{goto(`${event.detail}`, {keepfocus:true})}} />
+</p>
 
-<TypeSelector selectedTypeId={selectedProductId} on:change={event=>{goto(`${event.detail}`, {keepfocus:true})}} {selectableTypes} />
-
-
-<p/>
 
 {#if selectedActivityId === REACTION_ACTIVITY_ID}
 <ReactionActivity productTypeId={selectedProductId} />

@@ -27,6 +27,7 @@ npm run dev
 
 ```bash
 git checkout -b gh-pages   # Create a local branch called "gh-pages"
+git subtree add --prefix dist origin gh-pages   # Pull current state from origin
 npm run build   # Build the Svelte app using the currently specified adapter into the "/dist" folder
 git add -f dist   # Add files for committing
 git commit -m "Deploy to gh-pages" # Commit to branch

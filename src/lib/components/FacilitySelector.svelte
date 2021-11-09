@@ -7,7 +7,7 @@ import type { EntityCollection, EveLocation, Location_Id } from "$lib/eve-data/E
 import { REACTION_ACTIVITY_ID } from "$lib/eve-data/EveIndustry";
 import type { IndustryFacilityModifiers } from "$lib/IndustryJob";
 
-import LocationSelector from "./LocationSelector.svelte";
+import LocationSelector from "$lib/components/LocationSelector.svelte";
 
     export let facilityModifiers: IndustryFacilityModifiers = {
         systemCostIndex: 0.05,

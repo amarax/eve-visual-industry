@@ -1,6 +1,7 @@
 <script lang="ts">
 
 import { DescendantGroups, EveMarketGroup, EveMarketGroupId, ProducableMarketGroups } from "$lib/eve-data/EveMarketGroups";
+import { createEventDispatcher } from "svelte";
 
 
     let groupTreeBranches:Array<Array<EveMarketGroup>>;
@@ -35,6 +36,8 @@ import { DescendantGroups, EveMarketGroup, EveMarketGroupId, ProducableMarketGro
         }
     }
 
+
+    const dispatch = createEventDispatcher();
 </script>
 
 {#each groupTreeBranches as marketGroup, i}
@@ -44,6 +47,7 @@ import { DescendantGroups, EveMarketGroup, EveMarketGroupId, ProducableMarketGro
         else {
             value = selectedGroupTreeBranches[i-1] ?? null;
         }
+        dispatch('change', value);
     }}>
         <option value={null}></option>
         {#each [...marketGroup] as {market_group_id, name} }
