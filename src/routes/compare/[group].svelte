@@ -14,18 +14,16 @@
     import type { IndustryFacilityModifiers } from "$lib/IndustryJob";
     import { getMarketType, IskAmount, MarketType } from "$lib/eve-data/EveMarkets";
     import MarketGroupSelector from "$lib/MarketGroupSelector.svelte";
-    import EveTypes, { EveTypeId, MarketGroupToTypes } from "$lib/eve-data/EveTypes";
+    import { EveTypeId, MarketGroupToTypes } from "$lib/eve-data/EveTypes";
 
     import { max } from "d3-array";
-
 
 
     let currentGroup: EveMarketGroupId;
     $: { 
         currentGroup = parseInt($page.params['group']) || null as EveMarketGroupId;
 
-        if(!selectedGroup && currentGroup)
-            selectedGroup = currentGroup;
+        selectedGroup = currentGroup;
     }
 
     $: selectedTypeIds = GetProducibleTypes(currentGroup, $DescendantGroups, $MarketGroupToTypes, $ProductToActivity)
@@ -104,7 +102,7 @@
 </svelte:head>
 
 
-<p><MarketGroupSelector bind:value={selectedGroup} /><br/>
+<p><MarketGroupSelector value={selectedGroup} on:change={event=>selectedGroup = event.detail} /><br/>
 <button on:click={event=>goto(`${selectedGroup}`, {keepfocus:true})}>Compare</button></p>
 
 <FacilitySelector bind:value={locationId} activity={selectedActivityId} bind:facilityModifiers />

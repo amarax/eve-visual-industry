@@ -14,7 +14,6 @@
     
 
     $: selectedProductId = parseInt( $page.params['type'] ) || null;
-    $: console.log(selectedProductId, selectedActivityId);
 
 
     // Only pick types that can be manufactured
