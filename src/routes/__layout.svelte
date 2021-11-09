@@ -10,6 +10,7 @@
     
     import EveTypes from '$lib/eve-data/EveTypes';
     import EveMarketGroups from '$lib/eve-data/EveMarketGroups';
+    import Login from '$lib/Login.svelte';
 
     import '../app.scss';
 
@@ -62,6 +63,11 @@
     let currentCharacter = writable<Character_Id>(null);
     setContext('currentCharacter', currentCharacter);
 </script>
+
+<p>
+    <Login />
+</p>
+
 
 {#if loaded}
     <CharacterSelector bind:value={$currentCharacter} /><br/>
