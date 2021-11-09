@@ -1,6 +1,7 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
     import { page } from "$app/stores";
+    import { base as basePath } from '$app/paths';
 
     import { ProductToActivity } from "$lib/eve-data/EveIndustry";
     import { MANUFACTURING_ACTIVITY_ID, REACTION_ACTIVITY_ID } from "$lib/eve-data/EveIndustry";
@@ -41,7 +42,8 @@
 </svelte:head>
 
 <p>
-<MarketGroupSelector value={selectedGroup} on:change={event=>{selectedGroup = event.detail}} /><br/>
+<MarketGroupSelector value={selectedGroup} on:change={event=>{selectedGroup = event.detail}} /> 
+<a href={`${basePath}/compare/${selectedGroup}`}>Compare group</a><br/>
 <TypeSelector selectedTypeId={selectedProductId} {selectableTypes}
     on:change={event=>{goto(`${event.detail}`, {keepfocus:true})}} />
 </p>

@@ -9,7 +9,8 @@
     import { IskAmount, MarketPrices } from "$lib/eve-data/EveMarkets";
     import MarketOrdersBar from "$lib/components/MarketOrdersBar.svelte";
 
-    import { FormatIskChange, FormatPercentageChange } from "./Format";
+    import { FormatIskChange, FormatPercentageChange } from "$lib/Format";
+    import { base as basePath } from '$app/paths';
 
 
 
@@ -53,7 +54,7 @@
     }
 </style>
 
-<div class="itemName" title={`${$Universe.types[productTypeId]?.name} [${productTypeId}]`}><a href={`/breakdown/${productTypeId}`}>{$Universe.types[productTypeId]?.name}</a></div>
+<div class="itemName" title={`${$Universe.types[productTypeId]?.name} [${productTypeId}]`}><a href={`${basePath}/breakdown/${productTypeId}`}>{$Universe.types[productTypeId]?.name}</a></div>
 <div class="metric">{FormatPercentageChange(profitRatio)}</div>
 <div class="metric">{FormatIskChange(profitPerDay)}</div>
 <div class="graph">
