@@ -7,7 +7,7 @@
     import { Industry, ProductToActivity } from "$lib/eve-data/EveIndustry";
     import { CreateProductionJobStore, IndustryFacilityModifiers } from "$lib/IndustryJob";
     import { IskAmount, MarketPrices } from "$lib/eve-data/EveMarkets";
-    import MarketOrdersBar from "./MarketOrdersBar.svelte";
+    import MarketOrdersBar from "$lib/components/MarketOrdersBar.svelte";
 
     import { FormatIskChange, FormatPercentageChange } from "./Format";
 

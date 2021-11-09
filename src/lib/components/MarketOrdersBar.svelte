@@ -4,7 +4,7 @@
     import { getMarketType } from "$lib/eve-data/EveMarkets";
     import type { IskAmount, MarketOrder } from "$lib/eve-data/EveMarkets";
 
-    import { FormatIskAmount } from "./Format";
+    import { FormatIskAmount } from "$lib/Format";
 
     import { scaleLinear } from "d3-scale";
     import { sum, minIndex } from "d3-array";

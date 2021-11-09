@@ -9,10 +9,10 @@
     import type { IndustryActivity } from "$lib/eve-data/EveIndustry";
     import type { Quantity } from "$lib/eve-data/EveMarkets";
 
-    import MarketOrdersBar from "./MarketOrdersBar.svelte";
+    import MarketOrdersBar from "$lib/components/MarketOrdersBar.svelte";
     import { FormatDuration, FormatIskAmount, FormatIskChange } from "$lib/Format";
     import InventionActivity from "./InventionActivity.svelte";
-    import LocationSelector from "./LocationSelector.svelte";
+    import LocationSelector from "$lib/components/LocationSelector.svelte";
 import ReactionActivity from "./ReactionActivity.svelte";
 import { getContext } from "svelte";
 import type { Readable } from "svelte/store";

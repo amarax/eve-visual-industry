@@ -1,20 +1,21 @@
 <script lang="ts">
     import { loadType, Universe } from "$lib/eve-data/EveData";
-    import { ADVANCED_INDUSTRY_SKILL_ID, Decryptors, Industry, INVENTION_ACTIVITY_ID, MANUFACTURING_ACTIVITY_ID,  } from "$lib/eve-data/EveIndustry";
-    
-    import type { EntityCollection, Location_Id, Type_Id } from "$lib/eve-data/EveData";
-    import type { IndustryType } from "$lib/eve-data/EveIndustry";
-
     import { IskAmount, MarketPrices } from "$lib/eve-data/EveMarkets";
-    import MarketOrdersBar from "./MarketOrdersBar.svelte";
+    import { ADVANCED_INDUSTRY_SKILL_ID, Decryptors, Industry, INVENTION_ACTIVITY_ID, MANUFACTURING_ACTIVITY_ID,  } from "$lib/eve-data/EveIndustry";
+    import { CharacterSkills, Character_Id } from "$lib/eve-data/EveCharacter";
+    
+    import type { EntityCollection, Type_Id } from "$lib/eve-data/EveData";
+    import type { IndustryType } from "$lib/eve-data/EveIndustry";
+    import type { ESIStore } from "$lib/eve-data/ESIStore";
+    import type { Readable } from "svelte/store";
+
     import { sum } from "$lib/Utilities";
     import { FormatDuration, FormatIskAmount } from "$lib/Format";
     
-    import { CharacterSkills, Character_Id } from "$lib/eve-data/EveCharacter";
-    import type { ESIStore } from "$lib/eve-data/ESIStore";
-    import LocationSelector from "./LocationSelector.svelte";
-import { getContext } from "svelte";
-import type { Readable } from "svelte/store";
+    import MarketOrdersBar from "$lib/components/MarketOrdersBar.svelte";
+    import LocationSelector from "$lib/components/LocationSelector.svelte";
+
+    import { getContext } from "svelte";
 
 
     let currentCharacter = getContext('currentCharacter') as Readable<Character_Id>;

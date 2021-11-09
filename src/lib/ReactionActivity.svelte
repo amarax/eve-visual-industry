@@ -6,13 +6,13 @@
     import { CharacterSkills } from "$lib/eve-data/EveCharacter";
 
     import type { Type_Id, EveLocation } from "$lib/eve-data/EveData";
-    import type { IskAmount, Quantity } from "./eve-data/EveMarkets";
+    import type { IskAmount, Quantity } from "$lib/eve-data/EveMarkets";
     import { Readable, writable, Writable } from "svelte/store";
     import type { Character_Id } from "$lib/eve-data/EveCharacter";
 
-    import { FormatDuration, FormatIskAmount, FormatIskChange } from "./Format";
-    import MarketOrdersBar from "./MarketOrdersBar.svelte";
-    import LocationSelector from "./LocationSelector.svelte";
+    import { FormatDuration, FormatIskAmount, FormatIskChange } from "$lib/Format";
+    import MarketOrdersBar from "$lib/components/MarketOrdersBar.svelte";
+    import LocationSelector from "$lib/components/LocationSelector.svelte";
     import { getContext, setContext } from "svelte";
     import { ApplyEffects, IndustryDogmaAttributes } from "./eve-data/EveDogma";
 

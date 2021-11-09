@@ -5,16 +5,15 @@
 
     import EveMarketGroups, { DescendantGroups, EveMarketGroupId, GetProducibleTypes } from "$lib/eve-data/EveMarketGroups";
     import { Activity_Id, IndustryActivity, ProductToActivity } from "$lib/eve-data/EveIndustry";
+    import { getMarketType, IskAmount, MarketType } from "$lib/eve-data/EveMarkets";
+    import { EveTypeId, MarketGroupToTypes } from "$lib/eve-data/EveTypes";
 
-    import type { Location_Id, Type } from "$lib/eve-data/EveData";
-    import type { EntityCollection } from "$lib/eve-data/EveData";
+    import type { Location_Id, EntityCollection } from "$lib/eve-data/EveData";
+    import type { IndustryFacilityModifiers } from "$lib/IndustryJob";
 
     import ComparedActivity from "$lib/ComparedActivity.svelte";
-    import FacilitySelector from "$lib/FacilitySelector.svelte";
-    import type { IndustryFacilityModifiers } from "$lib/IndustryJob";
-    import { getMarketType, IskAmount, MarketType } from "$lib/eve-data/EveMarkets";
-    import MarketGroupSelector from "$lib/MarketGroupSelector.svelte";
-    import { EveTypeId, MarketGroupToTypes } from "$lib/eve-data/EveTypes";
+    import FacilitySelector from "$lib/components/FacilitySelector.svelte";
+    import MarketGroupSelector from "$lib/components/MarketGroupSelector.svelte";
 
     import { max } from "d3-array";
 

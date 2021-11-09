@@ -2,8 +2,8 @@
     import { EveLocation, IsLocationStation, Location_Id, StructureTaxRates } from "$lib/eve-data/EveData";
     import { getContext } from "svelte";
     import type { Readable } from "svelte/store";
-    import { Activity_Id, GetCostIndex, Industry, IndustrySystems, MANUFACTURING_ACTIVITY_ID, REACTION_ACTIVITY_ID } from "./eve-data/EveIndustry";
-import { FormatPercentage } from "$lib/Format";
+    import { Activity_Id, GetCostIndex, Industry, IndustrySystems, MANUFACTURING_ACTIVITY_ID, REACTION_ACTIVITY_ID } from "$lib/eve-data/EveIndustry";
+    import { FormatPercentage } from "$lib/Format";
 
     export let value: Location_Id = null;
 

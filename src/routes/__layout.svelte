@@ -1,8 +1,8 @@
 <script lang="ts">
-    import CharacterSelector from '$lib/CharacterSelector.svelte';
+    import CharacterSelector from '$lib/components/CharacterSelector.svelte';
     import { CharacterBlueprints, Character_Id } from '$lib/eve-data/EveCharacter';
     import { GetLocationStore } from '$lib/eve-data/EveData';
-    import LocationSelector from '$lib/LocationSelector.svelte';
+    import LocationSelector from '$lib/components/LocationSelector.svelte';
     import { onMount, setContext } from 'svelte';
     import { writable } from 'svelte/store';
 

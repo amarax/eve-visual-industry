@@ -2,18 +2,15 @@
     import { goto } from "$app/navigation";
     import { page } from "$app/stores";
 
-    import { Universe } from "$lib/eve-data/EveData";
-    import { Industry, ProductToActivity, REACTION_ACTIVITY_ID } from "$lib/eve-data/EveIndustry";
-    import { MANUFACTURING_ACTIVITY_ID } from "$lib/eve-data/EveIndustry";
+    import { ProductToActivity } from "$lib/eve-data/EveIndustry";
+    import { MANUFACTURING_ACTIVITY_ID, REACTION_ACTIVITY_ID } from "$lib/eve-data/EveIndustry";
+    import { DescendantGroups, EveMarketGroupId, GetProducibleTypes } from "$lib/eve-data/EveMarketGroups";
+    import EveTypes, { MarketGroupToTypes } from "$lib/eve-data/EveTypes";
 
-    import type { Type_Id, Type } from "$lib/eve-data/EveData";
-
-    import TypeSelector from "$lib/TypeSelector.svelte";
+    import TypeSelector from "$lib/components/TypeSelector.svelte";
+    import MarketGroupSelector from "$lib/components/MarketGroupSelector.svelte";
     import ManufacturingActivity from "$lib/ManufacturingActivity.svelte";
     import ReactionActivity from "$lib/ReactionActivity.svelte";
-    import { DescendantGroups, EveMarketGroupId, GetProducibleTypes } from "$lib/eve-data/EveMarketGroups";
-    import MarketGroupSelector from "$lib/MarketGroupSelector.svelte";
-    import EveTypes, { EveType, EveTypeId, MarketGroupToTypes } from "$lib/eve-data/EveTypes";
     
     $: selectedProductId = parseInt( $page.params['type'] ) || null;
 
