@@ -11,6 +11,7 @@
 
     import { FormatIskChange, FormatPercentageChange } from "$lib/Format";
     import { base as basePath } from '$app/paths';
+import RelativeValueDisplay from "./components/RelativeValueDisplay.svelte";
 
 
 
@@ -33,7 +34,15 @@
     export let profitPerDay: number = 0;
     $: profitPerDay = $job?.profit * (24*60*60)/$job?.jobDuration;
 
-    export let extents: Array<number> = [0,1000]
+    export let extents: {
+        graph: Array<number>,
+        profitRatio: Array<number>,
+        profitPerDay: Array<number>,
+    } = {
+        profitRatio: [-.5,.5],
+        profitPerDay: [-1e6, 1e6],
+        graph:[0,1000]
+    }
 
     export let priceUpperBound: IskAmount = 0;
     let lowestSellPrice: IskAmount;
@@ -55,13 +64,13 @@
 </style>
 
 <div class="itemName" title={`${$Universe.types[productTypeId]?.name} [${productTypeId}]`}><a href={`${basePath}/breakdown/${productTypeId}`}>{$Universe.types[productTypeId]?.name}</a></div>
-<div class="metric">{FormatPercentageChange(profitRatio)}</div>
-<div class="metric">{FormatIskChange(profitPerDay)}</div>
+<div class="metric"><RelativeValueDisplay value={profitRatio} extents={extents.profitRatio}>{FormatPercentageChange(profitRatio)}</RelativeValueDisplay></div>
+<div class="metric"><RelativeValueDisplay value={profitPerDay} extents={extents.profitPerDay}>{FormatIskChange(profitPerDay)}</RelativeValueDisplay></div>
 <div class="graph">
     <MarketOrdersBar type_id={productTypeId} 
         quantity={$job.producedQuantity} totalCost={$job.totalCost} 
         bind:price={prices[productTypeId]}
         buyOverheadRate={-salesTaxRate} sellOverheadRate={-brokerFeeRate-salesTaxRate}
         bind:lowestSellPrice
-        {extents} />
+        extents={extents.graph} />
 </div>

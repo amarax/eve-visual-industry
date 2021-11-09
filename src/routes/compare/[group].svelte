@@ -15,7 +15,7 @@
     import FacilitySelector from "$lib/components/FacilitySelector.svelte";
     import MarketGroupSelector from "$lib/components/MarketGroupSelector.svelte";
 
-    import { max } from "d3-array";
+    import { extent, max } from "d3-array";
 
 
     let currentGroup: EveMarketGroupId;
@@ -89,8 +89,11 @@
         bounds = bounds;
     }
 
-    $: extents = [0, max(Object.values(bounds)) * 1.1]
-    // let extents = [0, 2e7]
+    $: extents = {
+        profitRatio: extent(Object.values(metrics['profitRatio'])),
+        profitPerDay: extent(Object.values(metrics['profitPerDay'])),
+        graph: [0, max(Object.values(bounds)) * 1.1]
+    } 
 
 
     let selectedGroup: EveMarketGroupId = currentGroup;
