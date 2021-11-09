@@ -89,12 +89,7 @@ import type { Writable } from "svelte/store";
     let topBottomMargin = 8;
     let yExtents = compact ? [0,height-topBottomMargin] : [0,height-2*topBottomMargin]
     $: y = scaleLinear()
-        .domain([1,0])
-        .range(yExtents)
-
-    $: volumeY = scaleLinear()
-        // .domain([sum($marketType?.orders.sell ?? [],o=>o.volume_remain) ,0])
-        .domain([quantity*2,0])
+        .domain([quantity*4,0])
         .range(yExtents)
 
         
@@ -106,7 +101,7 @@ import type { Writable } from "svelte/store";
         let sum = 0;
         return d=>{
             sum+=d.volume_remain;
-            return volumeY(sum);
+            return y(sum);
         }
     }
 
@@ -124,8 +119,8 @@ import type { Writable } from "svelte/store";
 
 
     $: fillGraphHeight = {
-        y: y(1),
-        height: Math.abs(y(0)-y(1))
+        y: Math.min(y.range()[0],y.range()[1]),
+        height: Math.abs(y.range()[0]-y.range()[1])
     }
 
     $: translateX = (value)=>{
@@ -216,20 +211,20 @@ import type { Writable } from "svelte/store";
         {#if !isNaN(totalCost) && totalCost !== null}
             <rect class="mark cost" x={x(totalCost)} width={1} height={height} />
             {#if price != 0}
-                <rect class={`difference profit ${unitCost>price?"negative":"positive"}`} x={Math.min(x(totalCost), x(price*quantity))} width={Math.abs(x(totalCost)-x(price*quantity))} y={y(0.5)} height={1} />
+                <rect class={`difference profit ${unitCost>price?"negative":"positive"}`} x={Math.min(x(totalCost), x(price*quantity))} width={Math.abs(x(totalCost)-x(price*quantity))} y={y(quantity)} height={1} />
             {/if}
         {/if}
         {#if type_id}
-            <circle class="mark price" cx={x(price*quantity)} cy={y(0.5)} r={2} />
+            <circle class="mark price" cx={x(price*quantity)} cy={y(quantity)} r={2} />
         {/if}
     {/if}
 
     {#if hover}
         <text bind:this={hoverText} class="hover" style={translateX(hoverPrice*quantity)} y={y(0)} dy={8} text-anchor="middle">{FormatIskAmount(hoverPrice*quantity)} @{FormatIskAmount(hoverPrice)}</text>
-        <circle class="hover" style={translateX(hoverPrice*quantity)} cx={0} cy={y(0.5)} r={4} />
+        <circle class="hover" style={translateX(hoverPrice*quantity)} cx={0} cy={y(quantity)} r={4} />
     {/if}
 
-    <rect class="hitArea" width={width} y={y(1)} height={y(0)-y(1)} 
+    <rect class="hitArea" width={width} {...fillGraphHeight} 
         on:mouseenter={event=>{hover=true; onHoverGraph(event)}} on:mouseleave={event=>hover=false} on:mousemove={onHoverGraph} 
         on:click={onClickGraph}
     />
