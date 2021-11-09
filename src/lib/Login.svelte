@@ -14,8 +14,6 @@ import { base as basePath } from "$app/paths";
 
     let authorizeQuery = "https://login.eveonline.com/v2/oauth/authorize/?" + searchParams.toString();
 
-    console.log(authorizeQuery);
-
 </script>
 
 <a href={authorizeQuery}><img src={`${basePath}/img/eve-sso-login-white-small.png`} alt="Log in with EVE Online" /></a>
