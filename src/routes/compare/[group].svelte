@@ -4,8 +4,7 @@
     import { goto } from "$app/navigation";
 
     import EveMarketGroups, { DescendantGroups, EveMarketGroupId, GetProducibleTypes } from "$lib/eve-data/EveMarketGroups";
-    import { Universe } from "$lib/eve-data/EveData";
-    import { Activity_Id, GetProductionActivity, Industry, IndustryActivity, ProductToActivity } from "$lib/eve-data/EveIndustry";
+    import { Activity_Id, IndustryActivity, ProductToActivity } from "$lib/eve-data/EveIndustry";
 
     import type { Location_Id, Type } from "$lib/eve-data/EveData";
     import type { EntityCollection } from "$lib/eve-data/EveData";
@@ -84,8 +83,18 @@
     
 
     let bounds = {};
+    $: {
+        for(let typeId in bounds) {
+            if(!selectedTypeIds.includes(parseInt(typeId))) {
+                delete bounds[typeId];
+            }
+        }
+        bounds = bounds;
+    }
+
     $: extents = [0, max(Object.values(bounds)) * 1.1]
     // let extents = [0, 2e7]
+
 
     let selectedGroup: EveMarketGroupId = currentGroup;
 </script>
