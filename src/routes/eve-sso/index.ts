@@ -1,6 +1,6 @@
 import type { IncomingRequest } from "@sveltejs/kit";
 
-export async function get(request: IncomingRequest ) {
+export async function get(request: IncomingRequest) {
     const code = request.query.get('code');
     if(code) {
         let headers = {
@@ -25,10 +25,15 @@ export async function get(request: IncomingRequest ) {
         );
 
         if(response.ok) {
-            const access = await response.json();
+            const token = await response.json();
+
+            // TODO validate access token
+
+            const accessToken = token['access_token'];
+            const refreshToken = token['refresh_token']
 
             return {
-                body: access,
+                body: token,
             }
         } else {
             console.error(response);
@@ -38,6 +43,6 @@ export async function get(request: IncomingRequest ) {
 
 
     return {
-        body: "Verifying with EVE SSO..."
+        body: "This page should redirect you to index instead"
     }
 }
