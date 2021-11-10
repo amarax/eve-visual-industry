@@ -49,7 +49,7 @@ export type IndustryStore = {
 export const MANUFACTURING_ACTIVITY_ID = 1;
 export const INVENTION_ACTIVITY_ID = 8;
 export const REVERSE_ENGINEERING_ACTIVITY_ID = 7;
-export const REACTION_ACTIVITY_ID = 11;
+export const REACTION_ACTIVITY_ID = 9;
 
 
 let industryPopulated = false;
