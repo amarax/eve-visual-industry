@@ -1,4 +1,5 @@
 <script lang="ts">
+	console.log("index");
 </script>
 
 <svelte:head>

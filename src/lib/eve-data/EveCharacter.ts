@@ -66,3 +66,10 @@ export async function LoadAuthorisedCharacters() {
     }
 }
 
+export function GetCharacterInfo(id:Character_Id): ESIStore<Character> {
+    if(!Characters[id]) {
+        Characters[id] = CreateESIStore(`/characters/${id}/`);
+    }
+
+    return Characters[id];
+}

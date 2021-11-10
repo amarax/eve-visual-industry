@@ -1,7 +1,18 @@
-import type { IncomingRequest } from "@sveltejs/kit";
+import type { RequestHandler } from "@sveltejs/kit";
 
-export async function get(request: IncomingRequest) {
-    const code = request.query.get('code');
+import jwt from 'jsonwebtoken';
+import type {JwtPayload} from 'jsonwebtoken'
+import { StoreToken } from "$lib/eve-sso/Tokens";
+import { base } from "$app/paths";
+
+interface EveSSOJWT extends JwtPayload {
+    name: string,
+    owner: string
+}
+
+export const get: RequestHandler = async ({query, locals})=> {
+    
+    const code = query.get('code');
     if(code) {
         let headers = {
             'Authorization': `Basic ${
@@ -16,33 +27,47 @@ export async function get(request: IncomingRequest) {
             'code': code
         })
 
-        const response = await fetch("https://login.eveonline.com/v2/oauth/token",
-            {
-                method: 'POST',
-                headers,
-                body,
-            }
+        const response = await fetch(
+            "https://login.eveonline.com/v2/oauth/token",
+            { method: 'POST', headers, body }
         );
 
         if(response.ok) {
             const token = await response.json();
 
-            // TODO validate access token
-
             const accessToken = token['access_token'];
             const refreshToken = token['refresh_token']
 
+            // TODO validate access token
+            let {sub, name, owner} = jwt.decode(accessToken) as EveSSOJWT;
+            let characterId = parseInt( sub.split(':')[2] );
+            
+            const userId = "12345";
+            StoreToken(locals.userId, characterId, token);
+
             return {
-                body: token,
+                headers: {
+                    Location: `${base}/`,
+
+                },
+                status: 302,
             }
         } else {
             console.error(response);
         }
+    } else {
+        
     }
 
 
 
     return {
+        headers: {
+            Location: `${base}/`,
+
+        },
+        status: 302,
         body: "This page should redirect you to index instead"
     }
 }
+
