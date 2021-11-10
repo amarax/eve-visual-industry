@@ -1,6 +1,6 @@
 <script lang="ts">
     import CharacterSelector from '$lib/components/CharacterSelector.svelte';
-    import { CharacterBlueprints, Character_Id } from '$lib/eve-data/EveCharacter';
+    import { CharacterBlueprints, EveCharacterId } from '$lib/eve-data/EveCharacter';
     import { GetLocationStore } from '$lib/eve-data/EveData';
     import LocationSelector from '$lib/components/LocationSelector.svelte';
     import { onMount, setContext } from 'svelte';
@@ -60,7 +60,7 @@
     let marketFilterLocation = writable<Location_Id>(null);
     setContext('marketFilterLocation', marketFilterLocation);
 
-    let currentCharacter = writable<Character_Id>(null);
+    let currentCharacter = writable<EveCharacterId>(null);
     setContext('currentCharacter', currentCharacter);
 </script>
 

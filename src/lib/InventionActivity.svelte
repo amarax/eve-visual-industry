@@ -2,7 +2,7 @@
     import { loadType, Universe } from "$lib/eve-data/EveData";
     import { IskAmount, MarketPrices } from "$lib/eve-data/EveMarkets";
     import { ADVANCED_INDUSTRY_SKILL_ID, Decryptors, Industry, INVENTION_ACTIVITY_ID, MANUFACTURING_ACTIVITY_ID,  } from "$lib/eve-data/EveIndustry";
-    import { CharacterSkills, Character_Id } from "$lib/eve-data/EveCharacter";
+    import { CharacterSkills, EveCharacterId } from "$lib/eve-data/EveCharacter";
     
     import type { EntityCollection, Type_Id } from "$lib/eve-data/EveData";
     import type { IndustryType } from "$lib/eve-data/EveIndustry";
@@ -18,7 +18,7 @@
     import { getContext } from "svelte";
 
 
-    let currentCharacter = getContext('currentCharacter') as Readable<Character_Id>;
+    let currentCharacter = getContext('currentCharacter') as Readable<EveCharacterId>;
 
 
     

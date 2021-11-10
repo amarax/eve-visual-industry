@@ -1,12 +1,12 @@
 <script lang="ts">
     import { GetCharacterInfo } from "$lib/eve-data/EveCharacter";
-    import type { Character, Character_Id } from "$lib/eve-data/EveCharacter";
+    import type { Character, EveCharacterId } from "$lib/eve-data/EveCharacter";
     import { session } from "$app/stores";
 
-    export let value: Character_Id = null;
+    export let value: EveCharacterId = null;
 
-    let characterIds = ($session.authenticatedESICharacters || []) as Array<Character_Id>;
-    let characters = new Map<Character_Id, Character>();
+    let characterIds = ($session.authenticatedESICharacters || []) as Array<EveCharacterId>;
+    let characters = new Map<EveCharacterId, Character>();
     $: {
         for(const id of characterIds) {
             GetCharacterInfo(id).subscribe(char=>{

@@ -8,7 +8,7 @@ import { browser } from "$app/env";
 import { base as basePath } from '$app/paths';
 
 
-export type Character_Id = number;
+export type EveCharacterId = number;
 
 export type Character = {
     name: string,
@@ -37,19 +37,19 @@ export type CharacterBlueprints = Array<{
 }>
 
 export const Characters: {
-    [index: Character_Id]: ESIStore<Character>
+    [index: EveCharacterId]: ESIStore<Character>
 } = {}
 
 export const CharacterSkills: {
-    [index: Character_Id]: ESIStore<CharacterSkills>
+    [index: EveCharacterId]: ESIStore<CharacterSkills>
 } = {}
 
 export const CharacterBlueprints: {
-    [index: Character_Id]: ESIStore<CharacterBlueprints>
+    [index: EveCharacterId]: ESIStore<CharacterBlueprints>
 } = {}
 
 
-export function GetCharacterInfo(id:Character_Id): ESIStore<Character> {
+export function GetCharacterInfo(id:EveCharacterId): ESIStore<Character> {
     if(!Characters[id]) {
         Characters[id] = CreateESIStore(`/characters/${id}/`);
         CharacterSkills[id] = CreateESIStoreFromCache(`/characters/${id}/skills/`);
