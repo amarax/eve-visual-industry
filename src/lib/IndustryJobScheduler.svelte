@@ -34,19 +34,64 @@ import { Activity_Id, INVENTION_ACTIVITY_ID, MANUFACTURING_ACTIVITY_ID, REACTION
     let characterJobs: ESIStore<Array<JobDetails>>;
     $: if(characterId) characterJobs = CreateESIStore<Array<JobDetails>>(`/characters/${characterId}/industry/jobs/`, null, {char:characterId, include_completed:true})
 
+    export let groupBy = "activity_id";
+
     let _jobs: Array<JobDetails>;
     $: {
-        _jobs = $characterJobs ?? [] as Array<JobDetails>;
-        _jobs?.sort((a,b)=>a.facility_id - b.facility_id)
+        _jobs = $characterJobs instanceof Array ? $characterJobs : [] as Array<JobDetails>;
+        _jobs.sort((a,b)=>a[groupBy] - b[groupBy])
     }
     
+
+    // Assign the jobs into rows
+    let rows = new Map<number, Array<JobDetails>>();
+    $: {
+        // Group jobs in the same facility together
+        let facilities = new Map<number, Array<JobDetails>>();
+        _jobs.forEach(job=>{
+            if(!facilities.has(job[groupBy])) {
+                facilities.set(job[groupBy], []);
+            }
+
+            facilities.get(job[groupBy]).push(job);
+        })
+
+        rows.clear();
+        rows = rows;
+        for(let facilityJobs of facilities.values()) {
+            facilityJobs.sort((a,b)=>new Date(b.end_date).getTime() - new Date(a.end_date).getTime())
+            let firstFacilityRow = rows.size;
+
+            let lastFacilityRow = firstFacilityRow;
+            rows.set(lastFacilityRow, []);
+            for(let fj of facilityJobs) {
+                let row = firstFacilityRow;
+                while(row <= lastFacilityRow) {
+                    let r = rows.get(row);
+                    let lastFjInRow = r[r.length-1];
+                    if(r.length == 0 || (new Date(fj.end_date) < new Date(lastFjInRow.start_date)))
+                        break;
+                    row++;
+                }
+
+                if(!rows.get(row)) {
+                    rows.set(row, []);
+                    lastFacilityRow = row;
+                }
+
+                rows.get(row).push(fj);
+            }
+        }
+
+    }
 
 
     const rowHeight = 20;
 
+    export let scale = 100;
     $: xScale = scaleTime()
-        .domain([Date.now()-7*24*60*60*1000,Date.now()])
-        .range([0,500]);
+        .domain([Date.now()-24*60*60*1000,Date.now()])
+        .range([-scale,0]);
     $: x = value=>xScale(new Date(value));
 
     $: y = scaleLinear()
@@ -81,26 +126,36 @@ import { Activity_Id, INVENTION_ACTIVITY_ID, MANUFACTURING_ACTIVITY_ID, REACTION
     svg {
         background-color: #222;
 
-        rect.job {
-            fill: #333;
-            stroke: none;
 
-            &.manufacturing {
-                fill: rgb(132, 86, 0);
-            }
-            &.reaction {
-                fill: rgb(0, 132, 128);
-            }
-            &.invention {
-                fill: rgb(0, 59, 132);
-            }
-        }
-
-        g.job:hover {
+        g.job {
             rect.job {
-                fill: #444;
+                fill: rgb(0, 84, 187);
+                stroke: none;
+
+                opacity: 70%;
+
+                &.manufacturing {
+                    fill: rgb(182, 119, 0);
+                }
+                &.reaction {
+                    fill: rgb(0, 189, 145);
+                }
+                &.invention {
+                    fill: rgb(48, 148, 191);
+                }
+
+                &.delivered {
+                    opacity: 30%;
+                }
+            }
+
+            &:hover {
+                rect.job {
+                    opacity: 100%;
+                }
             }
         }
+
         
         rect.row {
             fill: transparent;
@@ -124,17 +179,19 @@ import { Activity_Id, INVENTION_ACTIVITY_ID, MANUFACTURING_ACTIVITY_ID, REACTION
     }
 </style>
 
-<svg bind:this={scheduleChart} width="100%" height={Math.max(_jobs.length, 1)*rowHeight}>
-    <g class="canvas" transform={`translate(${xOffset})`}>
+<svg bind:this={scheduleChart} width="100%" height={Math.max(rows.size, 1)*rowHeight}>
+    <g class="canvas" transform={`translate(${xOffset*100})`}>
 
-        <rect class="now" x={x(Date.now())} width={1} y={0} height={y(_jobs.length)} />
-        {#each _jobs as job, i (job.job_id)}
-            <g class="job" transform={`translate(${x(job.start_date)}, ${y(i)})`}>
-                <rect class={`job ${activityToClass(job.activity_id)}`} width={x(job.end_date)-x(job.start_date)} y={margin} height={y(i+1)-y(i) - margin*2} 
-                    on:click={event=>console.log(job)}
-                />
-                <text y={13} x={4}>{$EveTypes.get(job.product_type_id)?.name} x{job.runs}</text>
-            </g>
+        <rect class="now" x={x(Date.now())} width={1} y={0} height={y(rows.size)} />
+        {#each [...rows.values()] as row, r}
+            {#each row as job (job.job_id)}
+                <g class="job" transform={`translate(${x(job.start_date)}, ${y(r)})`}>
+                    <rect class={`job ${activityToClass(job.activity_id)} ${job.status}`} width={x(job.end_date)-x(job.start_date)} y={margin} height={y(r+1)-y(r) - margin*2} 
+                        on:click={event=>console.log(job)}
+                    />
+                    <text y={13} x={4}>{$EveTypes.get(job.product_type_id)?.name} x{job.runs}</text>
+                </g>
+            {/each}
         {/each}
     </g>
 </svg>
