@@ -11,11 +11,13 @@ import type { ESIStore } from "./ESIStore";
 import { base as basePath } from '$app/paths';
 import type { Activity_Id } from "./EveIndustry";
 import type { EveMarketGroupId } from "./EveMarketGroups";
+import type { EveCharacterId } from "./EveCharacter";
+import { GetAccessToken } from "$lib/eve-sso/Tokens";
 
 interface ESIOptions {
-    dev?: any,
+    dev?: boolean,
     datasource?: "tranquility" | "singularity",
-
+    characterId?: EveCharacterId
 }
 
 export type Type_Id = number;
@@ -52,30 +54,39 @@ export interface EntityCollection<Entity> {
 
 
 export async function LoadFromESI( route:string, options?:ESIOptions ) {
-    let endpoint = new URL(`https://esi.evetech.net/${(options&&options.dev)?"dev":"latest"}${route}`);
+    let endpoint = new URL(`https://esi.evetech.net/${(options?.dev)?"dev":"latest"}${route}`);
 
-    const response = await fetch(
-        endpoint.toString(),
-        {
-            method: 'GET',
-            headers: {
-                accept: 'application/json',
+    let headers = {accept: 'application/json'};
+    let token = GetAccessToken(options?.characterId);
+    if(token) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    let response;
+    try {
+        response = await fetch(
+            endpoint.toString(),
+            {
+                method: 'GET',
+                headers
             }
+        )
+        const data = await response.json();
+
+        if( response.ok ) {
+            let maxPages = response.headers.get("X-Pages");
+            if(maxPages) {
+                if(parseInt(maxPages)>1)
+                    console.log("More pages were available but not retrieved",endpoint.toString())
+    
+                // TODO get all the pages
+            }
+    
+            return data;
         }
-    )
-
-    const data = await response.json();
-
-    if( response.ok ) {
-        let maxPages = response.headers.get("X-Pages");
-        if(maxPages) {
-            if(parseInt(maxPages)>1)
-                console.log("More pages were available but not retrieved",endpoint.toString())
-
-            // TODO get all the pages
-        }
-
-        return data;
+    
+    } catch(error) {
+        console.error(error);
     }
 
     return Promise.reject(response);

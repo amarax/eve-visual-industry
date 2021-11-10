@@ -4,6 +4,7 @@ import { LoadFromESI } from "./EveData";
 import type { Subscriber } from "svelte/store";
 
 import { base as basePath } from '$app/paths';
+import type { EveCharacterId } from "./EveCharacter";
 
 
 export enum ESIStoreStatus {
@@ -16,8 +17,7 @@ export interface ESIStore<T> extends Readable<T> {
     status: ESIStoreStatus;
 } 
 
-
-export default function CreateESIStore<Data>( route:string, onLoad?:(value)=>void ): ESIStore<Data> {
+export default function CreateESIStore<Data>( route:string, onLoad?:(value)=>void, characterId?:EveCharacterId ): ESIStore<Data> {
     let store = {
         status: ESIStoreStatus.loading,
         subscribe: null,
@@ -25,17 +25,27 @@ export default function CreateESIStore<Data>( route:string, onLoad?:(value)=>voi
 
     function start(set: Subscriber<Data>): ()=>void {
         if(store.status !== ESIStoreStatus.loaded) {
-            LoadFromESI(route)
-            .then((value)=>{
+            let handleValue = (value)=>{
                 if(onLoad) value = onLoad(value);
                 store.status=ESIStoreStatus.loaded;
-                set(value);
-            })
-            .catch((reason)=>{
+                set(value as Data);
+            };
+            let handleException = (reason)=>{
                 store.status=ESIStoreStatus.error;
                 set(null);
                 console.error(reason);
-            });
+            }
+
+            if(characterId) {
+                fetch(`${basePath}/esi${route}?${new URLSearchParams({char:characterId.toString()}).toString()}`)
+                    .then(response=>response.json())
+                    .then(handleValue)
+                    .catch(handleException)
+            } else {
+                LoadFromESI(route)
+                    .then(handleValue)
+                    .catch(handleException)
+        }
         }
         
         return ()=>{}

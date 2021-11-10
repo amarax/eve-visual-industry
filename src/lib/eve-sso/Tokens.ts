@@ -20,7 +20,7 @@ export function StoreToken(userId, characterId, token) {
 }
 
 export function GetAccessToken(characterId) {
-    return CharacterTokens.get(characterId).access_token;
+    return CharacterTokens.get(characterId)?.access_token;
 }
 
 export function GetCharacters(userId) {
