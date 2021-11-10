@@ -1,30 +1,29 @@
 <script lang="ts">
-    import { Characters, LoadAuthorisedCharacters } from "$lib/eve-data/EveCharacter";
-    import type { Character_Id } from "$lib/eve-data/EveCharacter";
-    import { onDestroy } from "svelte";
-    import type { EntityCollection } from "$lib/eve-data/EveData";
+    import { GetCharacterInfo } from "$lib/eve-data/EveCharacter";
+    import type { Character, Character_Id } from "$lib/eve-data/EveCharacter";
+    import { session } from "$app/stores";
 
     export let value: Character_Id = null;
 
-    let characterNames: EntityCollection<string> = {};
+    let characterIds = ($session.authenticatedESICharacters || []) as Array<Character_Id>;
+    let characters = new Map<Character_Id, Character>();
+    $: {
+        for(const id of characterIds) {
+            GetCharacterInfo(id).subscribe(char=>{
+                characters.set(id, char);
+                characters = characters;
 
-    let _unsubscribes = [];
-
-    LoadAuthorisedCharacters()
-        .then(()=>{
-            for(let character_id in Characters ) {
-                _unsubscribes.push( Characters[character_id].subscribe(character=>{characterNames[character_id]=character?.name}) );
-            }
-            value = parseInt( Object.keys(Characters)[0] );
-        })
-
-    onDestroy(()=>{
-        _unsubscribes.forEach(unsubscribe=>unsubscribe());
-    });
+                if(value === null) {
+                    value = id;
+                }
+            })
+        }
+    }
+   
 </script>
 
 <select bind:value={value}>
-    {#each Object.keys(characterNames) as character_id}
-        <option value={parseInt(character_id)}>{characterNames[character_id] || character_id}</option>
+    {#each characterIds as id}
+        <option value={id}>{characters.get(id)?.name || id}</option>
     {/each}
 </select>

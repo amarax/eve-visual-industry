@@ -48,27 +48,12 @@ export const CharacterBlueprints: {
     [index: Character_Id]: ESIStore<CharacterBlueprints>
 } = {}
 
-export async function LoadAuthorisedCharacters() {
-    if(!browser) return;
-
-    try{
-        let authorisedCharacterIds: Array<Character_Id> = await (await fetch(`${basePath}/esi-cache/authorisedCharacters.json`)).json();
-
-        for(let character_id of authorisedCharacterIds) {
-            Characters[character_id] = CreateESIStore(`/characters/${character_id}/`);
-            CharacterSkills[character_id] = CreateESIStoreFromCache(`/characters/${character_id}/skills/`);
-            CharacterBlueprints[character_id] = CreateESIStoreFromCache(`/characters/${character_id}/blueprints/`);
-            
-        }
-    }
-    catch(error) {
-        console.error(error);
-    }
-}
 
 export function GetCharacterInfo(id:Character_Id): ESIStore<Character> {
     if(!Characters[id]) {
         Characters[id] = CreateESIStore(`/characters/${id}/`);
+        CharacterSkills[id] = CreateESIStoreFromCache(`/characters/${id}/skills/`);
+        CharacterBlueprints[id] = CreateESIStoreFromCache(`/characters/${id}/blueprints/`);
     }
 
     return Characters[id];

@@ -19,12 +19,7 @@
 
     let authorizeQuery = "https://login.eveonline.com/v2/oauth/authorize/?" + searchParams.toString();
 
-    $: if(browser) {
-        console.log($session);
-    }
-
     let characterIds = ($session.authenticatedESICharacters || []) as Array<Character_Id>;
-    
     let characters: {[index:Character_Id]: Character} = {}
     $: {
         for(const id of characterIds) {

@@ -15,7 +15,8 @@ export const getSession: GetSession = ({headers, locals}) => {
 export const handle: Handle = async ({request, resolve}) =>{
     const {userid} = cookie.parse(request.headers.cookie ?? "");
     if(!userid) {
-        console.error("No userid in cookies", request.headers.cookie);
+        // Todo generate a random number as a userid and store it
+        console.error("No userid in cookies for request", request.path);
     } else {
         request.locals.userId = userid;
     }
