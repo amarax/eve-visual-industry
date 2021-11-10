@@ -58,3 +58,4 @@ export function GetCharacterInfo(id:EveCharacterId): ESIStore<Character> {
 
     return Characters[id];
 }
+

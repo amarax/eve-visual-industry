@@ -1,7 +1,3 @@
-<script lang="ts">
-	console.log("index");
-</script>
-
 <svelte:head>
 	<title>EVE Online Visual Industry Calculator</title>
 </svelte:head>

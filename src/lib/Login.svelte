@@ -1,9 +1,7 @@
 <script lang="ts">
-    import { browser } from "$app/env";
-
     import { base as basePath } from "$app/paths";
     import { session } from "$app/stores";
-    import { Characters, GetCharacterInfo } from "$lib/eve-data/EveCharacter";
+    import { GetCharacterInfo } from "$lib/eve-data/EveCharacter";
     import type { Character, EveCharacterId } from "$lib/eve-data/EveCharacter";
 
     const scopes = "esi-skills.read_skills.v1 esi-wallet.read_character_wallet.v1 esi-search.search_structures.v1 esi-universe.read_structures.v1 esi-assets.read_assets.v1 esi-planets.manage_planets.v1 esi-ui.open_window.v1 esi-markets.structure_markets.v1 esi-characters.read_standings.v1 esi-characters.read_agents_research.v1 esi-industry.read_character_jobs.v1 esi-markets.read_character_orders.v1 esi-characters.read_blueprints.v1 esi-contracts.read_character_contracts.v1 esi-clones.read_implants.v1 esi-industry.read_character_mining.v1";

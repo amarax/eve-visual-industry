@@ -1,11 +1,13 @@
 <script lang="ts">
     import { GetCharacterInfo } from "$lib/eve-data/EveCharacter";
     import type { Character, EveCharacterId } from "$lib/eve-data/EveCharacter";
-    import { session } from "$app/stores";
+    import { getContext } from "svelte";
+    import type { Readable } from "svelte/store";
 
     export let value: EveCharacterId = null;
 
-    let characterIds = ($session.authenticatedESICharacters || []) as Array<EveCharacterId>;
+    $: availableEveCharacters = getContext('availableEveCharacters') as Readable<Array<EveCharacterId>>;
+    $: characterIds = $availableEveCharacters;
     let characters = new Map<EveCharacterId, Character>();
     $: {
         for(const id of characterIds) {

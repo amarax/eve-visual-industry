@@ -5,7 +5,7 @@ import CreateESIStore from "./eve-data/ESIStore";
 import type {ESIStore} from "./eve-data/ESIStore";
 import EveTypes from "$lib/eve-data/EveTypes";
 
-    let selectedCharacterId: EveCharacterId
+    export let characterId: EveCharacterId
 
     type JobDetails = {
         activity_id,
@@ -29,10 +29,8 @@ import EveTypes from "$lib/eve-data/EveTypes";
     }
 
     let characterJobs: ESIStore<Array<JobDetails>>;
-    $: if(selectedCharacterId) characterJobs = CreateESIStore<Array<JobDetails>>(`/characters/${selectedCharacterId}/industry/jobs/`, null, selectedCharacterId)
+    $: if(characterId) characterJobs = CreateESIStore<Array<JobDetails>>(`/characters/${characterId}/industry/jobs/`, null, characterId)
 </script>
-
-<CharacterSelector bind:value={selectedCharacterId} />
 
 <p>
 {#each $characterJobs ?? [] as jobDetails}
