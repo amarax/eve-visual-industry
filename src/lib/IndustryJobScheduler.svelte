@@ -6,6 +6,7 @@
     import { afterUpdate } from "svelte";
 
     import { scaleLinear, scaleTime } from "d3-scale";
+import { Activity_Id, INVENTION_ACTIVITY_ID, MANUFACTURING_ACTIVITY_ID, REACTION_ACTIVITY_ID } from "./eve-data/EveIndustry";
 
     export let characterId: EveCharacterId
 
@@ -31,8 +32,14 @@
     }
 
     let characterJobs: ESIStore<Array<JobDetails>>;
-    $: if(characterId) characterJobs = CreateESIStore<Array<JobDetails>>(`/characters/${characterId}/industry/jobs/`, null, characterId)
-    $: _jobs = $characterJobs ?? [] as Array<JobDetails>;
+    $: if(characterId) characterJobs = CreateESIStore<Array<JobDetails>>(`/characters/${characterId}/industry/jobs/`, null, {char:characterId, include_completed:true})
+
+    let _jobs: Array<JobDetails>;
+    $: {
+        _jobs = $characterJobs ?? [] as Array<JobDetails>;
+        _jobs?.sort((a,b)=>a.facility_id - b.facility_id)
+    }
+    
 
 
     const rowHeight = 20;
@@ -49,11 +56,24 @@
     const margin = 2;
 
     
+    function activityToClass(activityId: Activity_Id) {
+        switch(activityId) {
+            case MANUFACTURING_ACTIVITY_ID:
+                return "manufacturing";
+            case REACTION_ACTIVITY_ID:
+                return "reaction";
+            case INVENTION_ACTIVITY_ID:
+                return "invention";
+            default:
+                return "";
+        }
+    }
+
     
     let scheduleChart: SVGElement;
-    let xOffset: number = 0;
+    export let xOffset: number = 0;
     afterUpdate(()=>{
-        scheduleChart?.setAttribute('viewBox',`${xOffset} 0 ${scheduleChart.clientWidth} ${scheduleChart.clientHeight}`)
+        // scheduleChart?.setAttribute('viewBox',`${xOffset} 0 ${scheduleChart.clientWidth} ${scheduleChart.clientHeight}`)
     })
 </script>
 
@@ -64,9 +84,19 @@
         rect.job {
             fill: #333;
             stroke: none;
+
+            &.manufacturing {
+                fill: rgb(132, 86, 0);
+            }
+            &.reaction {
+                fill: rgb(0, 132, 128);
+            }
+            &.invention {
+                fill: rgb(0, 59, 132);
+            }
         }
 
-        g:hover {
+        g.job:hover {
             rect.job {
                 fill: #444;
             }
@@ -91,26 +121,20 @@
             pointer-events: none;
         }
 
-        rect.bounds {
-            fill: none;
-            stroke: #fff;
-            stroke-width: 1px;
-        }
     }
 </style>
 
-<p>
-<svg bind:this={scheduleChart} width="100%" height={Math.max(_jobs.length, 1)*rowHeight} preserveAspectRatio="xMinYMin slice">
-    <rect class="bounds" x={0} y={0} height="100%" width="100%" />
+<svg bind:this={scheduleChart} width="100%" height={Math.max(_jobs.length, 1)*rowHeight}>
+    <g class="canvas" transform={`translate(${xOffset})`}>
 
-    <rect class="now" x={x(Date.now())} width={1} y={0} height={y(_jobs.length)} />
-    {#each _jobs as job, i}
-        <g transform={`translate(${x(job.start_date)}, ${y(i)})`}>
-            <rect class="job" width={x(job.end_date)-x(job.start_date)} y={margin} height={y(i+1)-y(i) - margin*2} />
-            <text y={13} x={4}>{$EveTypes.get(job.product_type_id)?.name} x{job.runs}</text>
-        </g>
-    {/each}
+        <rect class="now" x={x(Date.now())} width={1} y={0} height={y(_jobs.length)} />
+        {#each _jobs as job, i (job.job_id)}
+            <g class="job" transform={`translate(${x(job.start_date)}, ${y(i)})`}>
+                <rect class={`job ${activityToClass(job.activity_id)}`} width={x(job.end_date)-x(job.start_date)} y={margin} height={y(i+1)-y(i) - margin*2} 
+                    on:click={event=>console.log(job)}
+                />
+                <text y={13} x={4}>{$EveTypes.get(job.product_type_id)?.name} x{job.runs}</text>
+            </g>
+        {/each}
+    </g>
 </svg>
-<input type="range" bind:value={xOffset} min={-800} max={800} />
-
-</p>

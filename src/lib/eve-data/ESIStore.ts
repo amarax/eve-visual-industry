@@ -17,7 +17,7 @@ export interface ESIStore<T> extends Readable<T> {
     status: ESIStoreStatus;
 } 
 
-export default function CreateESIStore<Data>( route:string, onLoad?:(value)=>void, characterId?:EveCharacterId ): ESIStore<Data> {
+export default function CreateESIStore<Data>( route:string, onLoad?:(value)=>void, params?:any ): ESIStore<Data> {
     let store = {
         status: ESIStoreStatus.loading,
         subscribe: null,
@@ -36,8 +36,8 @@ export default function CreateESIStore<Data>( route:string, onLoad?:(value)=>voi
                 console.error(reason);
             }
 
-            if(characterId) {
-                fetch(`${basePath}/esi${route}?${new URLSearchParams({char:characterId.toString()}).toString()}`)
+            if(params) {
+                fetch(`${basePath}/esi${route}?${new URLSearchParams(params).toString()}`)
                     .then(response=>response.json())
                     .then(handleValue)
                     .catch(handleException)

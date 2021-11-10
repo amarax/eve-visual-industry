@@ -6,9 +6,10 @@ import type { RequestHandler } from "@sveltejs/kit";
 export const get: RequestHandler = async ({query, locals, params}) => {
     let characterId = parseInt(query.get("char"));
 
+
     let body;
     try {
-        body = await LoadFromESI(`/${params.endpoint}`, {characterId});
+        body = await LoadFromESI(`/${params.endpoint}?${query.toString()}`, {characterId});
     } catch(error) {
         console.error(error);
     }
