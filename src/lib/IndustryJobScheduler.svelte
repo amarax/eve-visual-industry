@@ -186,10 +186,13 @@ import { Activity_Id, INVENTION_ACTIVITY_ID, MANUFACTURING_ACTIVITY_ID, REACTION
         {#each [...rows.values()] as row, r}
             {#each row as job (job.job_id)}
                 <g class="job" transform={`translate(${x(job.start_date)}, ${y(r)})`}>
+                    <clipPath  id={`job-${job.job_id}`}>
+                        <rect width={x(job.end_date)-x(job.start_date)} y={margin} height={y(r+1)-y(r) - margin*2} />
+                    </clipPath>
                     <rect class={`job ${activityToClass(job.activity_id)} ${job.status}`} width={x(job.end_date)-x(job.start_date)} y={margin} height={y(r+1)-y(r) - margin*2} 
                         on:click={event=>console.log(job)}
                     />
-                    <text y={13} x={4}>{$EveTypes.get(job.product_type_id)?.name} x{job.runs}</text>
+                    <text clip-path={`url(#job-${job.job_id})`} y={13} x={4}>{$EveTypes.get(job.product_type_id)?.name} x{job.runs}</text>
                 </g>
             {/each}
         {/each}
