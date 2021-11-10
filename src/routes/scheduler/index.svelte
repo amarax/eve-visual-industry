@@ -17,7 +17,7 @@ let availableEveCharacters = getContext('availableEveCharacters') as Readable<Ar
 </script>
 
 
-{#each $availableEveCharacters as characterId }
+{#each $availableEveCharacters as characterId (characterId) }
 <IndustryJobScheduler {characterId} />
     
 {/each}
