@@ -1,10 +1,12 @@
 <script lang="ts">
+import { onDestroy, onMount } from "svelte";
+
 import { Activity_Id, INVENTION_ACTIVITY_ID, MANUFACTURING_ACTIVITY_ID, REACTION_ACTIVITY_ID } from "./eve-data/EveIndustry";
 import EveTypes from "./eve-data/EveTypes";
 import type { JobDetails } from "./IndustryJobScheduler";
 
 
-    export let r: number;
+    export let row: number;
     export let job: JobDetails
 
     export let x: (datetime: number|string)=>number;
@@ -35,6 +37,8 @@ import type { JobDetails } from "./IndustryJobScheduler";
         --invention-color: rgb(48, 148, 191);
         --blueprint-color: rgb(0, 84, 187);
 
+
+        transition: transform 300ms;
 
         rect.job {
             fill: var(--blueprint-color);
@@ -82,12 +86,12 @@ import type { JobDetails } from "./IndustryJobScheduler";
     }
 </style>
 
-<g transform={`translate(${x(job.start_date)}, ${y(r)})`}>
+<g transform={`translate(0 ${y(row)})`}>
     <clipPath id={`job-${job.job_id}`}>
-        <rect width={x(job.end_date)-x(job.start_date)} y={margin} height={y(r+1)-y(r) - margin*2} />
+        <rect x={x(job.start_date)} width={x(job.end_date)-x(job.start_date)} y={margin} height={y(row+1)-y(row) - margin*2} />
     </clipPath>
-    <rect class={`job ${activityToClass(job.activity_id)} ${job.status}`} width={x(job.end_date)-x(job.start_date)} y={margin} height={y(r+1)-y(r) - margin*2} 
+    <rect x={x(job.start_date)} class={`job ${activityToClass(job.activity_id)} ${job.status}`} width={x(job.end_date)-x(job.start_date)} y={margin} height={y(row+1)-y(row) - margin*2} 
         on:click={event=>console.log(job)}
     />
-    <text clip-path={`url(#job-${job.job_id})`} y={13} x={4}>{$EveTypes.get(job.product_type_id)?.name} x{job.runs}</text>
+    <text clip-path={`url(#job-${job.job_id})`} y={13} x={x(job.start_date)+4}>{$EveTypes.get(job.product_type_id)?.name} x{job.runs}</text>
 </g>

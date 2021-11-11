@@ -102,6 +102,7 @@ import IndustryJobScheduleBlock from "./IndustryJobScheduleBlock.svelte";
 
     // Assign the jobs into rows
     let rows = new Map<number, Array<JobDetails>>();
+    let flattenedRows: Array<{row: number, job: JobDetails}> = [];
     $: {
         // Group jobs in the same facility together
         let facilities = new Map<number, Array<JobDetails>>();
@@ -140,10 +141,20 @@ import IndustryJobScheduleBlock from "./IndustryJobScheduleBlock.svelte";
             }
         }
 
+        flattenedRows = [];
+        for(let [row, jobs] of rows.entries()) {
+            for(let job of jobs) {
+                flattenedRows.push({row, job});
+            }
+        }
+        // Sort so the DOM elements will be the same order
+        flattenedRows.sort((a,b)=>a.job.job_id - b.job.job_id);
+        flattenedRows = flattenedRows;
     }
-
+    
 
     let scheduledRows = new Map<number, Array<JobDetails>>();
+    let flattenedScheduledRows = [];
     $: {
         scheduledRows.clear();
         // For now just add the scheduled rows to any empty row
@@ -167,6 +178,15 @@ import IndustryJobScheduleBlock from "./IndustryJobScheduleBlock.svelte";
             }
         }
         scheduledRows = scheduledRows;
+
+        flattenedScheduledRows = [];
+        for(let [row, jobs] of scheduledRows.entries()) {
+            for(let job of jobs) {
+                flattenedScheduledRows.push({row, job});
+            }
+        }
+        flattenedScheduledRows.sort((a,b)=>a.job.job_id - b.job.job_id);
+        flattenedScheduledRows = flattenedScheduledRows;
     }
 
 
@@ -240,15 +260,11 @@ import IndustryJobScheduleBlock from "./IndustryJobScheduleBlock.svelte";
     <g class="canvas" transform={`translate(${xOffset*100})`}>
 
         <rect class="now" x={x(Date.now())} width={1} y={0} height={y(rows.size)} />
-        {#each [...rows.values()] as row, r (r)}
-            {#each row as job (job.job_id)}
-                <IndustryJobScheduleBlock {r} {job} {x} {y} />
-            {/each}
+        {#each flattenedRows as {row, job} (job.job_id)}
+            <IndustryJobScheduleBlock {row} {job} {x} {y} />
         {/each}
-        {#each [...scheduledRows.entries()] as [r, row] (r)}
-            {#each row as job (job.job_id)}
-                <IndustryJobScheduleBlock {r} {job} {x} {y} />
-            {/each}
+        {#each flattenedScheduledRows as {row, job} (job.job_id)}
+            <IndustryJobScheduleBlock {row} {job} {x} {y} />
         {/each}
     </g>
 </svg>
