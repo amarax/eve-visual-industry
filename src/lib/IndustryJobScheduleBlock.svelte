@@ -39,7 +39,11 @@ import type { JobDetails } from "./IndustryJobScheduler";
     // NOTE this line has the hack for REACTION_ACTIVITY_ID that addresses the discrepancy between TQ reaction id and SDE reaction id
     $: producedItems = industryJob ? $industryJob.producedQuantity : $Industry.types[job.blueprint_type_id].activities[job.activity_id == 9?REACTION_ACTIVITY_ID:job.activity_id]?.products[job.product_type_id]?.quantity * job.runs;
 
-    $: textLabel = `${$EveTypes.get(job.product_type_id)?.name} x${producedItems}`
+    let textLabel: string;
+    $: {
+        textLabel = $EveTypes.get(job.product_type_id)?.name;
+        if(!isNaN(producedItems)) textLabel += ` x${producedItems}` // There is no quantity for research activities
+    }
 </script>
 
 <style lang="scss">

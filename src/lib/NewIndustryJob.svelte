@@ -16,13 +16,20 @@ import ReactionActivity from "./ReactionActivity.svelte";
 
     let collapsed = true;
 
+    $: job.update({
+        blueprintModifiers: {
+            materialEfficiency: blueprint.material_efficiency,
+            timeEfficiency: blueprint.time_efficiency
+        }
+    })
+
     let maxRuns: number;
     $: {
         maxRuns = blueprint?.runs;
         if(maxRuns == -1) {
             maxRuns = $Industry.types[blueprint.type_id].maxProductionLimit;
         }
-    }    
+    }
 </script>
 
 <style lang="scss">
