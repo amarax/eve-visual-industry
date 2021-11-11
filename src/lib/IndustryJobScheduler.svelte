@@ -12,9 +12,23 @@
 
     export let characterId: EveCharacterId
 
+    type EveItemId = number;
+
+    interface JobDetails {
+        job_id,
+        activity_id,
+        blueprint_id,
+        blueprint_location_id,
+        blueprint_type_id,
+        end_date,
+        start_date,
+        status,
+        runs,
+        product_type_id,
+    }
 
 
-    let characterJobs: ESIStore<Array<EveJobDetails>>;
+    let characterJobs: ESIStore<Array<JobDetails>>;
     let characterBlueprints: ESIStore<Array<EveBlueprint>>;
     let _prevCharacterId: EveCharacterId;
     $: if(characterId && _prevCharacterId !== characterId) {
@@ -29,20 +43,29 @@
     }
 
 
+    let newJobs = []
 
+    let selectedBlueprintItem: EveItemId;
+    function addJob() {
+        let _selectedBlueprintItem = blueprints.find(b=>b.item_id===selectedBlueprintItem);
+
+        newJobs.push({
+            
+        })
+    }
 
         
     export let groupBy = "activity_id";
 
-    let _jobs: Array<EveJobDetails>;
+    let _jobs: Array<JobDetails>;
     $: {
-        _jobs = $characterJobs instanceof Array ? $characterJobs : [] as Array<EveJobDetails>;
+        _jobs = $characterJobs instanceof Array ? $characterJobs : [];
         _jobs.sort((a,b)=>a[groupBy] - b[groupBy])
     }
     
 
     // Assign the jobs into rows
-    let rows = new Map<number, Array<EveJobDetails>>();
+    let rows = new Map<number, Array<JobDetails>>();
     $: {
         // Group jobs in the same facility together
         let facilities = new Map<number, Array<EveJobDetails>>();
@@ -103,7 +126,7 @@
         switch(activityId) {
             case MANUFACTURING_ACTIVITY_ID:
                 return "manufacturing";
-            case REACTION_ACTIVITY_ID:
+            case 9: // Somehow on TQ the reaction activity id is different from the SDE
                 return "reaction";
             case INVENTION_ACTIVITY_ID:
                 return "invention";
@@ -175,11 +198,12 @@
     }
 </style>
 
-<select>
+<select bind:value={selectedBlueprintItem}>
     {#each blueprints as blueprint (blueprint.item_id)}
         <option disabled={_jobs.find(job=>job.blueprint_id===blueprint.item_id && new Date(job.end_date).getTime() > Date.now()) !== undefined}>{$EveTypes.get(blueprint.type_id)?.name ?? blueprint.type_id} </option>
     {/each}
 </select>
+<button>Add</button>
 
 <svg bind:this={scheduleChart} width="100%" height={Math.max(rows.size, 1)*rowHeight}>
     <g class="canvas" transform={`translate(${xOffset*100})`}>
