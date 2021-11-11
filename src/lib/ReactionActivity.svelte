@@ -16,11 +16,14 @@
     import LocationSelector from "$lib/components/LocationSelector.svelte";
     import { getContext, setContext } from "svelte";
     import { ApplyEffects, IndustryDogmaAttributes } from "./eve-data/EveDogma";
+import type { EveBlueprint } from "./eve-data/ESI";
 
 
     export let productTypeId: Type_Id = null;
 
     export let job: IndustryJobStore = null;
+
+    export let blueprint: EveBlueprint = null;
 
     let _job: IndustryJobStore;
     $: if(!job && productTypeId) {
@@ -162,6 +165,16 @@
     }
 
     // #endregion
+
+    let maxRuns: number;
+    $: {
+        maxRuns = blueprint?.runs;
+        if(maxRuns == -1) {
+            maxRuns = $Industry.types[blueprint.type_id].maxProductionLimit;
+        }
+    }
+
+
 </script>
 
 <div class={`breakdown ${!compact?"summary":""}`}>
@@ -193,7 +206,7 @@
 </div>
 
 <div class="combinedInput">
-    Runs <input type="range" bind:value={runs} min={1} disabled={requiredQuantity !== null && !overrideRequiredQuantity} /> <input type="number" bind:value={runs} disabled={requiredQuantity !== null && !overrideRequiredQuantity} /> 
+    Runs <input type="range" bind:value={runs} min={1} max={maxRuns} disabled={requiredQuantity !== null && !overrideRequiredQuantity} /> <input type="number" bind:value={runs} disabled={requiredQuantity !== null && !overrideRequiredQuantity} /> 
     {#if requiredQuantity !== null}
         <label><input type="checkbox" bind:checked={overrideRequiredQuantity} /> Override</label> 
     {/if}

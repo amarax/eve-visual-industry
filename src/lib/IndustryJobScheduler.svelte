@@ -280,7 +280,7 @@ import { get } from "svelte/store";
 </select>
 <button on:click={addJob}>Add</button>
 {#each [...scheduledJobs.values()] as job}
-    <NewIndustryJob blueprintLocation={job.blueprint_location_id} job={job.industryJob} /> <button on:click={event=>removeJob(job.job_id)}>Remove</button>
+    <NewIndustryJob blueprint={blueprints.find(b=>b.item_id===job.blueprint_id) } job={job.industryJob} /> <button on:click={event=>removeJob(job.job_id)}>Remove</button>
 {/each}
 
 <svg bind:this={scheduleChart} width="100%" height={Math.max(rows.size, 1)*rowHeight}>
