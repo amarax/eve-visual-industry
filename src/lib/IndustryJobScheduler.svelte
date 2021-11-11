@@ -6,48 +6,46 @@
     import { afterUpdate } from "svelte";
 
     import { scaleLinear, scaleTime } from "d3-scale";
-import { Activity_Id, INVENTION_ACTIVITY_ID, MANUFACTURING_ACTIVITY_ID, REACTION_ACTIVITY_ID } from "./eve-data/EveIndustry";
+    import { INVENTION_ACTIVITY_ID, MANUFACTURING_ACTIVITY_ID, REACTION_ACTIVITY_ID } from "$lib/eve-data/EveIndustry";
+    import type { Activity_Id } from "$lib/eve-data/EveIndustry";
+    import type { EveBlueprint, EveJobDetails } from "$lib/eve-data/ESI";
 
     export let characterId: EveCharacterId
 
-    type JobDetails = {
-        activity_id,
-        blueprint_id,
-        blueprint_location_id,
-        blueprint_type_id,
-        cost,
-        duration,
-        end_date,
-        facility_id,
-        installer_id,
-        job_id,
-        licensed_runs,
-        output_location_id,
-        probability,
-        product_type_id,
-        runs,
-        start_date,
-        station_id,
-        status,
+
+
+    let characterJobs: ESIStore<Array<EveJobDetails>>;
+    let characterBlueprints: ESIStore<Array<EveBlueprint>>;
+    let _prevCharacterId: EveCharacterId;
+    $: if(characterId && _prevCharacterId !== characterId) {
+        characterJobs = CreateESIStore<Array<EveJobDetails>>(`/characters/${characterId}/industry/jobs/`, null, {char:characterId, include_completed:true});
+        characterBlueprints = CreateESIStore<Array<EveBlueprint>>(`/characters/${characterId}/blueprints/`, null, {char:characterId});
+        _prevCharacterId = characterId;
     }
 
-    let characterJobs: ESIStore<Array<JobDetails>>;
-    $: if(characterId) characterJobs = CreateESIStore<Array<JobDetails>>(`/characters/${characterId}/industry/jobs/`, null, {char:characterId, include_completed:true})
+    let blueprints: Array<EveBlueprint>;
+    $: {
+        blueprints = $characterBlueprints instanceof Array ? $characterBlueprints : [];
+    }
 
+
+
+
+        
     export let groupBy = "activity_id";
 
-    let _jobs: Array<JobDetails>;
+    let _jobs: Array<EveJobDetails>;
     $: {
-        _jobs = $characterJobs instanceof Array ? $characterJobs : [] as Array<JobDetails>;
+        _jobs = $characterJobs instanceof Array ? $characterJobs : [] as Array<EveJobDetails>;
         _jobs.sort((a,b)=>a[groupBy] - b[groupBy])
     }
     
 
     // Assign the jobs into rows
-    let rows = new Map<number, Array<JobDetails>>();
+    let rows = new Map<number, Array<EveJobDetails>>();
     $: {
         // Group jobs in the same facility together
-        let facilities = new Map<number, Array<JobDetails>>();
+        let facilities = new Map<number, Array<EveJobDetails>>();
         _jobs.forEach(job=>{
             if(!facilities.has(job[groupBy])) {
                 facilities.set(job[groupBy], []);
@@ -117,9 +115,7 @@ import { Activity_Id, INVENTION_ACTIVITY_ID, MANUFACTURING_ACTIVITY_ID, REACTION
     
     let scheduleChart: SVGElement;
     export let xOffset: number = 0;
-    afterUpdate(()=>{
-        // scheduleChart?.setAttribute('viewBox',`${xOffset} 0 ${scheduleChart.clientWidth} ${scheduleChart.clientHeight}`)
-    })
+
 </script>
 
 <style lang="scss">
@@ -178,6 +174,12 @@ import { Activity_Id, INVENTION_ACTIVITY_ID, MANUFACTURING_ACTIVITY_ID, REACTION
 
     }
 </style>
+
+<select>
+    {#each blueprints as blueprint (blueprint.item_id)}
+        <option disabled={_jobs.find(job=>job.blueprint_id===blueprint.item_id && new Date(job.end_date).getTime() > Date.now()) !== undefined}>{$EveTypes.get(blueprint.type_id)?.name ?? blueprint.type_id} </option>
+    {/each}
+</select>
 
 <svg bind:this={scheduleChart} width="100%" height={Math.max(rows.size, 1)*rowHeight}>
     <g class="canvas" transform={`translate(${xOffset*100})`}>
