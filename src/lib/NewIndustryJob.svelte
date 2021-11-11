@@ -25,10 +25,27 @@ import ReactionActivity from "./ReactionActivity.svelte";
     }    
 </script>
 
+<style lang="scss">
+    input[type=number] {
+        width: 60px;
+        text-align: right;
+    }
+
+    .itemName {
+        display:inline-block;
+        
+        overflow-x: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+
+        width: 200px;
+    }
+</style>
+
 {#if job}
     {#if collapsed}
         <button on:click={()=>collapsed=false}>+</button> 
-        {$EveTypes.get($job.selectedProduct).name} 
+        <span class="itemName" title={$EveTypes.get($job.selectedProduct).name}>{$EveTypes.get($job.selectedProduct).name}</span>
         <input type="number" value={$job.runs} on:input={event=>job.update({runs:parseInt(event.currentTarget.value)})} />
         <FacilitySelector activity={$job.activity.activity.activityID} bind:value={location} on:change={event=>job.update({facilityModifiers:event.detail})} />
     {:else}

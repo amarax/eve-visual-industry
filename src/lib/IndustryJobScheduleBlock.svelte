@@ -1,8 +1,10 @@
 <script lang="ts">
 import { onDestroy, onMount } from "svelte";
 
-import { Activity_Id, INVENTION_ACTIVITY_ID, MANUFACTURING_ACTIVITY_ID, REACTION_ACTIVITY_ID } from "./eve-data/EveIndustry";
+import { Activity_Id, Industry, INVENTION_ACTIVITY_ID, MANUFACTURING_ACTIVITY_ID, REACTION_ACTIVITY_ID } from "./eve-data/EveIndustry";
+import type { Quantity } from "./eve-data/EveMarkets";
 import EveTypes from "./eve-data/EveTypes";
+import type { IndustryJobStore } from "./IndustryJob";
 import type { JobDetails } from "./IndustryJobScheduler";
 
 
@@ -28,6 +30,14 @@ import type { JobDetails } from "./IndustryJobScheduler";
                 return "";
         }
     }
+
+    let industryJob: IndustryJobStore;
+    $: if(job.industryJob) {
+        industryJob = job.industryJob;
+    }
+
+    // NOTE this line has the hack for REACTION_ACTIVITY_ID that addresses the discrepancy between TQ reaction id and SDE reaction id
+    $: producedItems = industryJob ? $industryJob.producedQuantity : $Industry.types[job.blueprint_type_id].activities[job.activity_id == 9?REACTION_ACTIVITY_ID:job.activity_id]?.products[job.product_type_id]?.quantity * job.runs;
 </script>
 
 <style lang="scss">
@@ -93,5 +103,5 @@ import type { JobDetails } from "./IndustryJobScheduler";
     <rect x={x(job.start_date)} class={`job ${activityToClass(job.activity_id)} ${job.status}`} width={x(job.end_date)-x(job.start_date)} y={margin} height={y(row+1)-y(row) - margin*2} 
         on:click={event=>console.log(job)}
     />
-    <text clip-path={`url(#job-${job.job_id})`} y={13} x={x(job.start_date)+4}>{$EveTypes.get(job.product_type_id)?.name} x{job.runs}</text>
+    <text clip-path={`url(#job-${job.job_id})`} y={13} x={x(job.start_date)+4}>{$EveTypes.get(job.product_type_id)?.name} x{producedItems}</text>
 </g>
