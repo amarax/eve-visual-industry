@@ -8,7 +8,7 @@ import { browser } from "$app/env";
 import { base as basePath } from '$app/paths';
 
 
-export type Character_Id = number;
+export type EveCharacterId = number;
 
 export type Character = {
     name: string,
@@ -37,32 +37,25 @@ export type CharacterBlueprints = Array<{
 }>
 
 export const Characters: {
-    [index: Character_Id]: ESIStore<Character>
+    [index: EveCharacterId]: ESIStore<Character>
 } = {}
 
 export const CharacterSkills: {
-    [index: Character_Id]: ESIStore<CharacterSkills>
+    [index: EveCharacterId]: ESIStore<CharacterSkills>
 } = {}
 
 export const CharacterBlueprints: {
-    [index: Character_Id]: ESIStore<CharacterBlueprints>
+    [index: EveCharacterId]: ESIStore<CharacterBlueprints>
 } = {}
 
-export async function LoadAuthorisedCharacters() {
-    if(!browser) return;
 
-    try{
-        let authorisedCharacterIds: Array<Character_Id> = await (await fetch(`${basePath}/esi-cache/authorisedCharacters.json`)).json();
+export function GetCharacterInfo(id:EveCharacterId): ESIStore<Character> {
+    if(!Characters[id]) {
+        Characters[id] = CreateESIStore(`/characters/${id}/`);
+        CharacterSkills[id] = CreateESIStoreFromCache(`/characters/${id}/skills/`);
+        CharacterBlueprints[id] = CreateESIStoreFromCache(`/characters/${id}/blueprints/`);
+    }
 
-        for(let character_id of authorisedCharacterIds) {
-            Characters[character_id] = CreateESIStore(`/characters/${character_id}/`);
-            CharacterSkills[character_id] = CreateESIStoreFromCache(`/characters/${character_id}/skills/`);
-            CharacterBlueprints[character_id] = CreateESIStoreFromCache(`/characters/${character_id}/blueprints/`);
-            
-        }
-    }
-    catch(error) {
-        console.error(error);
-    }
+    return Characters[id];
 }
 

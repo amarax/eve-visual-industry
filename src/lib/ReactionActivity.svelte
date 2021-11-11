@@ -8,7 +8,7 @@
     import type { Type_Id, EveLocation } from "$lib/eve-data/EveData";
     import type { IskAmount, Quantity } from "$lib/eve-data/EveMarkets";
     import { Readable, writable, Writable } from "svelte/store";
-    import type { Character_Id } from "$lib/eve-data/EveCharacter";
+    import type { EveCharacterId } from "$lib/eve-data/EveCharacter";
 
     import { FormatDuration, FormatIskAmount, FormatIskChange } from "$lib/Format";
     import MarketOrdersBar from "$lib/components/MarketOrdersBar.svelte";
@@ -42,7 +42,7 @@
 
     // #region Character-related
 
-    let currentCharacter = getContext('currentCharacter') as Readable<Character_Id>;
+    let currentCharacter = getContext('currentCharacter') as Readable<EveCharacterId>;
     $: characterSkills = CharacterSkills[$currentCharacter];
     
     const REACTION_TIME_ATTRIBUTE_ID = 2660;

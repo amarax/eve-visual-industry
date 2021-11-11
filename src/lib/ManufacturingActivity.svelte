@@ -3,7 +3,7 @@
     import { MANUFACTURING_ACTIVITY_ID, Industry, GetBlueprintToManufacture, GetInventableBlueprint, ADVANCED_INDUSTRY_SKILL_ID, IndustrySystems, GetReactionActivity } from "$lib/eve-data/EveIndustry";
     import { IskAmount, MarketPrices } from "$lib/eve-data/EveMarkets";
     import { IndustryDogmaAttributes } from "$lib/eve-data/EveDogma";
-    import { CharacterSkills, Character_Id } from "$lib/eve-data/EveCharacter";
+    import { CharacterSkills, EveCharacterId } from "$lib/eve-data/EveCharacter";
 
     import type { Location_Id, EntityCollection, Type_Id } from "$lib/eve-data/EveData";
     import type { IndustryActivity } from "$lib/eve-data/EveIndustry";
@@ -142,7 +142,7 @@ import type { Readable } from "svelte/store";
         }
     }
 
-    let currentCharacter = getContext('currentCharacter') as Readable<Character_Id>;
+    let currentCharacter = getContext('currentCharacter') as Readable<EveCharacterId>;
 
 
     export let extents: Array<number> = null;

@@ -1,17 +1,19 @@
 <script lang="ts">
     import CharacterSelector from '$lib/components/CharacterSelector.svelte';
-    import { CharacterBlueprints, Character_Id } from '$lib/eve-data/EveCharacter';
+    import { CharacterBlueprints, EveCharacterId } from '$lib/eve-data/EveCharacter';
     import { GetLocationStore } from '$lib/eve-data/EveData';
     import LocationSelector from '$lib/components/LocationSelector.svelte';
     import { onMount, setContext } from 'svelte';
-    import { writable } from 'svelte/store';
+    import { readable, writable } from 'svelte/store';
 
     import type { Location_Id } from '$lib/eve-data/EveData';
     
     import EveTypes from '$lib/eve-data/EveTypes';
     import EveMarketGroups from '$lib/eve-data/EveMarketGroups';
+    import Login from '$lib/Login.svelte';
 
     import '../app.scss';
+import { session } from '$app/stores';
 
 
     $: loaded = $EveTypes.size > 0 && $EveMarketGroups.size > 0;
@@ -59,9 +61,18 @@
     let marketFilterLocation = writable<Location_Id>(null);
     setContext('marketFilterLocation', marketFilterLocation);
 
-    let currentCharacter = writable<Character_Id>(null);
+    let currentCharacter = writable<EveCharacterId>(null);
     setContext('currentCharacter', currentCharacter);
+
+    const availableEveCharacters = writable<Array<EveCharacterId>>([]);
+    setContext('availableEveCharacters', availableEveCharacters);
+    $: $availableEveCharacters = $session.authenticatedESICharacters ?? [];
 </script>
+
+<p>
+    <Login />
+</p>
+
 
 {#if loaded}
     <CharacterSelector bind:value={$currentCharacter} /><br/>

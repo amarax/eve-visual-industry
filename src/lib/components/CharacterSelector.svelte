@@ -1,30 +1,31 @@
 <script lang="ts">
-    import { Characters, LoadAuthorisedCharacters } from "$lib/eve-data/EveCharacter";
-    import type { Character_Id } from "$lib/eve-data/EveCharacter";
-    import { onDestroy } from "svelte";
-    import type { EntityCollection } from "$lib/eve-data/EveData";
+    import { GetCharacterInfo } from "$lib/eve-data/EveCharacter";
+    import type { Character, EveCharacterId } from "$lib/eve-data/EveCharacter";
+    import { getContext } from "svelte";
+    import type { Readable } from "svelte/store";
 
-    export let value: Character_Id = null;
+    export let value: EveCharacterId = null;
 
-    let characterNames: EntityCollection<string> = {};
+    $: availableEveCharacters = getContext('availableEveCharacters') as Readable<Array<EveCharacterId>>;
+    $: characterIds = $availableEveCharacters;
+    let characters = new Map<EveCharacterId, Character>();
+    $: {
+        for(const id of characterIds) {
+            GetCharacterInfo(id).subscribe(char=>{
+                characters.set(id, char);
+                characters = characters;
 
-    let _unsubscribes = [];
-
-    LoadAuthorisedCharacters()
-        .then(()=>{
-            for(let character_id in Characters ) {
-                _unsubscribes.push( Characters[character_id].subscribe(character=>{characterNames[character_id]=character?.name}) );
-            }
-            value = parseInt( Object.keys(Characters)[0] );
-        })
-
-    onDestroy(()=>{
-        _unsubscribes.forEach(unsubscribe=>unsubscribe());
-    });
+                if(value === null) {
+                    value = id;
+                }
+            })
+        }
+    }
+   
 </script>
 
 <select bind:value={value}>
-    {#each Object.keys(characterNames) as character_id}
-        <option value={parseInt(character_id)}>{characterNames[character_id] || character_id}</option>
+    {#each characterIds as id}
+        <option value={id}>{characters.get(id)?.name || id}</option>
     {/each}
 </select>
