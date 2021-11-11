@@ -278,7 +278,7 @@ import { get } from "svelte/store";
         <option value={blueprint.item_id}>{$EveTypes.get(blueprint.type_id)?.name ?? blueprint.type_id} </option>
     {/each}
 </select>
-<button on:click={addJob}>Add</button>
+<button on:click={addJob}>Add</button><br/>
 {#each [...scheduledJobs.values()] as job}
     <NewIndustryJob blueprint={blueprints.find(b=>b.item_id===job.blueprint_id) } job={job.industryJob} /> <button on:click={event=>removeJob(job.job_id)}>Remove</button>
 {/each}

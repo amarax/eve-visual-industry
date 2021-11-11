@@ -34,13 +34,9 @@ import type { EveBlueprint } from "./eve-data/ESI";
     $: _productTypeId = $_job.selectedProduct;
 
     export let requiredQuantity: Quantity = null; 
-    let runs: number = 1;
     let overrideRequiredQuantity: boolean = false;
-    $: if(requiredQuantity === null || overrideRequiredQuantity) { 
-        _job.update({runs});
-    } else {
+    $: if(requiredQuantity !== null && !overrideRequiredQuantity) { 
         _job.update({requiredQuantity});
-        runs = $_job.runs;
     }
 
     type ItemPickedList = {
@@ -173,8 +169,6 @@ import type { EveBlueprint } from "./eve-data/ESI";
             maxRuns = $Industry.types[blueprint.type_id].maxProductionLimit;
         }
     }
-
-
 </script>
 
 <div class={`breakdown ${!compact?"summary":""}`}>
@@ -206,7 +200,7 @@ import type { EveBlueprint } from "./eve-data/ESI";
 </div>
 
 <div class="combinedInput">
-    Runs <input type="range" bind:value={runs} min={1} max={maxRuns} disabled={requiredQuantity !== null && !overrideRequiredQuantity} /> <input type="number" bind:value={runs} disabled={requiredQuantity !== null && !overrideRequiredQuantity} /> 
+    Runs <input type="range" value={$job.runs} on:input={event=>job.update({runs:parseInt(event.currentTarget.value)})} min={1} max={maxRuns} disabled={requiredQuantity !== null && !overrideRequiredQuantity} /> <input type="number" value={$job.runs} on:input={event=>job.update({runs:parseInt(event.currentTarget.value)})} disabled={requiredQuantity !== null && !overrideRequiredQuantity} /> 
     {#if requiredQuantity !== null}
         <label><input type="checkbox" bind:checked={overrideRequiredQuantity} /> Override</label> 
     {/if}
