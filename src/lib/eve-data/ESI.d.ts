@@ -1,3 +1,5 @@
+export type EveJobDetailsStatus = 'active' | 'cancelled' | 'delivered' | 'paused' | 'ready' | 'reverted';
+
 export type EveJobDetails = {
     activity_id,
     blueprint_id,

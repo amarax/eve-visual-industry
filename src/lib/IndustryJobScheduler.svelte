@@ -8,15 +8,17 @@
     import { scaleLinear, scaleTime } from "d3-scale";
     import { Industry, INVENTION_ACTIVITY_ID, MANUFACTURING_ACTIVITY_ID, REACTION_ACTIVITY_ID } from "$lib/eve-data/EveIndustry";
     import type { Activity_Id } from "$lib/eve-data/EveIndustry";
-    import type { EveBlueprint, EveJobDetails } from "$lib/eve-data/ESI";
+    import type { EveBlueprint, EveJobDetails, EveJobDetailsStatus } from "$lib/eve-data/ESI";
     import type { IndustryJob, IndustryJobStore } from "./IndustryJob";
     import { CreateIndustryJobStore } from "./IndustryJob";
 import NewIndustryJob from "./NewIndustryJob.svelte";
+import { get } from "svelte/store";
 
     export let characterId: EveCharacterId
 
     type EveItemId = number;
 
+    type JobDetailsStatus = EveJobDetailsStatus | 'scheduled';
     interface JobDetails {
         job_id,
         activity_id,
@@ -25,9 +27,10 @@ import NewIndustryJob from "./NewIndustryJob.svelte";
         blueprint_type_id,
         end_date,
         start_date,
-        status,
+        status: JobDetailsStatus,
         runs,
         product_type_id,
+        industryJob?: IndustryJobStore,
     }
 
 
@@ -48,7 +51,6 @@ import NewIndustryJob from "./NewIndustryJob.svelte";
 
     type NewJobId = number;
 
-    let newJobs:Array<{_id: NewJobId, blueprint: EveBlueprint, job: IndustryJobStore}> = []
     let scheduledJobs = new Map<NewJobId, JobDetails>();
 
     let selectedBlueprintItem: EveItemId;
@@ -59,14 +61,38 @@ import NewIndustryJob from "./NewIndustryJob.svelte";
             let activities = $Industry.types[_selectedBlueprintItem.type_id]?.activities;
             let activity = activities[REACTION_ACTIVITY_ID] ?? activities[MANUFACTURING_ACTIVITY_ID]
 
-            newJobs.push({_id:Date.now(), blueprint: _selectedBlueprintItem, job: CreateIndustryJobStore(activity)})
-            newJobs = newJobs;
+            let industryJob = CreateIndustryJobStore(activity);
+            let _initIndustryJob = get(industryJob);
+            
+            let _id = Date.now();
+            let scheduledJob = {
+                job_id: _id,
+                activity_id: activity.activity.activityID,
+                blueprint_id: _selectedBlueprintItem.item_id,
+                blueprint_location_id: _selectedBlueprintItem.location_id,
+                blueprint_type_id: _selectedBlueprintItem.type_id,
+                end_date: Date.now() + _initIndustryJob.jobDuration*1000,
+                start_date: Date.now(),
+                status: "scheduled" as JobDetailsStatus,
+                runs: _initIndustryJob.runs,
+                product_type_id: _initIndustryJob.selectedProduct,
+                industryJob: industryJob,                
+            }
+            scheduledJobs.set(_id, scheduledJob)
+
+            industryJob.subscribe(ij=>{
+                let j = scheduledJobs.get(_id);
+                // Assume activity and product_type remain the same
+                j.end_date = j.start_date + ij.jobDuration*1000;
+                j.runs = ij.runs;
+            })
+
+            scheduledJobs = scheduledJobs;
         }
     }
-    function removeJob(newJob) {
-        let index = newJobs.indexOf(newJob);
-        newJobs.splice(index, 1);
-        newJobs = newJobs;
+    function removeJob(job_id) {
+        scheduledJobs.delete(job_id);
+        scheduledJobs = scheduledJobs;
     }
 
     
@@ -119,6 +145,34 @@ import NewIndustryJob from "./NewIndustryJob.svelte";
             }
         }
 
+    }
+
+    let scheduledRows = new Map<number, Array<JobDetails>>();
+    $: {
+        scheduledRows.clear();
+        // For now just add the scheduled rows to any empty row
+        for(let sj of scheduledJobs.values()) {
+            for(let [row, rowJobs] of rows.entries()) {
+                let lastJobInRow = rowJobs[0];  // Row jobs is sorted end to start
+                if(scheduledRows.has(row)) {
+                    let scheduledJobRow = scheduledRows.get(row);
+                    lastJobInRow = scheduledJobRow[scheduledJobRow.length-1];
+                }
+
+                if(new Date(sj.start_date) > new Date(lastJobInRow.end_date)) {
+                    // Add to row
+                    if(!scheduledRows.has(row)) {
+                        scheduledRows.set(row, []);
+                    }
+
+                    scheduledRows.get(row).push(sj);
+                    break;
+                }
+            }
+        }
+        scheduledRows = scheduledRows;
+
+        console.log(scheduledRows);
     }
 
 
@@ -219,8 +273,8 @@ import NewIndustryJob from "./NewIndustryJob.svelte";
     {/each}
 </select>
 <button on:click={addJob}>Add</button>
-{#each newJobs as nj}
-    <NewIndustryJob blueprint={nj.blueprint} job={nj.job} /> <button on:click={event=>removeJob(nj)}>Remove</button>
+{#each [...scheduledJobs.values()] as job}
+    <NewIndustryJob blueprintLocation={job.blueprint_location_id} job={job.industryJob} /> <button on:click={event=>removeJob(job.job_id)}>Remove</button>
 {/each}
 
 <svg bind:this={scheduleChart} width="100%" height={Math.max(rows.size, 1)*rowHeight}>
@@ -228,6 +282,19 @@ import NewIndustryJob from "./NewIndustryJob.svelte";
 
         <rect class="now" x={x(Date.now())} width={1} y={0} height={y(rows.size)} />
         {#each [...rows.values()] as row, r}
+            {#each row as job (job.job_id)}
+                <g class="job" transform={`translate(${x(job.start_date)}, ${y(r)})`}>
+                    <clipPath  id={`job-${job.job_id}`}>
+                        <rect width={x(job.end_date)-x(job.start_date)} y={margin} height={y(r+1)-y(r) - margin*2} />
+                    </clipPath>
+                    <rect class={`job ${activityToClass(job.activity_id)} ${job.status}`} width={x(job.end_date)-x(job.start_date)} y={margin} height={y(r+1)-y(r) - margin*2} 
+                        on:click={event=>console.log(job)}
+                    />
+                    <text clip-path={`url(#job-${job.job_id})`} y={13} x={4}>{$EveTypes.get(job.product_type_id)?.name} x{job.runs}</text>
+                </g>
+            {/each}
+        {/each}
+        {#each [...scheduledRows.entries()] as [r, row]}
             {#each row as job (job.job_id)}
                 <g class="job" transform={`translate(${x(job.start_date)}, ${y(r)})`}>
                     <clipPath  id={`job-${job.job_id}`}>
