@@ -34,6 +34,22 @@ import EveTypes from "$lib/eve-data/EveTypes";
         }
         materialsList = materialsList;
     }
+
+    function timeout(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    let copied = false;
+    async function copyBOMToClipboard() {
+        let bom = "";
+        for(let [materialTypeId, quantity] of materialsList.entries()) {
+            bom += `${$EveTypes.get(materialTypeId).name} ${quantity}\n`;
+        }
+        await navigator.clipboard.writeText(bom);
+        copied = true;
+        await timeout(1000);
+        copied = false;
+    }
 </script>
 
 
@@ -65,8 +81,11 @@ import EveTypes from "$lib/eve-data/EveTypes";
 <IndustryJobScheduler {characterId} {xOffset} {scale} {groupBy} bind:materialsList={characterMaterialsList[characterId]} />
 {/each}
 
+<p>
+<b>Bill of Materials</b> <button on:click={copyBOMToClipboard} disabled={copied}>{copied?"Copied!":"Copy to clipboard"}</button><br/>
 {#each [...materialsList.entries()] as [materialTypeId, quantity]}
     <span class="itemName">{$EveTypes.get(materialTypeId).name}</span>
     <span class="qty">{quantity}</span>
     <br/>
 {/each}
+</p>
