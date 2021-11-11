@@ -41,7 +41,7 @@ import type { EveLocationId } from "$lib/eve-data/ESI";
 
     const dispatch = createEventDispatcher();
 
-    export let facilityModifiers: IndustryFacilityModifiers;
+    export let facilityModifiers: IndustryFacilityModifiers = {};
 
 </script>
 

@@ -8,7 +8,7 @@
 
     import type { Type_Id, EveLocation } from "$lib/eve-data/EveData";
     import type { IskAmount, Quantity } from "$lib/eve-data/EveMarkets";
-    import { Readable, writable, Writable } from "svelte/store";
+    import type { Readable } from "svelte/store";
     import type { EveCharacterId } from "$lib/eve-data/EveCharacter";
 
     import { FormatDuration, FormatIskAmount, FormatIskChange } from "$lib/Format";
@@ -17,6 +17,7 @@
     import { getContext, setContext } from "svelte";
     import { ApplyEffects, IndustryDogmaAttributes } from "./eve-data/EveDogma";
 import type { EveBlueprint } from "./eve-data/ESI";
+import FacilitySelector from "./components/FacilitySelector.svelte";
 
 
     export let productTypeId: Type_Id = null;
@@ -75,22 +76,7 @@ import type { EveBlueprint } from "./eve-data/ESI";
 
     // #region Facility-related
 
-    let locations: Writable<EntityCollection<EveLocation>> = getContext('locations');   // This should be a collection of all locations
-    let _filteredLocations: Writable<EntityCollection<EveLocation>> = writable({});
-    setContext('locations', _filteredLocations);
-    $: if($locations) {
-        // For now we're just going to filter for Athanors
-        const ATHANOR_TYPE_ID = 35835;
-        
-        let entries = Object.values($locations)
-            .filter((l: EveLocation)=>l?.type_id == ATHANOR_TYPE_ID)
-            .map((l: EveLocation)=>[l?.type_id, l]);
-        
-        _filteredLocations.set( Object.fromEntries(entries) );
-    }
-
-    export let defaultLocationId: Location_Id = null;
-    export let location: Location_Id = defaultLocationId;
+    export let location: Location_Id;
 
     // #endregion
 
@@ -178,7 +164,7 @@ import type { EveBlueprint } from "./eve-data/ESI";
 
 <p>
     <b>Facility</b>
-    <LocationSelector activity={$job.activity.activity.activityID} bind:value={location} on:change={event=>job.update({facilityModifiers:ModifiersFromLocationInfo(event.detail)})} />
+    <FacilitySelector activity={$job?.activity.activity.activityID} bind:value={location} on:change={event=>job.update({facilityModifiers:event.detail})} />
 </p>
 
 <b>Production</b>
@@ -227,5 +213,3 @@ import type { EveBlueprint } from "./eve-data/ESI";
     {/each}
 
 </div>
-
-{@debug location}
