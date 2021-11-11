@@ -93,6 +93,8 @@ import type { Quantity } from "./eve-data/EveMarkets";
 
             scheduledJobs = scheduledJobs;
         }
+
+        selectedBlueprintItem = null;
     }
     function removeJob(job_id) {
         jobMaterials.delete( scheduledJobs.get(job_id).industryJob );
@@ -236,6 +238,8 @@ import type { Quantity } from "./eve-data/EveMarkets";
     const margin = 2;
 
     export let xOffset: number = 0;
+
+    let blueprintSelector: HTMLSelectElement;
 
 </script>
 
