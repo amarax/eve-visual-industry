@@ -156,7 +156,7 @@ export class IndustryJob {
 }
 
 
-interface IndustryJobStore extends Readable<IndustryJob> {
+export interface IndustryJobStore extends Readable<IndustryJob> {
     update(changes: {
         activity?: IndustryActivity
         selectedProduct?: Type_Id
@@ -180,7 +180,13 @@ interface IndustryJobStore extends Readable<IndustryJob> {
     })
 }
 
-export function CreateIndustryJobStore(activity: IndustryActivity, selectedProduct: Type_Id): IndustryJobStore {
+export function CreateIndustryJobStore(activity: IndustryActivity, selectedProduct?: Type_Id): IndustryJobStore {
+    if(!activity)
+        debugger;
+
+    // If no product is selected, we will take the first product from the activity
+    selectedProduct = selectedProduct ?? Object.values( activity.products )[0]?.type_id;
+    
     let job = new IndustryJob(activity, selectedProduct);
 
     let { subscribe, set } = writable(job);

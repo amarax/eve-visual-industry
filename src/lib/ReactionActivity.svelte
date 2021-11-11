@@ -2,6 +2,7 @@
     import { EntityCollection, Location_Id, Universe } from "$lib/eve-data/EveData";
     import { CanBeProduced, GetReactionActivity, Industry, ProductToActivity, REACTION_ACTIVITY_ID } from "$lib/eve-data/EveIndustry";
     import { CreateProductionJobStore } from "$lib/IndustryJob";
+    import type { IndustryJobStore } from "$lib/IndustryJob";
     import { MarketPrices } from "./eve-data/EveMarkets";
     import { CharacterSkills } from "$lib/eve-data/EveCharacter";
 
@@ -19,16 +20,24 @@
 
     export let productTypeId: Type_Id = null;
 
-    $: job = CreateProductionJobStore(productTypeId, $ProductToActivity);
+    export let job: IndustryJobStore = null;
+
+    let _job: IndustryJobStore;
+    $: if(!job && productTypeId) {
+        _job = CreateProductionJobStore(productTypeId, $ProductToActivity);
+    } else {
+        _job = job;
+    }
+    $: _productTypeId = $_job.selectedProduct;
 
     export let requiredQuantity: Quantity = null; 
     let runs: number = 1;
     let overrideRequiredQuantity: boolean = false;
     $: if(requiredQuantity === null || overrideRequiredQuantity) { 
-        job.update({runs});
+        _job.update({runs});
     } else {
-        job.update({requiredQuantity});
-        runs = $job.runs;
+        _job.update({requiredQuantity});
+        runs = $_job.runs;
     }
 
     type ItemPickedList = {
@@ -47,7 +56,7 @@
     
     const REACTION_TIME_ATTRIBUTE_ID = 2660;
     $: {
-        let affectingSkills = Object.values( $job.activity?.requiredSkills ?? {} )
+        let affectingSkills = Object.values( $_job.activity?.requiredSkills ?? {} )
             .map(s=>s.type_id)
             .filter((s: Type_Id)=>$IndustryDogmaAttributes.types[s] != undefined)
             .filter((s: Type_Id)=>$IndustryDogmaAttributes.types[s][REACTION_TIME_ATTRIBUTE_ID] != undefined)
@@ -58,7 +67,7 @@
 
         let skill_jobDuration = ApplyEffects(1, skillModifiers)*100 -100;
 
-        job.update({characterModifiers:{
+        _job.update({characterModifiers:{
             skill_jobDuration
         }})
     }
@@ -84,7 +93,7 @@
     export let defaultLocationId: Location_Id = null;
     let locationId: Location_Id = defaultLocationId;
     let activitySystemCostIndex = 0.05, activityTax = 10;
-    $: job.update({
+    $: _job.update({
         facilityModifiers: {
             systemCostIndex: activitySystemCostIndex,
             taxRate: activityTax,
@@ -93,7 +102,7 @@
 
     let structureRoleBonuses, structureRigBonuses;
     $: if(structureRoleBonuses) {
-        job.update({
+        _job.update({
             facilityModifiers: {
                 roleModifiers: {
                     jobDuration: structureRoleBonuses.jobDurationModifier,
@@ -104,7 +113,7 @@
         });
     }
     $: if(structureRigBonuses) {
-        job.update({
+        _job.update({
             facilityModifiers: {
                 rigModifiers: {
                     materialReduction: structureRigBonuses.materialReductionBonus,
@@ -123,14 +132,14 @@
             prices[type_id] = prices[type_id];
         }
         prices = prices;
-        job.update({prices});
+        _job.update({prices});
     }
 
-    // Force recalculation of job when any changes happen
-    $: job.update({indexPrices:$MarketPrices});
+    // Force recalculation of _job when any changes happen
+    $: _job.update({indexPrices:$MarketPrices});
 
     export let unitCost: IskAmount = 0;
-    $: unitCost = $job.unitCost;
+    $: unitCost = $_job.unitCost;
 
     export let salesTaxRate = 0.036;
     export let brokerFeeRate = 0.0113709973928; // Selene's broker fee
@@ -145,7 +154,7 @@
     let _extents = [0,1000];
     $: {
         if(extents === null) {
-            _extents[1] = 1.1*Math.max(prices[productTypeId] ?? 0, unitCost ?? 0, lowestSellPrice ?? 0, highestBuyPrice ?? 0)*$job.producedQuantity;
+            _extents[1] = 1.1*Math.max(prices[_productTypeId] ?? 0, unitCost ?? 0, lowestSellPrice ?? 0, highestBuyPrice ?? 0)*$_job.producedQuantity;
             if(_extents[1] == 0 || isNaN(_extents[1])) _extents[1] = 1000;
         } else {
             _extents = extents;
@@ -159,26 +168,26 @@
     {#if compact}
         <div/>
     {:else}
-        <div class="itemName" title={`${$Universe.types[productTypeId]?.name} [${productTypeId}]`}>{$Universe.types[productTypeId]?.name}</div>
+        <div class="itemName" title={`${$Universe.types[_productTypeId]?.name} [${_productTypeId}]`}>{$Universe.types[_productTypeId]?.name}</div>
     {/if}
-    <div class="qty">{$job.producedQuantity}</div>
+    <div class="qty">{$_job.producedQuantity}</div>
     <div class="graph">
         Unit price
-        {FormatIskAmount(prices[productTypeId])}
+        {FormatIskAmount(prices[_productTypeId])}
         Total Profit 
-        {FormatIskChange($job.profit)} 
+        {FormatIskChange($_job.profit)} 
         <br/>
 
-        <MarketOrdersBar extents={_extents} quantity={$job.producedQuantity} 
-            type_id={productTypeId}
-            bind:price={prices[productTypeId]}
+        <MarketOrdersBar extents={_extents} quantity={$_job.producedQuantity} 
+            type_id={_productTypeId}
+            bind:price={prices[_productTypeId]}
             buyOverheadRate={-salesTaxRate} sellOverheadRate={-brokerFeeRate-salesTaxRate}
-            totalCost={$job.totalCost}
+            totalCost={$_job.totalCost}
             bind:lowestSellPrice bind:highestBuyPrice
         />
         <br/>
 
-        Unit cost {FormatIskAmount(unitCost)} Total cost {FormatIskAmount($job.totalCost)}
+        Unit cost {FormatIskAmount(unitCost)} Total cost {FormatIskAmount($_job.totalCost)}
 
     </div>
 </div>
@@ -199,29 +208,29 @@
 <b>Production</b>
 <dl>
     <dt>Time</dt>
-    <dd title={`${$job.jobDuration}s`}>{FormatDuration($job.jobDuration)}</dd>
+    <dd title={`${$_job.jobDuration}s`}>{FormatDuration($_job.jobDuration)}</dd>
 </dl>
 
 <div class="breakdown">
     <div>Job cost</div><div></div>
     <div class="graph">
-        <MarketOrdersBar compact extents={_extents} quantity={$job.producedQuantity} totalCost={$job.jobCost} />
+        <MarketOrdersBar compact extents={_extents} quantity={$_job.producedQuantity} totalCost={$_job.jobCost} />
     </div>
 
-    {#each Object.keys($job.activity?.materials || {}).map(id=>parseInt(id)) as type_id}
+    {#each Object.keys($_job.activity?.materials || {}).map(id=>parseInt(id)) as type_id}
         <div class="itemName">
             <label>
                 <input type="checkbox" bind:checked={producedItems[type_id]} disabled={!CanBeProduced(type_id, $Industry)} /> 
                 <span title={`${$Universe.types[type_id]?.name} [${type_id}]`}>{$Universe.types[type_id]?.name}</span>
             </label>
         </div>
-        <div class="qty">{$job.materialQuantity(type_id)}</div>
+        <div class="qty">{$_job.materialQuantity(type_id)}</div>
         <div class="graph">
-            <MarketOrdersBar extents={_extents} quantity={$job.materialQuantity(type_id)} 
+            <MarketOrdersBar extents={_extents} quantity={$_job.materialQuantity(type_id)} 
                 {type_id} 
                 bind:price={prices[type_id]} overridePrice={producedItems[type_id] ? producedPrices[type_id] : undefined}
                 buyOverheadRate={brokerFeeRate}
-                totalCost={producedItems[type_id] ? producedPrices[type_id]*$job.materialQuantity(type_id) : null}
+                totalCost={producedItems[type_id] ? producedPrices[type_id]*$_job.materialQuantity(type_id) : null}
                 compact
             />
         </div>
@@ -229,7 +238,7 @@
         {#if producedItems[type_id]}
         <div class="subItem">
             {#if GetReactionActivity(type_id, $Industry).activity}
-                <svelte:self productTypeId={type_id} requiredQuantity={$job.materialQuantity(type_id)} 
+                <svelte:self _productTypeId={type_id} requiredQuantity={$_job.materialQuantity(type_id)} 
                     bind:unitCost={producedPrices[type_id]} bind:producedItems
                     defaultLocationId={locationId}
                     compact

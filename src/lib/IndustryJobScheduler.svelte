@@ -6,9 +6,12 @@
     import { afterUpdate } from "svelte";
 
     import { scaleLinear, scaleTime } from "d3-scale";
-    import { INVENTION_ACTIVITY_ID, MANUFACTURING_ACTIVITY_ID, REACTION_ACTIVITY_ID } from "$lib/eve-data/EveIndustry";
+    import { Industry, INVENTION_ACTIVITY_ID, MANUFACTURING_ACTIVITY_ID, REACTION_ACTIVITY_ID } from "$lib/eve-data/EveIndustry";
     import type { Activity_Id } from "$lib/eve-data/EveIndustry";
     import type { EveBlueprint, EveJobDetails } from "$lib/eve-data/ESI";
+    import type { IndustryJob, IndustryJobStore } from "./IndustryJob";
+    import { CreateIndustryJobStore } from "./IndustryJob";
+import NewIndustryJob from "./NewIndustryJob.svelte";
 
     export let characterId: EveCharacterId
 
@@ -43,18 +46,30 @@
     }
 
 
-    let newJobs = []
+    type NewJobId = number;
+
+    let newJobs:Array<{_id: NewJobId, blueprint: EveBlueprint, job: IndustryJobStore}> = []
+    let scheduledJobs = new Map<NewJobId, JobDetails>();
 
     let selectedBlueprintItem: EveItemId;
     function addJob() {
         let _selectedBlueprintItem = blueprints.find(b=>b.item_id===selectedBlueprintItem);
 
-        newJobs.push({
-            
-        })
+        if(_selectedBlueprintItem) {
+            let activities = $Industry.types[_selectedBlueprintItem.type_id]?.activities;
+            let activity = activities[REACTION_ACTIVITY_ID] ?? activities[MANUFACTURING_ACTIVITY_ID]
+
+            newJobs.push({_id:Date.now(), blueprint: _selectedBlueprintItem, job: CreateIndustryJobStore(activity)})
+            newJobs = newJobs;
+        }
+    }
+    function removeJob(newJob) {
+        let index = newJobs.indexOf(newJob);
+        newJobs.splice(index, 1);
+        newJobs = newJobs;
     }
 
-        
+    
     export let groupBy = "activity_id";
 
     let _jobs: Array<JobDetails>;
@@ -68,7 +83,7 @@
     let rows = new Map<number, Array<JobDetails>>();
     $: {
         // Group jobs in the same facility together
-        let facilities = new Map<number, Array<EveJobDetails>>();
+        let facilities = new Map<number, Array<JobDetails>>();
         _jobs.forEach(job=>{
             if(!facilities.has(job[groupBy])) {
                 facilities.set(job[groupBy], []);
@@ -200,10 +215,13 @@
 
 <select bind:value={selectedBlueprintItem}>
     {#each blueprints as blueprint (blueprint.item_id)}
-        <option disabled={_jobs.find(job=>job.blueprint_id===blueprint.item_id && new Date(job.end_date).getTime() > Date.now()) !== undefined}>{$EveTypes.get(blueprint.type_id)?.name ?? blueprint.type_id} </option>
+        <option value={blueprint.item_id}>{$EveTypes.get(blueprint.type_id)?.name ?? blueprint.type_id} </option>
     {/each}
 </select>
-<button>Add</button>
+<button on:click={addJob}>Add</button>
+{#each newJobs as nj}
+    <NewIndustryJob blueprint={nj.blueprint} job={nj.job} /> <button on:click={event=>removeJob(nj)}>Remove</button>
+{/each}
 
 <svg bind:this={scheduleChart} width="100%" height={Math.max(rows.size, 1)*rowHeight}>
     <g class="canvas" transform={`translate(${xOffset*100})`}>
