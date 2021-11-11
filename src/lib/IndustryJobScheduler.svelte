@@ -83,8 +83,15 @@ import { get } from "svelte/store";
             industryJob.subscribe(ij=>{
                 let j = scheduledJobs.get(_id);
                 // Assume activity and product_type remain the same
-                j.end_date = j.start_date + ij.jobDuration*1000;
-                j.runs = ij.runs;
+                let newEndDate = j.start_date + ij.jobDuration*1000;
+                let newRuns = ij.runs;
+
+                // Only trigger re-render on changes
+                if(newEndDate!=j.end_date || newRuns!=j.runs) {
+                    j.end_date = newEndDate;
+                    j.runs = newRuns;
+                    scheduledJobs = scheduledJobs;
+                }
             })
 
             scheduledJobs = scheduledJobs;
@@ -147,6 +154,7 @@ import { get } from "svelte/store";
 
     }
 
+
     let scheduledRows = new Map<number, Array<JobDetails>>();
     $: {
         scheduledRows.clear();
@@ -171,8 +179,6 @@ import { get } from "svelte/store";
             }
         }
         scheduledRows = scheduledRows;
-
-        console.log(scheduledRows);
     }
 
 
@@ -281,7 +287,7 @@ import { get } from "svelte/store";
     <g class="canvas" transform={`translate(${xOffset*100})`}>
 
         <rect class="now" x={x(Date.now())} width={1} y={0} height={y(rows.size)} />
-        {#each [...rows.values()] as row, r}
+        {#each [...rows.values()] as row, r (r)}
             {#each row as job (job.job_id)}
                 <g class="job" transform={`translate(${x(job.start_date)}, ${y(r)})`}>
                     <clipPath  id={`job-${job.job_id}`}>
@@ -294,7 +300,7 @@ import { get } from "svelte/store";
                 </g>
             {/each}
         {/each}
-        {#each [...scheduledRows.entries()] as [r, row]}
+        {#each [...scheduledRows.entries()] as [r, row] (r)}
             {#each row as job (job.job_id)}
                 <g class="job" transform={`translate(${x(job.start_date)}, ${y(r)})`}>
                     <clipPath  id={`job-${job.job_id}`}>
