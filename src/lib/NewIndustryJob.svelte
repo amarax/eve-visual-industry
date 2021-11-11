@@ -29,7 +29,7 @@ import ReactionActivity from "./ReactionActivity.svelte";
     {#if collapsed}
         <button on:click={()=>collapsed=false}>+</button> 
         {$EveTypes.get($job.selectedProduct).name} 
-        <input type="range" value={$job.runs} on:input={event=>job.update({runs:parseInt(event.currentTarget.value)})} min={1} max={maxRuns} />
+        <input type="number" value={$job.runs} on:input={event=>job.update({runs:parseInt(event.currentTarget.value)})} />
         <FacilitySelector activity={$job.activity.activity.activityID} bind:value={location} on:change={event=>job.update({facilityModifiers:event.detail})} />
     {:else}
         <button on:click={()=>collapsed=true}>&ndash;</button> <ReactionActivity bind:location {job} {blueprint} />

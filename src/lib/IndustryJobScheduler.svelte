@@ -1,37 +1,25 @@
+
 <script lang="ts">
     import type { EveCharacterId } from "$lib/eve-data/EveCharacter";
     import CreateESIStore from "./eve-data/ESIStore";
     import type {ESIStore} from "./eve-data/ESIStore";
     import EveTypes from "$lib/eve-data/EveTypes";
-    import { afterUpdate } from "svelte";
 
     import { scaleLinear, scaleTime } from "d3-scale";
     import { Industry, INVENTION_ACTIVITY_ID, MANUFACTURING_ACTIVITY_ID, REACTION_ACTIVITY_ID } from "$lib/eve-data/EveIndustry";
     import type { Activity_Id } from "$lib/eve-data/EveIndustry";
     import type { EveBlueprint, EveJobDetails, EveJobDetailsStatus } from "$lib/eve-data/ESI";
-    import type { IndustryJob, IndustryJobStore } from "./IndustryJob";
     import { CreateIndustryJobStore } from "./IndustryJob";
 import NewIndustryJob from "./NewIndustryJob.svelte";
 import { get } from "svelte/store";
+import type { JobDetails, JobDetailsStatus } from "./IndustryJobScheduler";
+import IndustryJobScheduleBlock from "./IndustryJobScheduleBlock.svelte";
 
     export let characterId: EveCharacterId
 
     type EveItemId = number;
 
-    type JobDetailsStatus = EveJobDetailsStatus | 'scheduled';
-    interface JobDetails {
-        job_id,
-        activity_id,
-        blueprint_id,
-        blueprint_location_id,
-        blueprint_type_id,
-        end_date,
-        start_date,
-        status: JobDetailsStatus,
-        runs,
-        product_type_id,
-        industryJob?: IndustryJobStore,
-    }
+
 
 
     let characterJobs: ESIStore<Array<JobDetails>>;
@@ -222,50 +210,7 @@ import { get } from "svelte/store";
     svg {
         background-color: #222;
 
-        --manufacturing-color: rgb(182, 119, 0);
-        --reaction-color: rgb(0, 189, 145);
-        --invention-color: rgb(48, 148, 191);
-        --blueprint-color: rgb(0, 84, 187);
-
-        g.job {
-            rect.job {
-                fill: var(--blueprint-color);
-                stroke: rgb(0, 115, 255);
-                stroke-width: 0;
-
-                opacity: 70%;
-
-                &.manufacturing {
-                    fill: var(--manufacturing-color);
-                    stroke: rgb(255, 166, 0);
-                }
-                &.reaction {
-                    fill: var(--reaction-color);
-                    stroke: rgb(0, 255, 195);
-                }
-                &.invention {
-                    fill: var(--invention-color);
-                    stroke: rgb(104, 210, 255);
-                }
-
-                &.scheduled {
-                    opacity: 50%;
-                    stroke-width: 1px;
-                }
-
-                &.delivered {
-                    opacity: 30%;
-                }
-            }
-
-            &:hover {
-                rect.job {
-                    opacity: 100%;
-                }
-            }
-        }
-
-        
+       
         rect.row {
             fill: transparent;
 
@@ -277,13 +222,6 @@ import { get } from "svelte/store";
             fill: #666;
         }
 
-        text {
-            fill: #fff;
-
-            font-size: 10px;
-
-            pointer-events: none;
-        }
 
     }
 </style>
@@ -304,28 +242,12 @@ import { get } from "svelte/store";
         <rect class="now" x={x(Date.now())} width={1} y={0} height={y(rows.size)} />
         {#each [...rows.values()] as row, r (r)}
             {#each row as job (job.job_id)}
-                <g class="job" transform={`translate(${x(job.start_date)}, ${y(r)})`}>
-                    <clipPath  id={`job-${job.job_id}`}>
-                        <rect width={x(job.end_date)-x(job.start_date)} y={margin} height={y(r+1)-y(r) - margin*2} />
-                    </clipPath>
-                    <rect class={`job ${activityToClass(job.activity_id)} ${job.status}`} width={x(job.end_date)-x(job.start_date)} y={margin} height={y(r+1)-y(r) - margin*2} 
-                        on:click={event=>console.log(job)}
-                    />
-                    <text clip-path={`url(#job-${job.job_id})`} y={13} x={4}>{$EveTypes.get(job.product_type_id)?.name} x{job.runs}</text>
-                </g>
+                <IndustryJobScheduleBlock {r} {job} {x} {y} />
             {/each}
         {/each}
         {#each [...scheduledRows.entries()] as [r, row] (r)}
             {#each row as job (job.job_id)}
-                <g class="job" transform={`translate(${x(job.start_date)}, ${y(r)})`}>
-                    <clipPath  id={`job-${job.job_id}`}>
-                        <rect width={x(job.end_date)-x(job.start_date)} y={margin} height={y(r+1)-y(r) - margin*2} />
-                    </clipPath>
-                    <rect class={`job ${activityToClass(job.activity_id)} ${job.status}`} width={x(job.end_date)-x(job.start_date)} y={margin} height={y(r+1)-y(r) - margin*2} 
-                        on:click={event=>console.log(job)}
-                    />
-                    <text clip-path={`url(#job-${job.job_id})`} y={13} x={4}>{$EveTypes.get(job.product_type_id)?.name} x{job.runs}</text>
-                </g>
+                <IndustryJobScheduleBlock {r} {job} {x} {y} />
             {/each}
         {/each}
     </g>
