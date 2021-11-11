@@ -62,6 +62,10 @@ import EveTypes from "$lib/eve-data/EveTypes";
             width: 30%;
         }
     }
+
+    button.fixedWidth {
+        width: 150px;
+    }
 </style>
 
 <div class="controls">
@@ -82,7 +86,7 @@ import EveTypes from "$lib/eve-data/EveTypes";
 {/each}
 
 <p>
-<b>Bill of Materials</b> <button on:click={copyBOMToClipboard} disabled={copied}>{copied?"Copied!":"Copy to clipboard"}</button><br/>
+<b>Bill of Materials</b> <button class="fixedWidth" on:click={copyBOMToClipboard} disabled={copied}>{copied?"Copied!":"Copy to clipboard"}</button><br/>
 {#each [...materialsList.entries()] as [materialTypeId, quantity]}
     <span class="itemName">{$EveTypes.get(materialTypeId).name}</span>
     <span class="qty">{quantity}</span>
