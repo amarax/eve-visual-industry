@@ -38,6 +38,8 @@ import type { JobDetails } from "./IndustryJobScheduler";
 
     // NOTE this line has the hack for REACTION_ACTIVITY_ID that addresses the discrepancy between TQ reaction id and SDE reaction id
     $: producedItems = industryJob ? $industryJob.producedQuantity : $Industry.types[job.blueprint_type_id].activities[job.activity_id == 9?REACTION_ACTIVITY_ID:job.activity_id]?.products[job.product_type_id]?.quantity * job.runs;
+
+    $: textLabel = `${$EveTypes.get(job.product_type_id)?.name} x${producedItems}`
 </script>
 
 <style lang="scss">
@@ -102,6 +104,8 @@ import type { JobDetails } from "./IndustryJobScheduler";
     </clipPath>
     <rect x={x(job.start_date)} class={`job ${activityToClass(job.activity_id)} ${job.status}`} width={x(job.end_date)-x(job.start_date)} y={margin} height={y(row+1)-y(row) - margin*2} 
         on:click={event=>console.log(job)}
-    />
-    <text clip-path={`url(#job-${job.job_id})`} y={13} x={x(job.start_date)+4}>{$EveTypes.get(job.product_type_id)?.name} x{producedItems}</text>
+    >
+        <title>{textLabel}</title>
+    </rect>
+    <text clip-path={`url(#job-${job.job_id})`} y={13} x={x(job.start_date)+4}>{textLabel}</text>
 </g>
