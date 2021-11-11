@@ -13,7 +13,6 @@ import ReactionActivity from "./ReactionActivity.svelte";
     export let job: IndustryJobStore;
 
     let location: EveLocationId = blueprint.location_id;
-    $: console.log(location)
 
     let collapsed = true;
 

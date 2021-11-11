@@ -13,8 +13,7 @@
 
     import { FormatDuration, FormatIskAmount, FormatIskChange } from "$lib/Format";
     import MarketOrdersBar from "$lib/components/MarketOrdersBar.svelte";
-    import LocationSelector from "$lib/components/LocationSelector.svelte";
-    import { getContext, setContext } from "svelte";
+    import { getContext } from "svelte";
     import { ApplyEffects, IndustryDogmaAttributes } from "./eve-data/EveDogma";
 import type { EveBlueprint } from "./eve-data/ESI";
 import FacilitySelector from "./components/FacilitySelector.svelte";
