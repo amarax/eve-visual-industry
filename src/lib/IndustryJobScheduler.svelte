@@ -201,6 +201,8 @@ import { get } from "svelte/store";
         switch(activityId) {
             case MANUFACTURING_ACTIVITY_ID:
                 return "manufacturing";
+            case REACTION_ACTIVITY_ID:
+                return "reaction";
             case 9: // Somehow on TQ the reaction activity id is different from the SDE
                 return "reaction";
             case INVENTION_ACTIVITY_ID:
@@ -220,22 +222,35 @@ import { get } from "svelte/store";
     svg {
         background-color: #222;
 
+        --manufacturing-color: rgb(182, 119, 0);
+        --reaction-color: rgb(0, 189, 145);
+        --invention-color: rgb(48, 148, 191);
+        --blueprint-color: rgb(0, 84, 187);
 
         g.job {
             rect.job {
-                fill: rgb(0, 84, 187);
-                stroke: none;
+                fill: var(--blueprint-color);
+                stroke: rgb(0, 115, 255);
+                stroke-width: 0;
 
                 opacity: 70%;
 
                 &.manufacturing {
-                    fill: rgb(182, 119, 0);
+                    fill: var(--manufacturing-color);
+                    stroke: rgb(255, 166, 0);
                 }
                 &.reaction {
-                    fill: rgb(0, 189, 145);
+                    fill: var(--reaction-color);
+                    stroke: rgb(0, 255, 195);
                 }
                 &.invention {
-                    fill: rgb(48, 148, 191);
+                    fill: var(--invention-color);
+                    stroke: rgb(104, 210, 255);
+                }
+
+                &.scheduled {
+                    opacity: 50%;
+                    stroke-width: 1px;
                 }
 
                 &.delivered {
@@ -280,7 +295,7 @@ import { get } from "svelte/store";
 </select>
 <button on:click={addJob}>Add</button><br/>
 {#each [...scheduledJobs.values()] as job}
-    <NewIndustryJob blueprint={blueprints.find(b=>b.item_id===job.blueprint_id) } job={job.industryJob} /> <button on:click={event=>removeJob(job.job_id)}>Remove</button>
+    <NewIndustryJob blueprint={blueprints.find(b=>b.item_id===job.blueprint_id) } job={job.industryJob} /> <button on:click={event=>removeJob(job.job_id)}>Remove</button><br/>
 {/each}
 
 <svg bind:this={scheduleChart} width="100%" height={Math.max(rows.size, 1)*rowHeight}>
