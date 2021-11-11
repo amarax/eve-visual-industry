@@ -3,17 +3,18 @@
     import type { EveCharacterId } from "$lib/eve-data/EveCharacter";
     import CreateESIStore from "./eve-data/ESIStore";
     import type {ESIStore} from "./eve-data/ESIStore";
-    import EveTypes from "$lib/eve-data/EveTypes";
+    import EveTypes, { EveTypeId } from "$lib/eve-data/EveTypes";
 
     import { scaleLinear, scaleTime } from "d3-scale";
     import { Industry, INVENTION_ACTIVITY_ID, MANUFACTURING_ACTIVITY_ID, REACTION_ACTIVITY_ID } from "$lib/eve-data/EveIndustry";
     import type { Activity_Id } from "$lib/eve-data/EveIndustry";
     import type { EveBlueprint, EveJobDetails, EveJobDetailsStatus } from "$lib/eve-data/ESI";
-    import { CreateIndustryJobStore } from "./IndustryJob";
+    import { CreateIndustryJobStore, IndustryJobStore } from "./IndustryJob";
 import NewIndustryJob from "./NewIndustryJob.svelte";
 import { get } from "svelte/store";
 import type { JobDetails, JobDetailsStatus } from "./IndustryJobScheduler";
 import IndustryJobScheduleBlock from "./IndustryJobScheduleBlock.svelte";
+import type { Quantity } from "./eve-data/EveMarkets";
 
     export let characterId: EveCharacterId
 
@@ -80,12 +81,23 @@ import IndustryJobScheduleBlock from "./IndustryJobScheduleBlock.svelte";
                     j.runs = newRuns;
                     scheduledJobs = scheduledJobs;
                 }
+
+
+                let materials = [];
+                for(let {materialTypeID} of Object.values( ij.activity.materials )) {
+                    materials.push({materialTypeId: materialTypeID, quantity: ij.materialQuantity(materialTypeID)})
+                }
+                jobMaterials.set(industryJob,materials);
+                jobMaterials = jobMaterials;
             })
 
             scheduledJobs = scheduledJobs;
         }
     }
     function removeJob(job_id) {
+        jobMaterials.delete( scheduledJobs.get(job_id).industryJob );
+        jobMaterials = jobMaterials;
+
         scheduledJobs.delete(job_id);
         scheduledJobs = scheduledJobs;
     }
@@ -190,6 +202,25 @@ import IndustryJobScheduleBlock from "./IndustryJobScheduleBlock.svelte";
     }
 
 
+    // #region Materials Calculation
+
+    let jobMaterials = new Map<IndustryJobStore, Array<{materialTypeId:EveTypeId, quantity:Quantity}>>();
+    export let materialsList = new Map<EveTypeId, Quantity>();
+    $: {
+        materialsList.clear();
+
+        for(let materials of jobMaterials.values()) {
+            for(let {materialTypeId, quantity} of materials) {
+                materialsList.set(materialTypeId, (materialsList.get(materialTypeId) ?? 0) + quantity);
+            }
+        }
+
+        materialsList = materialsList;
+    }
+
+
+    // #endregion
+
     const rowHeight = 20;
 
     export let scale = 100;
@@ -204,24 +235,6 @@ import IndustryJobScheduleBlock from "./IndustryJobScheduleBlock.svelte";
 
     const margin = 2;
 
-    
-    function activityToClass(activityId: Activity_Id) {
-        switch(activityId) {
-            case MANUFACTURING_ACTIVITY_ID:
-                return "manufacturing";
-            case REACTION_ACTIVITY_ID:
-                return "reaction";
-            case 9: // Somehow on TQ the reaction activity id is different from the SDE
-                return "reaction";
-            case INVENTION_ACTIVITY_ID:
-                return "invention";
-            default:
-                return "";
-        }
-    }
-
-    
-    let scheduleChart: SVGElement;
     export let xOffset: number = 0;
 
 </script>
@@ -256,7 +269,7 @@ import IndustryJobScheduleBlock from "./IndustryJobScheduleBlock.svelte";
     <NewIndustryJob blueprint={blueprints.find(b=>b.item_id===job.blueprint_id) } job={job.industryJob} /> <button on:click={event=>removeJob(job.job_id)}>Remove</button><br/>
 {/each}
 
-<svg bind:this={scheduleChart} width="100%" height={Math.max(rows.size, 1)*rowHeight}>
+<svg width="100%" height={Math.max(rows.size, 1)*rowHeight}>
     <g class="canvas" transform={`translate(${xOffset*100})`}>
 
         <rect class="now" x={x(Date.now())} width={1} y={0} height={y(rows.size)} />
@@ -268,3 +281,4 @@ import IndustryJobScheduleBlock from "./IndustryJobScheduleBlock.svelte";
         {/each}
     </g>
 </svg>
+

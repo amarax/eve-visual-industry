@@ -6,7 +6,7 @@ import type { EveBlueprint, EveLocationId } from "./eve-data/ESI";
 import { Industry } from "./eve-data/EveIndustry";
 import EveTypes from "./eve-data/EveTypes";
 
-import type { IndustryJobStore } from "./IndustryJob";
+import type { IndustryFacilityModifiers, IndustryJobStore } from "./IndustryJob";
 import ReactionActivity from "./ReactionActivity.svelte";
 
     export let blueprint: EveBlueprint;
@@ -22,6 +22,8 @@ import ReactionActivity from "./ReactionActivity.svelte";
             timeEfficiency: blueprint.time_efficiency
         }
     })
+    let facilityModifiers: IndustryFacilityModifiers;
+    $: if(facilityModifiers) job.update({facilityModifiers})
 
     let maxRuns: number;
     $: {
@@ -54,7 +56,7 @@ import ReactionActivity from "./ReactionActivity.svelte";
         <button on:click={()=>collapsed=false}>+</button> 
         <span class="itemName" title={$EveTypes.get($job.selectedProduct).name}>{$EveTypes.get($job.selectedProduct).name}</span>
         <input type="number" value={$job.runs} on:input={event=>job.update({runs:parseInt(event.currentTarget.value)})} />
-        <FacilitySelector activity={$job.activity.activity.activityID} bind:value={location} on:change={event=>job.update({facilityModifiers:event.detail})} />
+        <FacilitySelector activity={$job.activity.activity.activityID} bind:value={location} bind:facilityModifiers />
     {:else}
         <button on:click={()=>collapsed=true}>&ndash;</button> <ReactionActivity bind:location {job} {blueprint} />
     {/if}

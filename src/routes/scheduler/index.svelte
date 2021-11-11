@@ -1,22 +1,39 @@
 
 <script lang="ts">
-import type { EveCharacterId } from "$lib/eve-data/EveCharacter";
-
-
-import IndustryJobScheduler from "$lib/IndustryJobScheduler.svelte";
-import { getContext } from "svelte";
-
-import type { Readable } from "svelte/store";
+    import type { EveCharacterId } from "$lib/eve-data/EveCharacter";
+import type { Quantity } from "$lib/eve-data/EveMarkets";
+import type { EveTypeId } from "$lib/eve-data/EveTypes";
+import EveTypes from "$lib/eve-data/EveTypes";
 
 
 
+    import IndustryJobScheduler from "$lib/IndustryJobScheduler.svelte";
+    import { getContext } from "svelte";
+
+    import type { Readable } from "svelte/store";
 
 
-let availableEveCharacters = getContext('availableEveCharacters') as Readable<Array<EveCharacterId>>;
 
-let xOffset: number = 7;
-let scale: number = 100;
-let groupBy = "activity_id";
+
+
+    let availableEveCharacters = getContext('availableEveCharacters') as Readable<Array<EveCharacterId>>;
+
+    let xOffset: number = 7;
+    let scale: number = 100;
+    let groupBy = "activity_id";
+
+
+    let materialsList = new Map<EveTypeId, Quantity>();
+    let characterMaterialsList: {[index: EveCharacterId]: Map<EveTypeId, Quantity>} = {};
+    $: {
+        materialsList.clear();
+        for(let characterId in characterMaterialsList) {
+            for(let [materialTypeId, quantity] of characterMaterialsList[characterId]) {
+                materialsList.set(materialTypeId, (materialsList.get(materialTypeId) ?? 0) + quantity);
+            }
+        }
+        materialsList = materialsList;
+    }
 </script>
 
 
@@ -45,5 +62,11 @@ let groupBy = "activity_id";
 </div>
 
 {#each $availableEveCharacters as characterId (characterId) }
-<IndustryJobScheduler {characterId} {xOffset} {scale} {groupBy} />
+<IndustryJobScheduler {characterId} {xOffset} {scale} {groupBy} bind:materialsList={characterMaterialsList[characterId]} />
+{/each}
+
+{#each [...materialsList.entries()] as [materialTypeId, quantity]}
+    <span class="itemName">{$EveTypes.get(materialTypeId).name}</span>
+    <span class="qty">{quantity}</span>
+    <br/>
 {/each}

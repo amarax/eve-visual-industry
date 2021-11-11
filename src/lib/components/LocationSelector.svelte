@@ -137,16 +137,24 @@ import type { EveLocationsContext } from "src/contexts";
         name: entry[1]?.name
     })).sort((a,b)=>(a.name && b.name) ? a.name.localeCompare(b.name) : 0)
 
-    type FacilityInfo = {
+    type LocationInfo = {
         activitySystemCostIndex,
         activityTax,
         structureRoleBonuses,
         structureRigBonuses,
     }
 
-    const dispatchFacilityInfo = createEventDispatcher();
+    const dispatchLocationInfo = createEventDispatcher();
     
-    $: dispatchFacilityInfo('change', {
+    export let locationInfo: LocationInfo = null;
+    $:locationInfo = {
+        activitySystemCostIndex,
+        activityTax,
+        structureRoleBonuses,
+        structureRigBonuses
+    }
+
+    $: dispatchLocationInfo('change', {
         activitySystemCostIndex,
         activityTax,
         structureRoleBonuses,
