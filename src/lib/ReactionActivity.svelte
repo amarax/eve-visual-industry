@@ -1,7 +1,7 @@
 <script lang="ts">
     import { EntityCollection, Location_Id, Universe } from "$lib/eve-data/EveData";
     import { CanBeProduced, GetReactionActivity, Industry, ProductToActivity, REACTION_ACTIVITY_ID } from "$lib/eve-data/EveIndustry";
-    import { CreateProductionJobStore } from "$lib/IndustryJob";
+    import { CreateProductionJobStore, ModifiersFromLocationInfo } from "$lib/IndustryJob";
     import type { IndustryJobStore } from "$lib/IndustryJob";
     import { MarketPrices } from "./eve-data/EveMarkets";
     import { CharacterSkills } from "$lib/eve-data/EveCharacter";
@@ -83,45 +83,14 @@ import type { EveBlueprint } from "./eve-data/ESI";
         const ATHANOR_TYPE_ID = 35835;
         
         let entries = Object.values($locations)
-            .filter((location: EveLocation)=>location?.type_id == ATHANOR_TYPE_ID)
-            .map((location: EveLocation)=>[location?.type_id, location]);
+            .filter((l: EveLocation)=>l?.type_id == ATHANOR_TYPE_ID)
+            .map((l: EveLocation)=>[l?.type_id, l]);
         
         _filteredLocations.set( Object.fromEntries(entries) );
     }
 
     export let defaultLocationId: Location_Id = null;
-    let locationId: Location_Id = defaultLocationId;
-    let activitySystemCostIndex = 0.05, activityTax = 10;
-    $: _job.update({
-        facilityModifiers: {
-            systemCostIndex: activitySystemCostIndex,
-            taxRate: activityTax,
-        }
-    });
-
-    let structureRoleBonuses, structureRigBonuses;
-    $: if(structureRoleBonuses) {
-        _job.update({
-            facilityModifiers: {
-                roleModifiers: {
-                    jobDuration: structureRoleBonuses.jobDurationModifier,
-                    materialConsumption: structureRoleBonuses.materialConsumptionModifier,
-                    jobCost: structureRoleBonuses.jobCostModifier,
-                }
-            }
-        });
-    }
-    $: if(structureRigBonuses) {
-        _job.update({
-            facilityModifiers: {
-                rigModifiers: {
-                    materialReduction: structureRigBonuses.materialReductionBonus,
-                    timeReduction: structureRigBonuses.timeReductionBonus,
-                    costReduction: structureRigBonuses.costReductionBonus,
-                }
-            }
-        });
-    }
+    export let location: Location_Id = defaultLocationId;
 
     // #endregion
 
@@ -200,7 +169,8 @@ import type { EveBlueprint } from "./eve-data/ESI";
 </div>
 
 <div class="combinedInput">
-    Runs <input type="range" value={$job.runs} on:input={event=>job.update({runs:parseInt(event.currentTarget.value)})} min={1} max={maxRuns} disabled={requiredQuantity !== null && !overrideRequiredQuantity} /> <input type="number" value={$job.runs} on:input={event=>job.update({runs:parseInt(event.currentTarget.value)})} disabled={requiredQuantity !== null && !overrideRequiredQuantity} /> 
+    Runs <input type="range" value={$job?.runs} on:input={event=>job.update({runs:parseInt(event.currentTarget.value)})} min={1} max={maxRuns} disabled={requiredQuantity !== null && !overrideRequiredQuantity} /> 
+    <input type="number" value={$job?.runs} on:input={event=>job.update({runs:parseInt(event.currentTarget.value)})} disabled={requiredQuantity !== null && !overrideRequiredQuantity} /> 
     {#if requiredQuantity !== null}
         <label><input type="checkbox" bind:checked={overrideRequiredQuantity} /> Override</label> 
     {/if}
@@ -208,8 +178,7 @@ import type { EveBlueprint } from "./eve-data/ESI";
 
 <p>
     <b>Facility</b>
-    <LocationSelector bind:value={locationId} activity={REACTION_ACTIVITY_ID}
-        bind:activitySystemCostIndex bind:activityTax bind:structureRoleBonuses bind:structureRigBonuses />
+    <LocationSelector activity={$job.activity.activity.activityID} bind:value={location} on:change={event=>job.update({facilityModifiers:ModifiersFromLocationInfo(event.detail)})} />
 </p>
 
 <b>Production</b>
@@ -247,7 +216,7 @@ import type { EveBlueprint } from "./eve-data/ESI";
             {#if GetReactionActivity(type_id, $Industry).activity}
                 <svelte:self _productTypeId={type_id} requiredQuantity={$_job.materialQuantity(type_id)} 
                     bind:unitCost={producedPrices[type_id]} bind:producedItems
-                    defaultLocationId={locationId}
+                    defaultLocationId={location}
                     compact
                 />
             {:else}
@@ -258,3 +227,5 @@ import type { EveBlueprint } from "./eve-data/ESI";
     {/each}
 
 </div>
+
+{@debug location}

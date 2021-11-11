@@ -1,8 +1,8 @@
-import { get, writable } from "svelte/store";
+import { writable } from "svelte/store";
 
 import type { Readable } from "svelte/store";
 import type { EntityCollection, Type_Id } from "$lib/eve-data/EveData"
-import type { IndustryActivity, IndustryStore, ProductToIndustryTypeMap } from "$lib/eve-data/EveIndustry"
+import type { IndustryActivity, ProductToIndustryTypeMap } from "$lib/eve-data/EveIndustry"
 import type { DurationSeconds, IskAmount, MarketPrices, Quantity } from "$lib/eve-data/EveMarkets"
 import { ApplyEffects } from "$lib/eve-data/EveDogma";
 
@@ -219,4 +219,50 @@ export function CreateProductionJobStore(selectedProduct: Type_Id, productToActi
     let activity = productToActivity.get(selectedProduct)?.activity;
 
     return CreateIndustryJobStore(activity, selectedProduct);
+}
+
+
+interface EveLocationInfo {
+    activitySystemCostIndex?,
+    activityTax?,
+    structureRoleBonuses?: {
+        jobDurationModifier: number,
+        materialConsumptionModifier: number,
+        jobCostModifier: number
+    },
+    structureRigBonuses?: {
+        materialReductionBonus: number,
+        timeReductionBonus: number,
+        costReductionBonus: number,
+    },
+}
+
+// TODO this should be the place that handles activity-related details
+export function ModifiersFromLocationInfo(locationInfo: EveLocationInfo): IndustryFacilityModifiers {
+    let modifiers: IndustryFacilityModifiers = {
+        systemCostIndex: locationInfo.activitySystemCostIndex,
+        taxRate: locationInfo.activityTax,
+
+    }
+
+    if(locationInfo.structureRoleBonuses) {
+        let structureRoleBonuses = locationInfo.structureRoleBonuses;
+        modifiers.roleModifiers = {
+            jobDuration: structureRoleBonuses.jobDurationModifier,
+            materialConsumption: structureRoleBonuses.materialConsumptionModifier,
+            jobCost: structureRoleBonuses.jobCostModifier,
+
+        }
+    }
+
+    if(locationInfo.structureRigBonuses) {
+        let structureRigBonuses = locationInfo.structureRigBonuses;
+        modifiers.rigModifiers = {
+            materialReduction: structureRigBonuses.materialReductionBonus,
+            timeReduction: structureRigBonuses.timeReductionBonus,
+            costReduction: structureRigBonuses.costReductionBonus,
+        }
+    }
+
+    return modifiers;
 }

@@ -1,21 +1,23 @@
 <script lang="ts">
-    import { EveLocation, IsLocationStation, Location_Id, StructureTaxRates } from "$lib/eve-data/EveData";
-    import { getContext } from "svelte";
+    import { EveLocation, IsLocationStation, StructureTaxRates } from "$lib/eve-data/EveData";
+    import { createEventDispatcher, getContext } from "svelte";
     import type { Readable } from "svelte/store";
     import { Activity_Id, GetCostIndex, Industry, IndustrySystems, MANUFACTURING_ACTIVITY_ID, REACTION_ACTIVITY_ID } from "$lib/eve-data/EveIndustry";
     import { FormatPercentage } from "$lib/Format";
+import type { EveLocationId } from "$lib/eve-data/ESI";
+import type { EveLocationsContext } from "src/contexts";
 
-    export let value: Location_Id = null;
+    export let value: EveLocationId = null;
 
-    $: locations = getContext('locations') as Readable<{[index:Location_Id]: EveLocation }>;
+    $: locations = getContext('EveLocations') as Readable<EveLocationsContext>;
     export let allowUnselected: boolean = false;
 
-    $: if(!allowUnselected && Object.keys($locations).length>0 && Object.keys($locations).map(id=>parseInt(id)).indexOf(value) < 0) {
-        value = parseInt( Object.keys($locations)[0] );
+    $: if(!allowUnselected && !$locations.has(value) && $locations.size >= 1) {
+        value = $locations.keys()[0];
     }
 
     export let selectedLocation: EveLocation = null;
-    $: selectedLocation = $locations[value];
+    $: selectedLocation = $locations.get(value);
 
     export let activity: Activity_Id = null;
     $: _activity = $Industry.activities[activity];
@@ -129,11 +131,27 @@
     export let collapsed = true;
 
 
-    let _locations: Array<{location_id:Location_Id, name:string}> = [];
-    $: _locations = Object.keys($locations).map(id=>({
-        location_id: parseInt(id), 
-        name: $locations[id]?.name
+    let _locations: Array<{location_id:EveLocationId, name:string}> = [];
+    $: _locations = [...$locations.entries()].map(entry=>({
+        location_id: entry[0], 
+        name: entry[1]?.name
     })).sort((a,b)=>(a.name && b.name) ? a.name.localeCompare(b.name) : 0)
+
+    type FacilityInfo = {
+        activitySystemCostIndex,
+        activityTax,
+        structureRoleBonuses,
+        structureRigBonuses,
+    }
+
+    const dispatchFacilityInfo = createEventDispatcher();
+    
+    $: dispatchFacilityInfo('change', {
+        activitySystemCostIndex,
+        activityTax,
+        structureRoleBonuses,
+        structureRigBonuses
+    })
 </script>
 
 
@@ -149,7 +167,7 @@
 
 
 <span class="overlay-parent">
-    <select bind:value={value}>
+    <select value={value} on:change={event=>{value=parseInt(event.currentTarget.value);}}>
         {#if allowUnselected}
             <option value={null}></option>
         {/if}

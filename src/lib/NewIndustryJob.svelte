@@ -1,19 +1,17 @@
 <script lang="ts">
 import LocationSelector from "./components/LocationSelector.svelte";
-import type { EveBlueprint } from "./eve-data/ESI";
+import type { EveBlueprint, EveLocationId } from "./eve-data/ESI";
 import { Industry } from "./eve-data/EveIndustry";
 import EveTypes from "./eve-data/EveTypes";
 
-import type { IndustryJobStore } from "./IndustryJob";
+import { IndustryJobStore, ModifiersFromLocationInfo } from "./IndustryJob";
 import ReactionActivity from "./ReactionActivity.svelte";
 
     export let blueprint: EveBlueprint;
     export let job: IndustryJobStore;
 
-    $: if(blueprint) {
-        
-    }
-
+    let location: EveLocationId = blueprint.location_id;
+    $: console.log(location)
 
     let collapsed = true;
 
@@ -31,8 +29,8 @@ import ReactionActivity from "./ReactionActivity.svelte";
         <button on:click={()=>collapsed=false}>+</button> 
         {$EveTypes.get($job.selectedProduct).name} 
         <input type="range" value={$job.runs} on:input={event=>job.update({runs:parseInt(event.currentTarget.value)})} min={1} max={maxRuns} />
-        <LocationSelector value={blueprint.location_id} />
+        <LocationSelector activity={$job.activity.activity.activityID} bind:value={location} on:change={event=>job.update({facilityModifiers:ModifiersFromLocationInfo(event.detail)})} />
     {:else}
-        <button on:click={()=>collapsed=true}>&ndash;</button> <ReactionActivity {job} {blueprint} defaultLocationId={blueprint?.location_id} />
+        <button on:click={()=>collapsed=true}>&ndash;</button> <ReactionActivity {location} {job} {blueprint} />
     {/if}
 {/if}

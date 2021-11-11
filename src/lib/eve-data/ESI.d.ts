@@ -31,3 +31,7 @@ export type EveBlueprint = {
     time_efficiency,
     type_id 
 }
+
+
+export type EveLocationId = number;
+
