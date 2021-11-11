@@ -125,6 +125,15 @@ import FacilitySelector from "./components/FacilitySelector.svelte";
     }
 </script>
 
+<style lang="scss">
+    .combinedInput {
+        input[type=number] {
+            width: 60px;
+            text-align: right;
+        }
+    }
+</style>
+
 <div class={`breakdown ${!compact?"summary":""}`}>
     {#if compact}
         <div/>
@@ -199,7 +208,7 @@ import FacilitySelector from "./components/FacilitySelector.svelte";
         {#if producedItems[type_id]}
         <div class="subItem">
             {#if GetReactionActivity(type_id, $Industry).activity}
-                <svelte:self _productTypeId={type_id} requiredQuantity={$_job.materialQuantity(type_id)} 
+                <svelte:self productTypeId={type_id} requiredQuantity={$_job.materialQuantity(type_id)} 
                     bind:unitCost={producedPrices[type_id]} bind:producedItems
                     defaultLocationId={location}
                     compact
