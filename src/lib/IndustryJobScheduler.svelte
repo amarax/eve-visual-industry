@@ -1,50 +1,122 @@
+
 <script lang="ts">
     import type { EveCharacterId } from "$lib/eve-data/EveCharacter";
     import CreateESIStore from "./eve-data/ESIStore";
     import type {ESIStore} from "./eve-data/ESIStore";
-    import EveTypes from "$lib/eve-data/EveTypes";
-    import { afterUpdate } from "svelte";
+    import EveTypes, { EveTypeId } from "$lib/eve-data/EveTypes";
 
     import { scaleLinear, scaleTime } from "d3-scale";
-import { Activity_Id, INVENTION_ACTIVITY_ID, MANUFACTURING_ACTIVITY_ID, REACTION_ACTIVITY_ID } from "./eve-data/EveIndustry";
+    import { Industry, INVENTION_ACTIVITY_ID, MANUFACTURING_ACTIVITY_ID, REACTION_ACTIVITY_ID } from "$lib/eve-data/EveIndustry";
+    import type { Activity_Id } from "$lib/eve-data/EveIndustry";
+    import type { EveBlueprint, EveJobDetails, EveJobDetailsStatus } from "$lib/eve-data/ESI";
+    import { CreateIndustryJobStore, IndustryJobStore } from "./IndustryJob";
+import NewIndustryJob from "./NewIndustryJob.svelte";
+import { get } from "svelte/store";
+import type { JobDetails, JobDetailsStatus } from "./IndustryJobScheduler";
+import IndustryJobScheduleBlock from "./IndustryJobScheduleBlock.svelte";
+import type { Quantity } from "./eve-data/EveMarkets";
 
     export let characterId: EveCharacterId
 
-    type JobDetails = {
-        activity_id,
-        blueprint_id,
-        blueprint_location_id,
-        blueprint_type_id,
-        cost,
-        duration,
-        end_date,
-        facility_id,
-        installer_id,
-        job_id,
-        licensed_runs,
-        output_location_id,
-        probability,
-        product_type_id,
-        runs,
-        start_date,
-        station_id,
-        status,
-    }
+    type EveItemId = number;
+
+
+
 
     let characterJobs: ESIStore<Array<JobDetails>>;
-    $: if(characterId) characterJobs = CreateESIStore<Array<JobDetails>>(`/characters/${characterId}/industry/jobs/`, null, {char:characterId, include_completed:true})
+    let characterBlueprints: ESIStore<Array<EveBlueprint>>;
+    let _prevCharacterId: EveCharacterId;
+    $: if(characterId && _prevCharacterId !== characterId) {
+        characterJobs = CreateESIStore<Array<EveJobDetails>>(`/characters/${characterId}/industry/jobs/`, null, {char:characterId, include_completed:true});
+        characterBlueprints = CreateESIStore<Array<EveBlueprint>>(`/characters/${characterId}/blueprints/`, null, {char:characterId});
+        _prevCharacterId = characterId;
+    }
 
+    let blueprints: Array<EveBlueprint>;
+    $: {
+        blueprints = $characterBlueprints instanceof Array ? $characterBlueprints : [];
+    }
+
+
+    type NewJobId = number;
+
+    let scheduledJobs = new Map<NewJobId, JobDetails>();
+
+    let selectedBlueprintItem: EveItemId;
+    function addJob() {
+        let _selectedBlueprintItem = blueprints.find(b=>b.item_id===selectedBlueprintItem);
+
+        if(_selectedBlueprintItem) {
+            let activities = $Industry.types[_selectedBlueprintItem.type_id]?.activities;
+            let activity = activities[REACTION_ACTIVITY_ID] ?? activities[MANUFACTURING_ACTIVITY_ID]
+
+            let industryJob = CreateIndustryJobStore(activity);
+            let _initIndustryJob = get(industryJob);
+            
+            let _id = Date.now();
+            let scheduledJob = {
+                job_id: _id,
+                activity_id: activity.activity.activityID,
+                blueprint_id: _selectedBlueprintItem.item_id,
+                blueprint_location_id: _selectedBlueprintItem.location_id,
+                blueprint_type_id: _selectedBlueprintItem.type_id,
+                end_date: Date.now() + _initIndustryJob.jobDuration*1000,
+                start_date: Date.now(),
+                status: "scheduled" as JobDetailsStatus,
+                runs: _initIndustryJob.runs,
+                product_type_id: _initIndustryJob.selectedProduct,
+                industryJob: industryJob,                
+            }
+            scheduledJobs.set(_id, scheduledJob)
+
+            industryJob.subscribe(ij=>{
+                let j = scheduledJobs.get(_id);
+                // Assume activity and product_type remain the same
+                let newEndDate = j.start_date + ij.jobDuration*1000;
+                let newRuns = ij.runs;
+
+                // Only trigger re-render on changes
+                if(newEndDate!=j.end_date || newRuns!=j.runs) {
+                    j.end_date = newEndDate;
+                    j.runs = newRuns;
+                    scheduledJobs = scheduledJobs;
+                }
+
+
+                let materials = [];
+                for(let {materialTypeID} of Object.values( ij.activity.materials )) {
+                    materials.push({materialTypeId: materialTypeID, quantity: ij.materialQuantity(materialTypeID)})
+                }
+                jobMaterials.set(industryJob,materials);
+                jobMaterials = jobMaterials;
+            })
+
+            scheduledJobs = scheduledJobs;
+        }
+
+        selectedBlueprintItem = null;
+    }
+    function removeJob(job_id) {
+        jobMaterials.delete( scheduledJobs.get(job_id).industryJob );
+        jobMaterials = jobMaterials;
+
+        scheduledJobs.delete(job_id);
+        scheduledJobs = scheduledJobs;
+    }
+
+    
     export let groupBy = "activity_id";
 
     let _jobs: Array<JobDetails>;
     $: {
-        _jobs = $characterJobs instanceof Array ? $characterJobs : [] as Array<JobDetails>;
+        _jobs = $characterJobs instanceof Array ? $characterJobs : [];
         _jobs.sort((a,b)=>a[groupBy] - b[groupBy])
     }
     
 
     // Assign the jobs into rows
     let rows = new Map<number, Array<JobDetails>>();
+    let flattenedRows: Array<{row: number, job: JobDetails}> = [];
     $: {
         // Group jobs in the same facility together
         let facilities = new Map<number, Array<JobDetails>>();
@@ -83,8 +155,73 @@ import { Activity_Id, INVENTION_ACTIVITY_ID, MANUFACTURING_ACTIVITY_ID, REACTION
             }
         }
 
+        flattenedRows = [];
+        for(let [row, jobs] of rows.entries()) {
+            for(let job of jobs) {
+                flattenedRows.push({row, job});
+            }
+        }
+        // Sort so the DOM elements will be the same order
+        flattenedRows.sort((a,b)=>a.job.job_id - b.job.job_id);
+        flattenedRows = flattenedRows;
+    }
+    
+
+    let scheduledRows = new Map<number, Array<JobDetails>>();
+    let flattenedScheduledRows = [];
+    $: {
+        scheduledRows.clear();
+        // For now just add the scheduled rows to any empty row
+        for(let sj of scheduledJobs.values()) {
+            for(let [row, rowJobs] of rows.entries()) {
+                let lastJobInRow = rowJobs[0];  // Row jobs is sorted end to start
+                if(scheduledRows.has(row)) {
+                    let scheduledJobRow = scheduledRows.get(row);
+                    lastJobInRow = scheduledJobRow[scheduledJobRow.length-1];
+                }
+
+                if(new Date(sj.start_date) > new Date(lastJobInRow.end_date)) {
+                    // Add to row
+                    if(!scheduledRows.has(row)) {
+                        scheduledRows.set(row, []);
+                    }
+
+                    scheduledRows.get(row).push(sj);
+                    break;
+                }
+            }
+        }
+        scheduledRows = scheduledRows;
+
+        flattenedScheduledRows = [];
+        for(let [row, jobs] of scheduledRows.entries()) {
+            for(let job of jobs) {
+                flattenedScheduledRows.push({row, job});
+            }
+        }
+        flattenedScheduledRows.sort((a,b)=>a.job.job_id - b.job.job_id);
+        flattenedScheduledRows = flattenedScheduledRows;
     }
 
+
+    // #region Materials Calculation
+
+    let jobMaterials = new Map<IndustryJobStore, Array<{materialTypeId:EveTypeId, quantity:Quantity}>>();
+    export let materialsList = new Map<EveTypeId, Quantity>();
+    $: {
+        materialsList.clear();
+
+        for(let materials of jobMaterials.values()) {
+            for(let {materialTypeId, quantity} of materials) {
+                materialsList.set(materialTypeId, (materialsList.get(materialTypeId) ?? 0) + quantity);
+            }
+        }
+
+        materialsList = materialsList;
+    }
+
+
+    // #endregion
 
     const rowHeight = 20;
 
@@ -100,63 +237,17 @@ import { Activity_Id, INVENTION_ACTIVITY_ID, MANUFACTURING_ACTIVITY_ID, REACTION
 
     const margin = 2;
 
-    
-    function activityToClass(activityId: Activity_Id) {
-        switch(activityId) {
-            case MANUFACTURING_ACTIVITY_ID:
-                return "manufacturing";
-            case REACTION_ACTIVITY_ID:
-                return "reaction";
-            case INVENTION_ACTIVITY_ID:
-                return "invention";
-            default:
-                return "";
-        }
-    }
-
-    
-    let scheduleChart: SVGElement;
     export let xOffset: number = 0;
-    afterUpdate(()=>{
-        // scheduleChart?.setAttribute('viewBox',`${xOffset} 0 ${scheduleChart.clientWidth} ${scheduleChart.clientHeight}`)
-    })
+
+    let blueprintSelector: HTMLSelectElement;
+
 </script>
 
 <style lang="scss">
     svg {
         background-color: #222;
 
-
-        g.job {
-            rect.job {
-                fill: rgb(0, 84, 187);
-                stroke: none;
-
-                opacity: 70%;
-
-                &.manufacturing {
-                    fill: rgb(182, 119, 0);
-                }
-                &.reaction {
-                    fill: rgb(0, 189, 145);
-                }
-                &.invention {
-                    fill: rgb(48, 148, 191);
-                }
-
-                &.delivered {
-                    opacity: 30%;
-                }
-            }
-
-            &:hover {
-                rect.job {
-                    opacity: 100%;
-                }
-            }
-        }
-
-        
+       
         rect.row {
             fill: transparent;
 
@@ -168,33 +259,30 @@ import { Activity_Id, INVENTION_ACTIVITY_ID, MANUFACTURING_ACTIVITY_ID, REACTION
             fill: #666;
         }
 
-        text {
-            fill: #fff;
-
-            font-size: 10px;
-
-            pointer-events: none;
-        }
 
     }
 </style>
 
-<svg bind:this={scheduleChart} width="100%" height={Math.max(rows.size, 1)*rowHeight}>
+<select bind:value={selectedBlueprintItem}>
+    {#each blueprints as blueprint (blueprint.item_id)}
+        <option value={blueprint.item_id}>{$EveTypes.get(blueprint.type_id)?.name ?? blueprint.type_id} </option>
+    {/each}
+</select>
+<button on:click={addJob}>Add</button><br/>
+{#each [...scheduledJobs.values()] as job}
+    <NewIndustryJob blueprint={blueprints.find(b=>b.item_id===job.blueprint_id) } job={job.industryJob} /> <button on:click={event=>removeJob(job.job_id)}>Remove</button><br/>
+{/each}
+
+<svg width="100%" height={Math.max(rows.size, 1)*rowHeight}>
     <g class="canvas" transform={`translate(${xOffset*100})`}>
 
         <rect class="now" x={x(Date.now())} width={1} y={0} height={y(rows.size)} />
-        {#each [...rows.values()] as row, r}
-            {#each row as job (job.job_id)}
-                <g class="job" transform={`translate(${x(job.start_date)}, ${y(r)})`}>
-                    <clipPath  id={`job-${job.job_id}`}>
-                        <rect width={x(job.end_date)-x(job.start_date)} y={margin} height={y(r+1)-y(r) - margin*2} />
-                    </clipPath>
-                    <rect class={`job ${activityToClass(job.activity_id)} ${job.status}`} width={x(job.end_date)-x(job.start_date)} y={margin} height={y(r+1)-y(r) - margin*2} 
-                        on:click={event=>console.log(job)}
-                    />
-                    <text clip-path={`url(#job-${job.job_id})`} y={13} x={4}>{$EveTypes.get(job.product_type_id)?.name} x{job.runs}</text>
-                </g>
-            {/each}
+        {#each flattenedRows as {row, job} (job.job_id)}
+            <IndustryJobScheduleBlock {row} {job} {x} {y} />
+        {/each}
+        {#each flattenedScheduledRows as {row, job} (job.job_id)}
+            <IndustryJobScheduleBlock {row} {job} {x} {y} />
         {/each}
     </g>
 </svg>
+

@@ -1,7 +1,7 @@
 <script lang="ts">
     import CharacterSelector from '$lib/components/CharacterSelector.svelte';
     import { CharacterBlueprints, EveCharacterId } from '$lib/eve-data/EveCharacter';
-    import { GetLocationStore } from '$lib/eve-data/EveData';
+    import { EveLocation, GetLocationStore } from '$lib/eve-data/EveData';
     import LocationSelector from '$lib/components/LocationSelector.svelte';
     import { onMount, setContext } from 'svelte';
     import { readable, writable } from 'svelte/store';
@@ -14,6 +14,8 @@
 
     import '../app.scss';
 import { session } from '$app/stores';
+import type { EveLocationId } from '$lib/eve-data/ESI';
+import type { EveLocationsContext } from 'src/contexts';
 
 
     $: loaded = $EveTypes.size > 0 && $EveMarketGroups.size > 0;
@@ -33,30 +35,31 @@ import { session } from '$app/stores';
     ]
 
     // Set the locations context for all location selectors below
-    let locations = writable({});
+    let _locations = new Map<EveLocationId,EveLocation>();
+    let locations = writable<EveLocationsContext>(_locations);
     $: if(mounted) {    // Ensure that subscribes run only if the component is mounted
-        let _locations = {};
+        _locations.clear();
         locations.set(_locations);
 
         $blueprints?.forEach(b=>{ 
-            _locations[b.location_id] = null;
+            _locations.set(b.location_id, null);
         });
 
-        TradeHubs.forEach(location_id=>_locations[location_id] = null)
+        TradeHubs.forEach(location_id=>_locations.set(location_id, null))
 
-        let ids = Object.keys(_locations);
-        ids.forEach(location_id=>{
-            GetLocationStore(parseInt(location_id)).subscribe(value=>{
-                _locations[location_id] = value;
+        for(let locationId of _locations.keys()) {
+            GetLocationStore(locationId).subscribe(value=>{
+                _locations.set(locationId, value);
                 locations.set(_locations);
             });
-        })
+        }
+
     }
+    setContext('EveLocations', locations);
 
 	let mounted = false;
     onMount(()=>{mounted = true})
 
-    setContext('locations', locations);
 
     let marketFilterLocation = writable<Location_Id>(null);
     setContext('marketFilterLocation', marketFilterLocation);

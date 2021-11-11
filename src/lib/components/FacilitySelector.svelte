@@ -1,56 +1,36 @@
 <script lang="ts">
-import { getContext, setContext } from "svelte";
-import { writable } from "svelte/store";
+import { createEventDispatcher, getContext, setContext } from "svelte";
+import { Readable, writable } from "svelte/store";
 import type { Writable } from "svelte/store";
 
-import type { EntityCollection, EveLocation, Location_Id } from "$lib/eve-data/EveData";
 import { REACTION_ACTIVITY_ID } from "$lib/eve-data/EveIndustry";
-import type { IndustryFacilityModifiers } from "$lib/IndustryJob";
+import { IndustryFacilityModifiers, ModifiersFromLocationInfo } from "$lib/IndustryJob";
 
 import LocationSelector from "$lib/components/LocationSelector.svelte";
+import type { EveLocationsContext } from "src/contexts";
+import type { EveLocationId } from "$lib/eve-data/ESI";
 
-    export let facilityModifiers: IndustryFacilityModifiers = {
-        systemCostIndex: 0.05,
-        taxRate: 10
-    }
-
-    let structureRoleBonuses, structureRigBonuses;
-    $: if(structureRoleBonuses) {
-        facilityModifiers.roleModifiers = {
-            jobDuration: structureRoleBonuses.jobDurationModifier,
-            materialConsumption: structureRoleBonuses.materialConsumptionModifier,
-            jobCost: structureRoleBonuses.jobCostModifier,
-        }
-    } else {
-        delete facilityModifiers.roleModifiers;
-    }
-    $: if(structureRigBonuses) {
-        facilityModifiers.rigModifiers = {
-            materialReduction: structureRigBonuses.materialReductionBonus,
-            timeReduction: structureRigBonuses.timeReductionBonus,
-            costReduction: structureRigBonuses.costReductionBonus,
-        }
-    } else {
-        delete facilityModifiers.rigModifiers;
-    }
-    export let value: Location_Id;
+    export let value: EveLocationId;
 
     export let activity;
     
-    let locations: Writable<EntityCollection<EveLocation>> = getContext('locations');   // This should be a collection of all locations
-    let _filteredLocations: Writable<EntityCollection<EveLocation>> = writable($locations);
-    setContext('locations', _filteredLocations);
+    let locations: Readable<EveLocationsContext> = getContext('EveLocations');   // This should be a collection of all locations
+    let _filteredLocations: Writable<EveLocationsContext> = writable($locations);
+    setContext('EveLocations', _filteredLocations);
     $: if($locations) {
         switch(activity) {
             case REACTION_ACTIVITY_ID:
                 // For now we're just going to filter for Athanors
                 const ATHANOR_TYPE_ID = 35835;
                 
-                let entries = Object.values($locations)
-                    .filter((location: EveLocation)=>location?.type_id == ATHANOR_TYPE_ID)
-                    .map((location: EveLocation)=>[location?.type_id, location]);
-                
-                _filteredLocations.set( Object.fromEntries(entries) );
+                let _locations: EveLocationsContext = new Map();
+                for(let [id, location] of $locations.entries()) {
+                    if(location.type_id == ATHANOR_TYPE_ID) {
+                        _locations.set(id, location);
+                    }
+                }
+               
+                _filteredLocations.set(_locations);
             break;
             default:
                 _filteredLocations.set($locations)
@@ -58,10 +38,13 @@ import LocationSelector from "$lib/components/LocationSelector.svelte";
     }
 
     // TODO transfer more facility-related functionality out of LocationSelector
+
+    const dispatch = createEventDispatcher();
+
+    let locationInfo;
+    export let facilityModifiers: IndustryFacilityModifiers = {};
+    $: if(locationInfo) facilityModifiers = ModifiersFromLocationInfo(locationInfo);
+
 </script>
 
-<LocationSelector bind:value {activity}
-    bind:activitySystemCostIndex={facilityModifiers.systemCostIndex} 
-    bind:activityTax={facilityModifiers.taxRate} 
-    bind:structureRoleBonuses 
-    bind:structureRigBonuses />
+<LocationSelector bind:value {activity} bind:locationInfo />
