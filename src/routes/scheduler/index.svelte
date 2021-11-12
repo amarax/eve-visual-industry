@@ -10,7 +10,7 @@ import EveTypes from "$lib/eve-data/EveTypes";
     import IndustryJobScheduler from "$lib/IndustryJobScheduler.svelte";
     import { getContext } from "svelte";
 
-    import type { Readable } from "svelte/store";
+    import { get, Readable } from "svelte/store";
 
 
 
@@ -115,7 +115,7 @@ import EveTypes from "$lib/eve-data/EveTypes";
 
 <p>
 <b>Bill of Materials</b> <button class="fixedWidth" on:click={copyBOMToClipboard} disabled={copied}>{copied?"Copied!":"Copy to clipboard"}</button><br/>
-{#each [...materialsList.entries()] as [materialTypeId, quantity]}
+{#each [...materialsList.entries()].sort((a,b)=>$EveTypes.get(a[0]).name.localeCompare($EveTypes.get(b[0]).name)) as [materialTypeId, quantity]}
     <span class="itemName">{$EveTypes.get(materialTypeId).name}</span>
     <span class="qty">{Math.max(quantity - (materialsInventory[materialTypeId]??0), 0)}</span>
     <span class="inventory"><input type="number" bind:value={materialsInventory[materialTypeId]} /></span>
