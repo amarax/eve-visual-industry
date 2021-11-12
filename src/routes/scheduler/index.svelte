@@ -48,7 +48,7 @@ import EveTypes from "$lib/eve-data/EveTypes";
         for(let [materialTypeId, quantity] of materialsList.entries()) {
             let requiredQuantity = quantity - (materialsInventory[materialTypeId]??0)
             if(requiredQuantity > 0)
-                bom += `${$EveTypes.get(materialTypeId).name} ${quantity}\n`;
+                bom += `${$EveTypes.get(materialTypeId).name} ${requiredQuantity}\n`;
         }
         await navigator.clipboard.writeText(bom);
         copied = true;
@@ -117,7 +117,7 @@ import EveTypes from "$lib/eve-data/EveTypes";
 <b>Bill of Materials</b> <button class="fixedWidth" on:click={copyBOMToClipboard} disabled={copied}>{copied?"Copied!":"Copy to clipboard"}</button><br/>
 {#each [...materialsList.entries()].sort((a,b)=>$EveTypes.get(a[0]).name.localeCompare($EveTypes.get(b[0]).name)) as [materialTypeId, quantity]}
     <span class="itemName">{$EveTypes.get(materialTypeId).name}</span>
-    <span class="qty">{Math.max(quantity - (materialsInventory[materialTypeId]??0), 0)}</span>
+    <span class="qty">{quantity - (materialsInventory[materialTypeId]??0)}</span>
     <span class="inventory"><input type="number" bind:value={materialsInventory[materialTypeId]} /></span>
     <br/>
 {/each}
