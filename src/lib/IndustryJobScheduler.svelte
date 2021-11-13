@@ -18,6 +18,7 @@ import type { Quantity } from "./eve-data/EveMarkets";
 import { onDestroy, onMount } from "svelte";
 import { GetScheduledJobs, OverwriteScheduledJobs } from "./local-data/ScheduledJobs";
 import type { EVIScheduledJob } from "./local-data/ScheduledJobs";
+import { max } from 'd3-array';
 
     export let characterId: EveCharacterId
 
@@ -63,8 +64,6 @@ import type { EVIScheduledJob } from "./local-data/ScheduledJobs";
             let activity_id = activity.activity.activityID;
             let start_date = restore?.start_date || Date.now();
             let runs = _initIndustryJob.runs;
-
-            console.log(runs);
 
             let _id = restore?.job_id ?? Date.now();   // Maybe we should automatically generate this
             let scheduledJob = {
@@ -168,6 +167,20 @@ import type { EVIScheduledJob } from "./local-data/ScheduledJobs";
         _jobs.sort((a,b)=>a[groupBy] - b[groupBy])
     }
     
+    const ACTIVITY_ID_SORT_ORDER = {
+        [MANUFACTURING_ACTIVITY_ID]: 0,
+        [REACTION_ACTIVITY_ID]: 1,
+        9: 1,
+        [INVENTION_ACTIVITY_ID]: 2,
+        5: 3,   // Copying
+        4: 4,   // Material efficiency
+        3: 5,   // Time efficiency
+
+        // Not used in TQ
+        0: 6,
+        6: 6,
+        7: 6,
+    }
 
     // Assign the jobs into rows
     let rows = new Map<number, Array<JobDetails>>();
@@ -183,9 +196,18 @@ import type { EVIScheduledJob } from "./local-data/ScheduledJobs";
             facilities.get(job[groupBy]).push(job);
         })
 
+        let facilitiesGroups = [...facilities.entries()];
+        if(groupBy == 'activity_id') {
+            // Impose a sort order
+            facilitiesGroups.sort((a,b)=>ACTIVITY_ID_SORT_ORDER[a[0]] - ACTIVITY_ID_SORT_ORDER[b[0]])
+        } else {
+            facilitiesGroups.sort((a,b)=>a[0] - b[0])
+       }
+        let facilitiesValues = facilitiesGroups.map(([g, fg])=>fg);
+
         rows.clear();
         rows = rows;
-        for(let facilityJobs of facilities.values()) {
+        for(let facilityJobs of facilitiesValues) {
             facilityJobs.sort((a,b)=>new Date(b.end_date).getTime() - new Date(a.end_date).getTime())
             let firstFacilityRow = rows.size;
 
@@ -226,16 +248,29 @@ import type { EVIScheduledJob } from "./local-data/ScheduledJobs";
     let flattenedScheduledRows = [];
     $: {
         scheduledRows.clear();
-        // For now just add the scheduled rows to any empty row
         for(let sj of scheduledJobs.values()) {
-            for(let [row, rowJobs] of rows.entries()) {
-                let lastJobInRow = rowJobs[0];  // Row jobs is sorted end to start
+            let row = 0;
+            while(row < 100) {
+                let rowJobs = rows.get(row);
+                let lastJobInRow = rowJobs && rowJobs[0];  // Row jobs is sorted end to start
+
+                // For now we just assume that the rows are already populated with previous jobs
+                // so any overflow we just handle later on
+                if(lastJobInRow && lastJobInRow[groupBy] !== sj[groupBy]) {
+                    if(groupBy=='activity_id' && lastJobInRow[groupBy]==9 && sj[groupBy] == REACTION_ACTIVITY_ID) {
+                        // Special exception for reactions as they're still considered equivalent
+                    } else {
+                        row++;
+                        continue;
+                    }
+                }
+
                 if(scheduledRows.has(row)) {
                     let scheduledJobRow = scheduledRows.get(row);
                     lastJobInRow = scheduledJobRow[scheduledJobRow.length-1];
                 }
 
-                if(new Date(sj.start_date) > new Date(lastJobInRow.end_date)) {
+                if(!lastJobInRow || (new Date(sj.start_date) > new Date(lastJobInRow.end_date))) {
                     // Add to row
                     if(!scheduledRows.has(row)) {
                         scheduledRows.set(row, []);
@@ -244,6 +279,8 @@ import type { EVIScheduledJob } from "./local-data/ScheduledJobs";
                     scheduledRows.get(row).push(sj);
                     break;
                 }
+
+                row++;
             }
         }
         scheduledRows = scheduledRows;
@@ -257,7 +294,6 @@ import type { EVIScheduledJob } from "./local-data/ScheduledJobs";
         flattenedScheduledRows.sort((a,b)=>a.job.job_id - b.job.job_id);
         flattenedScheduledRows = flattenedScheduledRows;
     }
-
 
     // #region Materials Calculation
 
@@ -336,7 +372,7 @@ import type { EVIScheduledJob } from "./local-data/ScheduledJobs";
     <NewIndustryJob blueprint={blueprints.find(b=>b.item_id===job.blueprint_id) } job={job.industryJob} /> <button on:click={event=>removeJob(job.job_id)}>Remove</button><br/>
 {/each}
 
-<svg width="100%" height={Math.max(rows.size, 1)*rowHeight}>
+<svg width="100%" height={Math.max(rows.size, max([...scheduledRows.keys()])??0 + 1, 1)*rowHeight}>
     <g class="canvas" transform={`translate(${xOffset*100})`}>
 
         <rect class="now" x={x(Date.now())} width={1} y={0} height={y(rows.size)} />
