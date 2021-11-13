@@ -77,5 +77,5 @@ export async function OverwriteScheduledJobs(characterId: EveCharacterId, jobs: 
     }
 
     await tx.done;
-    console.log("Saved scheduled jobs");
+    console.log("Saved scheduled jobs", jobs.length);
 }

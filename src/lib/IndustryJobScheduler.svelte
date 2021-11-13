@@ -154,8 +154,8 @@ import type { EVIScheduledJob } from "./local-data/ScheduledJobs";
     onDestroy(()=>{
         if(_saveTimeout) {
             clearTimeout(_saveTimeout);
+            _save();
         }
-        _save();
     })
 
 
@@ -278,10 +278,7 @@ import type { EVIScheduledJob } from "./local-data/ScheduledJobs";
 
     // #endregion
 
-
     // #region load and save jobs from EVIDatabase
-    let _mounted = false;
-    onMount(()=>{_mounted = true})
     $: if($characterBlueprints && characterBlueprints.status == ESIStoreStatus.loaded) {
         GetScheduledJobs(characterId)
             .then(jobs=>{
@@ -291,7 +288,7 @@ import type { EVIScheduledJob } from "./local-data/ScheduledJobs";
                 console.log("Loaded jobs", jobs.length);
             })
 
-        // TODO save scheduled jobs
+        // TODO save scheduled jobs if there are changes
     }
 
     // #endregion
@@ -351,4 +348,3 @@ import type { EVIScheduledJob } from "./local-data/ScheduledJobs";
         {/each}
     </g>
 </svg>
-
