@@ -187,27 +187,27 @@ import { max } from 'd3-array';
     let flattenedRows: Array<{row: number, job: JobDetails}> = [];
     $: {
         // Group jobs in the same facility together
-        let facilities = new Map<number, Array<JobDetails>>();
+        let groups = new Map<number, Array<JobDetails>>();
         _jobs.forEach(job=>{
-            if(!facilities.has(job[groupBy])) {
-                facilities.set(job[groupBy], []);
+            if(!groups.has(job[groupBy])) {
+                groups.set(job[groupBy], []);
             }
 
-            facilities.get(job[groupBy]).push(job);
+            groups.get(job[groupBy]).push(job);
         })
 
-        let facilitiesGroups = [...facilities.entries()];
+        let sortedGroups = [...groups.entries()];
         if(groupBy == 'activity_id') {
             // Impose a sort order
-            facilitiesGroups.sort((a,b)=>ACTIVITY_ID_SORT_ORDER[a[0]] - ACTIVITY_ID_SORT_ORDER[b[0]])
+            sortedGroups.sort((a,b)=>ACTIVITY_ID_SORT_ORDER[a[0]] - ACTIVITY_ID_SORT_ORDER[b[0]])
         } else {
-            facilitiesGroups.sort((a,b)=>a[0] - b[0])
+            sortedGroups.sort((a,b)=>a[0] - b[0])
        }
-        let facilitiesValues = facilitiesGroups.map(([g, fg])=>fg);
+        let groupValues = sortedGroups.map(([g, fg])=>fg);
 
         rows.clear();
         rows = rows;
-        for(let facilityJobs of facilitiesValues) {
+        for(let facilityJobs of groupValues) {
             facilityJobs.sort((a,b)=>new Date(b.end_date).getTime() - new Date(a.end_date).getTime())
             let firstFacilityRow = rows.size;
 
@@ -348,6 +348,7 @@ import { max } from 'd3-array';
 
     let blueprintSelector: HTMLSelectElement;
 
+    $: numberOfRows = Math.max(rows.size, (max([...scheduledRows.keys()])??0) + 1, 1);
 </script>
 
 <style lang="scss">
@@ -372,10 +373,9 @@ import { max } from 'd3-array';
     <NewIndustryJob blueprint={blueprints.find(b=>b.item_id===job.blueprint_id) } job={job.industryJob} /> <button on:click={event=>removeJob(job.job_id)}>Remove</button><br/>
 {/each}
 
-<svg width="100%" height={Math.max(rows.size, max([...scheduledRows.keys()])??0 + 1, 1)*rowHeight}>
+<svg width="100%" height={numberOfRows*rowHeight}>
     <g class="canvas" transform={`translate(${xOffset*100})`}>
-
-        <rect class="now" x={x(Date.now())} width={1} y={0} height={y(rows.size)} />
+        <rect class="now" x={x(Date.now())} width={1} y={0} height={y(numberOfRows)} />
         {#each flattenedRows as {row, job} (job.job_id)}
             <IndustryJobScheduleBlock {row} {job} {x} {y} />
         {/each}
