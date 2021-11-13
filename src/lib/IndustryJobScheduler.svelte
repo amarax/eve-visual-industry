@@ -1,27 +1,25 @@
 
 <script lang="ts">
     import type { EveCharacterId } from "$lib/eve-data/EveCharacter";
-    import CreateESIStore from "./eve-data/ESIStore";
+    import CreateESIStore, { ESIStoreStatus } from "./eve-data/ESIStore";
     import type {ESIStore} from "./eve-data/ESIStore";
     import EveTypes, { EveTypeId } from "$lib/eve-data/EveTypes";
 
     import { scaleLinear, scaleTime } from "d3-scale";
     import { Industry, INVENTION_ACTIVITY_ID, MANUFACTURING_ACTIVITY_ID, REACTION_ACTIVITY_ID } from "$lib/eve-data/EveIndustry";
     import type { Activity_Id } from "$lib/eve-data/EveIndustry";
-    import type { EveBlueprint, EveJobDetails, EveJobDetailsStatus } from "$lib/eve-data/ESI";
+    import type { EveBlueprint, EveIndustryActivityId, EveItemId, EveJobDetails, EveJobDetailsStatus } from "$lib/eve-data/ESI";
     import { CreateIndustryJobStore, IndustryJobStore } from "./IndustryJob";
 import NewIndustryJob from "./NewIndustryJob.svelte";
 import { get } from "svelte/store";
 import type { JobDetails, JobDetailsStatus } from "./IndustryJobScheduler";
 import IndustryJobScheduleBlock from "./IndustryJobScheduleBlock.svelte";
 import type { Quantity } from "./eve-data/EveMarkets";
+import { onMount } from "svelte";
+import { GetScheduledJobs, OverwriteScheduledJobs } from "./local-data/ScheduledJobs";
+import type { EVIScheduledJob } from "./local-data/ScheduledJobs";
 
     export let characterId: EveCharacterId
-
-    type EveItemId = number;
-
-
-
 
     let characterJobs: ESIStore<Array<JobDetails>>;
     let characterBlueprints: ESIStore<Array<EveBlueprint>>;
@@ -29,6 +27,7 @@ import type { Quantity } from "./eve-data/EveMarkets";
     $: if(characterId && _prevCharacterId !== characterId) {
         characterJobs = CreateESIStore<Array<EveJobDetails>>(`/characters/${characterId}/industry/jobs/`, null, {char:characterId, include_completed:true});
         characterBlueprints = CreateESIStore<Array<EveBlueprint>>(`/characters/${characterId}/blueprints/`, null, {char:characterId});
+
         _prevCharacterId = characterId;
     }
 
@@ -42,26 +41,28 @@ import type { Quantity } from "./eve-data/EveMarkets";
 
     let scheduledJobs = new Map<NewJobId, JobDetails>();
 
-    let selectedBlueprintItem: EveItemId;
-    function addJob() {
-        let _selectedBlueprintItem = blueprints.find(b=>b.item_id===selectedBlueprintItem);
+    function createScheduledJob(blueprint_id: EveItemId, restore?: EVIScheduledJob): JobDetails | undefined {
+        let _blueprintItem = blueprints.find(b=>b.item_id===blueprint_id);
 
-        if(_selectedBlueprintItem) {
-            let activities = $Industry.types[_selectedBlueprintItem.type_id]?.activities;
-            let activity = activities[REACTION_ACTIVITY_ID] ?? activities[MANUFACTURING_ACTIVITY_ID]
+        if(_blueprintItem) {
+            let activities = $Industry.types[_blueprintItem.type_id]?.activities;
+            let activity = activities[restore?.activity_id] ?? activities[REACTION_ACTIVITY_ID] ?? activities[MANUFACTURING_ACTIVITY_ID]
 
             let industryJob = CreateIndustryJobStore(activity);
             let _initIndustryJob = get(industryJob);
             
-            let _id = Date.now();
+            let activity_id = activity.activity.activityID;
+            let start_date = restore?.start_date || Date.now();
+
+            let _id = restore?.job_id ?? Date.now();   // Maybe we should automatically generate this
             let scheduledJob = {
                 job_id: _id,
-                activity_id: activity.activity.activityID,
-                blueprint_id: _selectedBlueprintItem.item_id,
-                blueprint_location_id: _selectedBlueprintItem.location_id,
-                blueprint_type_id: _selectedBlueprintItem.type_id,
-                end_date: Date.now() + _initIndustryJob.jobDuration*1000,
-                start_date: Date.now(),
+                activity_id,
+                blueprint_id,
+                blueprint_location_id: _blueprintItem.location_id,
+                blueprint_type_id: _blueprintItem.type_id,
+                end_date: start_date + _initIndustryJob.jobDuration*1000,
+                start_date,
                 status: "scheduled" as JobDetailsStatus,
                 runs: _initIndustryJob.runs,
                 product_type_id: _initIndustryJob.selectedProduct,
@@ -92,9 +93,26 @@ import type { Quantity } from "./eve-data/EveMarkets";
             })
 
             scheduledJobs = scheduledJobs;
+            return scheduledJob;
         }
+        
+        return undefined;
+    }
+
+
+    let selectedBlueprintItem: EveItemId;
+    function addJob() {
+        createScheduledJob(selectedBlueprintItem);
 
         selectedBlueprintItem = null;
+
+        // TODO save scheduled jobs
+        OverwriteScheduledJobs( characterId, [...scheduledJobs.values()].map(({
+            job_id, start_date, blueprint_id, activity_id, runs,
+        })=>({
+            job_id, start_date, blueprint_id, activity_id, runs,
+            location_id:null
+        })) )
     }
     function removeJob(job_id) {
         jobMaterials.delete( scheduledJobs.get(job_id).industryJob );
@@ -102,6 +120,8 @@ import type { Quantity } from "./eve-data/EveMarkets";
 
         scheduledJobs.delete(job_id);
         scheduledJobs = scheduledJobs;
+
+        // TODO save scheduled jobs
     }
 
     
@@ -223,6 +243,26 @@ import type { Quantity } from "./eve-data/EveMarkets";
 
     // #endregion
 
+
+    // #region load and save jobs from EVIDatabase
+    let _mounted = false;
+    onMount(()=>{_mounted = true})
+    $: console.log($characterBlueprints);
+    $: if($characterBlueprints && characterBlueprints.status == ESIStoreStatus.loaded) {
+        GetScheduledJobs(characterId)
+            .then(jobs=>{
+                // TODO filter jobs that are no longer valid
+                jobs.forEach(j=>createScheduledJob(j.blueprint_id, j));
+
+                console.log("Loaded jobs", jobs.length);
+            })
+
+        // TODO save scheduled jobs
+    }
+
+    // #endregion
+
+
     const rowHeight = 20;
 
     export let scale = 100;
@@ -255,7 +295,7 @@ import type { Quantity } from "./eve-data/EveMarkets";
     }
 </style>
 
-<select bind:value={selectedBlueprintItem}>
+<select value={selectedBlueprintItem} on:change={event=>selectedBlueprintItem = parseInt(event.currentTarget.value)}>
     {#each blueprints as blueprint (blueprint.item_id)}
         <option value={blueprint.item_id}>{$EveTypes.get(blueprint.type_id)?.name ?? blueprint.type_id} </option>
     {/each}
