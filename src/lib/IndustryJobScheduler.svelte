@@ -15,7 +15,7 @@ import { get } from "svelte/store";
 import type { JobDetails, JobDetailsStatus } from "./IndustryJobScheduler";
 import IndustryJobScheduleBlock from "./IndustryJobScheduleBlock.svelte";
 import type { Quantity } from "./eve-data/EveMarkets";
-import { onMount } from "svelte";
+import { onDestroy, onMount } from "svelte";
 import { GetScheduledJobs, OverwriteScheduledJobs } from "./local-data/ScheduledJobs";
 import type { EVIScheduledJob } from "./local-data/ScheduledJobs";
 
@@ -49,22 +49,34 @@ import type { EVIScheduledJob } from "./local-data/ScheduledJobs";
             let activity = activities[restore?.activity_id] ?? activities[REACTION_ACTIVITY_ID] ?? activities[MANUFACTURING_ACTIVITY_ID]
 
             let industryJob = CreateIndustryJobStore(activity);
+            if(restore) {
+                industryJob.update({
+                    blueprintModifiers: {
+                        materialEfficiency: _blueprintItem.material_efficiency,
+                        timeEfficiency: _blueprintItem.time_efficiency
+                    },
+                    runs: restore.runs,
+                })
+            }
             let _initIndustryJob = get(industryJob);
             
             let activity_id = activity.activity.activityID;
             let start_date = restore?.start_date || Date.now();
+            let runs = _initIndustryJob.runs;
+
+            console.log(runs);
 
             let _id = restore?.job_id ?? Date.now();   // Maybe we should automatically generate this
             let scheduledJob = {
                 job_id: _id,
                 activity_id,
                 blueprint_id,
-                blueprint_location_id: _blueprintItem.location_id,
+                facility_id: _blueprintItem.location_id,
                 blueprint_type_id: _blueprintItem.type_id,
                 end_date: start_date + _initIndustryJob.jobDuration*1000,
                 start_date,
                 status: "scheduled" as JobDetailsStatus,
-                runs: _initIndustryJob.runs,
+                runs,
                 product_type_id: _initIndustryJob.selectedProduct,
                 industryJob: industryJob,                
             }
@@ -81,8 +93,10 @@ import type { EVIScheduledJob } from "./local-data/ScheduledJobs";
                     j.end_date = newEndDate;
                     j.runs = newRuns;
                     scheduledJobs = scheduledJobs;
-                }
 
+                    // For now we'll just save based on this
+                    save();
+                }
 
                 let materials = [];
                 for(let {materialTypeID} of Object.values( ij.activity.materials )) {
@@ -106,13 +120,7 @@ import type { EVIScheduledJob } from "./local-data/ScheduledJobs";
 
         selectedBlueprintItem = null;
 
-        // TODO save scheduled jobs
-        OverwriteScheduledJobs( characterId, [...scheduledJobs.values()].map(({
-            job_id, start_date, blueprint_id, activity_id, runs,
-        })=>({
-            job_id, start_date, blueprint_id, activity_id, runs,
-            location_id:null
-        })) )
+        save();
     }
     function removeJob(job_id) {
         jobMaterials.delete( scheduledJobs.get(job_id).industryJob );
@@ -121,8 +129,35 @@ import type { EVIScheduledJob } from "./local-data/ScheduledJobs";
         scheduledJobs.delete(job_id);
         scheduledJobs = scheduledJobs;
 
-        // TODO save scheduled jobs
+        save();
     }
+
+    const SAVE_DEBOUNCE_TIMEOUT = 500;
+
+    // Combine multiple save requests in a short period so we don't overload the db unnecessarily
+    let _saveTimeout: NodeJS.Timeout = undefined;
+    let _save = ()=>{
+        OverwriteScheduledJobs( characterId, [...scheduledJobs.values()].map(({
+            job_id, start_date, blueprint_id, activity_id, runs,
+        })=>({
+            job_id, start_date, blueprint_id, activity_id, runs,
+            location_id:null
+        })) );
+        _saveTimeout = undefined;
+    };
+    let save = ()=>{
+        if(_saveTimeout) {
+            clearTimeout(_saveTimeout);
+        }
+        _saveTimeout = setTimeout(_save, SAVE_DEBOUNCE_TIMEOUT);
+    }
+    onDestroy(()=>{
+        if(_saveTimeout) {
+            clearTimeout(_saveTimeout);
+        }
+        _save();
+    })
+
 
     
     export let groupBy = "activity_id";
@@ -247,7 +282,6 @@ import type { EVIScheduledJob } from "./local-data/ScheduledJobs";
     // #region load and save jobs from EVIDatabase
     let _mounted = false;
     onMount(()=>{_mounted = true})
-    $: console.log($characterBlueprints);
     $: if($characterBlueprints && characterBlueprints.status == ESIStoreStatus.loaded) {
         GetScheduledJobs(characterId)
             .then(jobs=>{
