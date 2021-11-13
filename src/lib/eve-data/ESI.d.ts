@@ -10,7 +10,7 @@ export type EveJobDetails = {
     end_date,
     facility_id,
     installer_id,
-    job_id,
+    job_id: EveJobId,
     licensed_runs,
     output_location_id,
     probability,
@@ -35,3 +35,5 @@ export type EveBlueprint = {
 
 export type EveLocationId = number;
 
+export type EveItemId = number;
+export type EveJobId = number;

@@ -247,14 +247,6 @@ import type { Quantity } from "./eve-data/EveMarkets";
     svg {
         background-color: #222;
 
-       
-        rect.row {
-            fill: transparent;
-
-            &:hover {
-                fill: rgba(1,1,1,0.1);
-            }
-        }
         rect.now {
             fill: #666;
         }

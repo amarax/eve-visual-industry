@@ -10,7 +10,7 @@ import EveTypes from "$lib/eve-data/EveTypes";
     import IndustryJobScheduler from "$lib/IndustryJobScheduler.svelte";
     import { getContext } from "svelte";
 
-    import { get, Readable } from "svelte/store";
+    import type { Readable } from "svelte/store";
 
 
 
