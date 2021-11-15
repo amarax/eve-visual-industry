@@ -12,11 +12,12 @@ export type EveGroupId = number;
 export type EveAttributeId = number;
 
 export type EveType = {
-    type_id: EveTypeId;
-    name: string;
+    type_id: EveTypeId,
+    name: string,
+    packaged_volume: number,
 
-    group_id: EveGroupId;
-    market_group_id: EveMarketGroupId;
+    group_id: EveGroupId,
+    market_group_id: EveMarketGroupId,
 
     dogma_attributes?: Array<{
         attribute_id: EveAttributeId,

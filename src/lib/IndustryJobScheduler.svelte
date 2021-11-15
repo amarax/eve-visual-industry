@@ -35,6 +35,12 @@ import { GetLocationStore } from "./eve-data/EveData";
         _prevCharacterId = characterId;
     }
 
+    export let incompleteJobs: Array<JobDetails> = [];
+    $: incompleteJobs = [ 
+        ...($characterJobs?.filter(j=>j.status==='active')??[]), 
+        ...scheduledJobs.values()
+    ];
+
     let blueprints: Array<EveBlueprint>;
     $: {
         blueprints = $characterBlueprints instanceof Array ? $characterBlueprints : [];
@@ -80,7 +86,8 @@ import { GetLocationStore } from "./eve-data/EveData";
                 status: "scheduled" as JobDetailsStatus,
                 runs,
                 product_type_id: _initIndustryJob.selectedProduct,
-                industryJob: industryJob,                
+                industryJob: industryJob,
+                installer_id: characterId,
             }
             scheduledJobs.set(_id, scheduledJob)
 
@@ -142,9 +149,9 @@ import { GetLocationStore } from "./eve-data/EveData";
     let _saveTimeout: NodeJS.Timeout = undefined;
     let _save = ()=>{
         OverwriteScheduledJobs( characterId, [...scheduledJobs.values()].map(({
-            job_id, start_date, blueprint_id, activity_id, runs,
+            job_id, start_date, blueprint_id, activity_id, runs, installer_id,
         })=>({
-            job_id, start_date, blueprint_id, activity_id, runs,
+            job_id, start_date, blueprint_id, activity_id, runs, installer_id,
             location_id:null
         })) );
         _saveTimeout = undefined;

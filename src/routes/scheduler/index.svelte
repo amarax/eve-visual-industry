@@ -15,6 +15,8 @@ import EveTypes from "$lib/eve-data/EveTypes";
     import type { Readable } from "svelte/store";
 
     import { sum } from "d3-array";
+import type { JobDetails } from "$lib/IndustryJobScheduler";
+import { Industry } from "$lib/eve-data/EveIndustry";
 
 
 
@@ -74,6 +76,17 @@ import EveTypes from "$lib/eve-data/EveTypes";
         assetsList = assetsList;
     }
 
+    let characterIncompleteJobs: {[index:EveCharacterId]:Array<JobDetails>} = {};
+    let incompleteJobs: Array<JobDetails> = [];
+    $: {
+        incompleteJobs = [];
+        for(let characterId in characterIncompleteJobs) {
+            incompleteJobs = [...incompleteJobs, ...characterIncompleteJobs[characterId]]
+        }
+    }
+
+
+
     function timeout(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
@@ -90,6 +103,20 @@ import EveTypes from "$lib/eve-data/EveTypes";
         copied = true;
         await timeout(1000);
         copied = false;
+    }
+
+    $: getAssetQuantity = (materialTypeId: EveTypeId): Quantity => {
+        return sum(assetsList.get(materialTypeId)??[], (a)=>a.quantity);
+    }
+
+    function getJobOutputQuantity(materialTypeId: EveTypeId): Quantity {
+        return sum(incompleteJobs.filter(j=>j.product_type_id === materialTypeId),
+            (job: JobDetails)=>{
+                let activityId = job.activity_id === 9 ? 11 : job.activity_id;
+                let productPerRun = $Industry.types[job.blueprint_type_id]?.activities[activityId].products[job.product_type_id].quantity ?? 0;
+                return productPerRun * job.runs
+            }
+        );
     }
 </script>
 
@@ -153,21 +180,34 @@ import EveTypes from "$lib/eve-data/EveTypes";
 <IndustryJobScheduler {characterId} {xOffset} {scale} {groupBy} 
     bind:materialsList={characterMaterialsList[characterId]} 
     bind:materialsInAssets={characterAssetsList[characterId]}
+    bind:incompleteJobs={characterIncompleteJobs[characterId]}
 />
 {/each}
 
 <p>
 <b>Bill of Materials</b> <button class="fixedWidth" on:click={copyBOMToClipboard} disabled={copied}>{copied?"Copied!":"Copy to clipboard"}</button><br/>
+<b>
 <span class="itemName">Material</span>
 <span class="qty">Required</span>
+<span class="qty">Requested</span>
 <span class="qty">Assets</span>
+<span class="qty">Jobs</span>
+<span class="inventory">Adjustment</span>
+</b>
 <br/>
 
 {#each [...materialsList.entries()].sort((a,b)=>$EveTypes.get(a[0]).name.localeCompare($EveTypes.get(b[0]).name)) as [materialTypeId, quantity]}
     <span class="itemName">{$EveTypes.get(materialTypeId).name}</span>
-    <span class="qty">{quantity -sum(assetsList.get(materialTypeId)??[], (a)=>a.quantity) -(materialsInventory[materialTypeId]??0)}</span>
-    <span class="qty">{sum(assetsList.get(materialTypeId)??[], (a)=>a.quantity)}</span>
+    <span class="qty">{quantity -getAssetQuantity(materialTypeId) -getJobOutputQuantity(materialTypeId) +(materialsInventory[materialTypeId]??0)}</span>
+    <span class="qty">{quantity}</span>
+    <span class="qty">{getAssetQuantity(materialTypeId)}</span>
+    <span class="qty">{getJobOutputQuantity(materialTypeId)}</span>
     <span class="inventory"><input type="number" bind:value={materialsInventory[materialTypeId]} /></span>
     <br/>
 {/each}
+
+Total volume: {sum(materialsList.entries(), ([materialTypeId, quantity])=>{
+    let qty = quantity -getAssetQuantity(materialTypeId) -getJobOutputQuantity(materialTypeId) +(materialsInventory[materialTypeId]??0);
+    return $EveTypes.get(materialTypeId).packaged_volume * Math.max(qty,0);
+})}m3
 </p>
