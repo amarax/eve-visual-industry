@@ -37,6 +37,7 @@ export function ClearTokensFor(userId) {
 }
 
 export async function RefreshToken(userId: UserId, characterId: EveCharacterId) {
+    console.log("Refreshing token", characterId);
     let headers = {
         'Authorization': `Basic ${
             Buffer.from(`${import.meta.env.VITE_EVE_APP_CLIENT_ID}:${import.meta.env.VITE_EVE_APP_SECRET_KEY}`, 'utf-8').toString('base64')
@@ -60,7 +61,7 @@ export async function RefreshToken(userId: UserId, characterId: EveCharacterId) 
     if(response.ok) {
         const token = await response.json();
 
-        StoreToken(userId, characterId, token);
+        CharacterTokens.set(characterId, token);
 
         console.log("Token refreshed", characterId);
     } else {

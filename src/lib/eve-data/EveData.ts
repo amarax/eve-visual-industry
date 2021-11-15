@@ -71,15 +71,25 @@ export async function LoadFromESI( route:string, options?:ESIOptions ) {
                 headers
             }
         )
-        const data = await response.json();
+        let data = await response.json();
 
         if( response.ok ) {
             let maxPages = response.headers.get("X-Pages");
-            if(maxPages) {
-                if(parseInt(maxPages)>1)
-                    console.log("More pages were available but not retrieved",endpoint.toString())
-    
-                // TODO get all the pages
+            if(maxPages && parseInt(maxPages)>1) {
+                // If we're getting multple pages, it should mean that the data is in the form of an array
+                console.assert(data instanceof Array);
+                
+                let nextPageEndpoint = new URL(endpoint.toString());
+
+                for(let page=2; page <= parseInt(maxPages); page++) {
+                    nextPageEndpoint.searchParams.set('page', page.toString());
+                    let pageResponse = await fetch( nextPageEndpoint.toString(), {method:'GET', headers});
+                    let pageData = await pageResponse.json();
+
+                    data = [...(data as Array<any>), ...pageData];
+                }
+
+                console.log("Obtained all pages for", maxPages, endpoint.toString());
             }
     
             return data;
