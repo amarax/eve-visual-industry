@@ -36,7 +36,14 @@ export function ClearTokensFor(userId) {
     UserCharacters.delete(userId);
 }
 
-export async function RefreshToken(userId: UserId, characterId: EveCharacterId) {
+const tokenRefreshRequests: Array<{
+        userId: UserId, 
+        characterId: EveCharacterId,
+        promise: Promise<void>
+    }> = [];
+
+async function _refreshToken(userId, characterId) {
+
     console.log("Refreshing token", characterId);
     let headers = {
         'Authorization': `Basic ${
@@ -68,4 +75,18 @@ export async function RefreshToken(userId: UserId, characterId: EveCharacterId) 
         console.error(response);
         throw response;
     }
+}
+
+export async function RefreshToken(userId: UserId, characterId: EveCharacterId) {
+    let existingRequest = tokenRefreshRequests.find(req=>req.userId===userId && req.characterId===characterId);
+    if(existingRequest) {
+        await existingRequest.promise;
+        return;
+    }
+
+    let promise = _refreshToken(userId, characterId);
+    let refreshRequest = {userId, characterId, promise};
+    tokenRefreshRequests.push(refreshRequest);
+    await promise;
+    tokenRefreshRequests.splice( tokenRefreshRequests.indexOf(refreshRequest), 1 );
 }
