@@ -96,6 +96,10 @@ import EveTypes from "$lib/eve-data/EveTypes";
     }
 </style>
 
+<svelte:head>
+	<title>Job Scheduler - EVE Online Visual Industry Calculator</title>
+</svelte:head>
+
 <div class="controls">
     <select bind:value={groupBy}>
         <option value=""></option>

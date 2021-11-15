@@ -18,7 +18,7 @@
     import { extent, max } from "d3-array";
 import { getContext } from "svelte";
 import type { EveLocationId } from "$lib/eve-data/ESI";
-import type { Readable } from "svelte/store";
+import { get, Readable } from "svelte/store";
 
 
     let currentGroup: EveMarketGroupId;
@@ -99,7 +99,7 @@ import type { Readable } from "svelte/store";
 </script>
 
 <svelte:head>
-	<title>{($EveMarketGroups && $EveMarketGroups[currentGroup]) ? `${$EveMarketGroups[currentGroup].name} - ` : "" }EVE Online Visual Industry Calculator</title>
+	<title>{($EveMarketGroups.has(currentGroup)) ? `${$EveMarketGroups.get(currentGroup).name} - ` : "" }EVE Online Visual Industry Calculator</title>
 </svelte:head>
 
 
