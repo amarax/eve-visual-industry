@@ -21,7 +21,8 @@ const config = {
 		}),
 
 		paths: {
-			base: dev ? '' : '/eve-visual-industry',
+			// base: dev ? '' : '/eve-visual-industry',
+			base: ''
 		}
 	}
 };

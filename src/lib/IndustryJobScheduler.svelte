@@ -1,27 +1,26 @@
 
 <script lang="ts">
     import type { EveCharacterId } from "$lib/eve-data/EveCharacter";
-    import CreateESIStore from "./eve-data/ESIStore";
+    import CreateESIStore, { ESIStoreStatus } from "./eve-data/ESIStore";
     import type {ESIStore} from "./eve-data/ESIStore";
     import EveTypes, { EveTypeId } from "$lib/eve-data/EveTypes";
 
     import { scaleLinear, scaleTime } from "d3-scale";
     import { Industry, INVENTION_ACTIVITY_ID, MANUFACTURING_ACTIVITY_ID, REACTION_ACTIVITY_ID } from "$lib/eve-data/EveIndustry";
     import type { Activity_Id } from "$lib/eve-data/EveIndustry";
-    import type { EveBlueprint, EveJobDetails, EveJobDetailsStatus } from "$lib/eve-data/ESI";
+    import type { EveBlueprint, EveIndustryActivityId, EveItemId, EveJobDetails, EveJobDetailsStatus } from "$lib/eve-data/ESI";
     import { CreateIndustryJobStore, IndustryJobStore } from "./IndustryJob";
 import NewIndustryJob from "./NewIndustryJob.svelte";
 import { get } from "svelte/store";
 import type { JobDetails, JobDetailsStatus } from "./IndustryJobScheduler";
 import IndustryJobScheduleBlock from "./IndustryJobScheduleBlock.svelte";
 import type { Quantity } from "./eve-data/EveMarkets";
+import { onDestroy, onMount } from "svelte";
+import { GetScheduledJobs, OverwriteScheduledJobs } from "./local-data/ScheduledJobs";
+import type { EVIScheduledJob } from "./local-data/ScheduledJobs";
+import { max } from 'd3-array';
 
     export let characterId: EveCharacterId
-
-    type EveItemId = number;
-
-
-
 
     let characterJobs: ESIStore<Array<JobDetails>>;
     let characterBlueprints: ESIStore<Array<EveBlueprint>>;
@@ -29,6 +28,7 @@ import type { Quantity } from "./eve-data/EveMarkets";
     $: if(characterId && _prevCharacterId !== characterId) {
         characterJobs = CreateESIStore<Array<EveJobDetails>>(`/characters/${characterId}/industry/jobs/`, null, {char:characterId, include_completed:true});
         characterBlueprints = CreateESIStore<Array<EveBlueprint>>(`/characters/${characterId}/blueprints/`, null, {char:characterId});
+
         _prevCharacterId = characterId;
     }
 
@@ -42,28 +42,40 @@ import type { Quantity } from "./eve-data/EveMarkets";
 
     let scheduledJobs = new Map<NewJobId, JobDetails>();
 
-    let selectedBlueprintItem: EveItemId;
-    function addJob() {
-        let _selectedBlueprintItem = blueprints.find(b=>b.item_id===selectedBlueprintItem);
+    function createScheduledJob(blueprint_id: EveItemId, restore?: EVIScheduledJob): JobDetails | undefined {
+        let _blueprintItem = blueprints.find(b=>b.item_id===blueprint_id);
 
-        if(_selectedBlueprintItem) {
-            let activities = $Industry.types[_selectedBlueprintItem.type_id]?.activities;
-            let activity = activities[REACTION_ACTIVITY_ID] ?? activities[MANUFACTURING_ACTIVITY_ID]
+        if(_blueprintItem) {
+            let activities = $Industry.types[_blueprintItem.type_id]?.activities;
+            let activity = activities[restore?.activity_id] ?? activities[REACTION_ACTIVITY_ID] ?? activities[MANUFACTURING_ACTIVITY_ID]
 
             let industryJob = CreateIndustryJobStore(activity);
+            if(restore) {
+                industryJob.update({
+                    blueprintModifiers: {
+                        materialEfficiency: _blueprintItem.material_efficiency,
+                        timeEfficiency: _blueprintItem.time_efficiency
+                    },
+                    runs: restore.runs,
+                })
+            }
             let _initIndustryJob = get(industryJob);
             
-            let _id = Date.now();
+            let activity_id = activity.activity.activityID;
+            let start_date = restore?.start_date || Date.now();
+            let runs = _initIndustryJob.runs;
+
+            let _id = restore?.job_id ?? Date.now();   // Maybe we should automatically generate this
             let scheduledJob = {
                 job_id: _id,
-                activity_id: activity.activity.activityID,
-                blueprint_id: _selectedBlueprintItem.item_id,
-                blueprint_location_id: _selectedBlueprintItem.location_id,
-                blueprint_type_id: _selectedBlueprintItem.type_id,
-                end_date: Date.now() + _initIndustryJob.jobDuration*1000,
-                start_date: Date.now(),
+                activity_id,
+                blueprint_id,
+                facility_id: _blueprintItem.location_id,
+                blueprint_type_id: _blueprintItem.type_id,
+                end_date: start_date + _initIndustryJob.jobDuration*1000,
+                start_date,
                 status: "scheduled" as JobDetailsStatus,
-                runs: _initIndustryJob.runs,
+                runs,
                 product_type_id: _initIndustryJob.selectedProduct,
                 industryJob: industryJob,                
             }
@@ -80,8 +92,10 @@ import type { Quantity } from "./eve-data/EveMarkets";
                     j.end_date = newEndDate;
                     j.runs = newRuns;
                     scheduledJobs = scheduledJobs;
-                }
 
+                    // For now we'll just save based on this
+                    save();
+                }
 
                 let materials = [];
                 for(let {materialTypeID} of Object.values( ij.activity.materials )) {
@@ -92,9 +106,20 @@ import type { Quantity } from "./eve-data/EveMarkets";
             })
 
             scheduledJobs = scheduledJobs;
+            return scheduledJob;
         }
+        
+        return undefined;
+    }
+
+
+    let selectedBlueprintItem: EveItemId;
+    function addJob() {
+        createScheduledJob(selectedBlueprintItem);
 
         selectedBlueprintItem = null;
+
+        save();
     }
     function removeJob(job_id) {
         jobMaterials.delete( scheduledJobs.get(job_id).industryJob );
@@ -102,7 +127,36 @@ import type { Quantity } from "./eve-data/EveMarkets";
 
         scheduledJobs.delete(job_id);
         scheduledJobs = scheduledJobs;
+
+        save();
     }
+
+    const SAVE_DEBOUNCE_TIMEOUT = 500;
+
+    // Combine multiple save requests in a short period so we don't overload the db unnecessarily
+    let _saveTimeout: NodeJS.Timeout = undefined;
+    let _save = ()=>{
+        OverwriteScheduledJobs( characterId, [...scheduledJobs.values()].map(({
+            job_id, start_date, blueprint_id, activity_id, runs,
+        })=>({
+            job_id, start_date, blueprint_id, activity_id, runs,
+            location_id:null
+        })) );
+        _saveTimeout = undefined;
+    };
+    let save = ()=>{
+        if(_saveTimeout) {
+            clearTimeout(_saveTimeout);
+        }
+        _saveTimeout = setTimeout(_save, SAVE_DEBOUNCE_TIMEOUT);
+    }
+    onDestroy(()=>{
+        if(_saveTimeout) {
+            clearTimeout(_saveTimeout);
+            _save();
+        }
+    })
+
 
     
     export let groupBy = "activity_id";
@@ -113,24 +167,47 @@ import type { Quantity } from "./eve-data/EveMarkets";
         _jobs.sort((a,b)=>a[groupBy] - b[groupBy])
     }
     
+    const ACTIVITY_ID_SORT_ORDER = {
+        [MANUFACTURING_ACTIVITY_ID]: 0,
+        [REACTION_ACTIVITY_ID]: 1,
+        9: 1,
+        [INVENTION_ACTIVITY_ID]: 2,
+        5: 3,   // Copying
+        4: 4,   // Material efficiency
+        3: 5,   // Time efficiency
+
+        // Not used in TQ
+        0: 6,
+        6: 6,
+        7: 6,
+    }
 
     // Assign the jobs into rows
     let rows = new Map<number, Array<JobDetails>>();
     let flattenedRows: Array<{row: number, job: JobDetails}> = [];
     $: {
         // Group jobs in the same facility together
-        let facilities = new Map<number, Array<JobDetails>>();
+        let groups = new Map<number, Array<JobDetails>>();
         _jobs.forEach(job=>{
-            if(!facilities.has(job[groupBy])) {
-                facilities.set(job[groupBy], []);
+            if(!groups.has(job[groupBy])) {
+                groups.set(job[groupBy], []);
             }
 
-            facilities.get(job[groupBy]).push(job);
+            groups.get(job[groupBy]).push(job);
         })
+
+        let sortedGroups = [...groups.entries()];
+        if(groupBy == 'activity_id') {
+            // Impose a sort order
+            sortedGroups.sort((a,b)=>ACTIVITY_ID_SORT_ORDER[a[0]] - ACTIVITY_ID_SORT_ORDER[b[0]])
+        } else {
+            sortedGroups.sort((a,b)=>a[0] - b[0])
+       }
+        let groupValues = sortedGroups.map(([g, fg])=>fg);
 
         rows.clear();
         rows = rows;
-        for(let facilityJobs of facilities.values()) {
+        for(let facilityJobs of groupValues) {
             facilityJobs.sort((a,b)=>new Date(b.end_date).getTime() - new Date(a.end_date).getTime())
             let firstFacilityRow = rows.size;
 
@@ -171,16 +248,29 @@ import type { Quantity } from "./eve-data/EveMarkets";
     let flattenedScheduledRows = [];
     $: {
         scheduledRows.clear();
-        // For now just add the scheduled rows to any empty row
         for(let sj of scheduledJobs.values()) {
-            for(let [row, rowJobs] of rows.entries()) {
-                let lastJobInRow = rowJobs[0];  // Row jobs is sorted end to start
+            let row = 0;
+            while(row < 100) {
+                let rowJobs = rows.get(row);
+                let lastJobInRow = rowJobs && rowJobs[0];  // Row jobs is sorted end to start
+
+                // For now we just assume that the rows are already populated with previous jobs
+                // so any overflow we just handle later on
+                if(lastJobInRow && lastJobInRow[groupBy] !== sj[groupBy]) {
+                    if(groupBy=='activity_id' && lastJobInRow[groupBy]==9 && sj[groupBy] == REACTION_ACTIVITY_ID) {
+                        // Special exception for reactions as they're still considered equivalent
+                    } else {
+                        row++;
+                        continue;
+                    }
+                }
+
                 if(scheduledRows.has(row)) {
                     let scheduledJobRow = scheduledRows.get(row);
                     lastJobInRow = scheduledJobRow[scheduledJobRow.length-1];
                 }
 
-                if(new Date(sj.start_date) > new Date(lastJobInRow.end_date)) {
+                if(!lastJobInRow || (new Date(sj.start_date) > new Date(lastJobInRow.end_date))) {
                     // Add to row
                     if(!scheduledRows.has(row)) {
                         scheduledRows.set(row, []);
@@ -189,6 +279,8 @@ import type { Quantity } from "./eve-data/EveMarkets";
                     scheduledRows.get(row).push(sj);
                     break;
                 }
+
+                row++;
             }
         }
         scheduledRows = scheduledRows;
@@ -202,7 +294,6 @@ import type { Quantity } from "./eve-data/EveMarkets";
         flattenedScheduledRows.sort((a,b)=>a.job.job_id - b.job.job_id);
         flattenedScheduledRows = flattenedScheduledRows;
     }
-
 
     // #region Materials Calculation
 
@@ -223,6 +314,22 @@ import type { Quantity } from "./eve-data/EveMarkets";
 
     // #endregion
 
+    // #region load and save jobs from EVIDatabase
+    $: if($characterBlueprints && characterBlueprints.status == ESIStoreStatus.loaded) {
+        GetScheduledJobs(characterId)
+            .then(jobs=>{
+                // TODO filter jobs that are no longer valid
+                jobs.forEach(j=>createScheduledJob(j.blueprint_id, j));
+
+                console.log("Loaded jobs", jobs.length);
+            })
+
+        // TODO save scheduled jobs if there are changes
+    }
+
+    // #endregion
+
+
     const rowHeight = 20;
 
     export let scale = 100;
@@ -241,20 +348,13 @@ import type { Quantity } from "./eve-data/EveMarkets";
 
     let blueprintSelector: HTMLSelectElement;
 
+    $: numberOfRows = Math.max(rows.size, (max([...scheduledRows.keys()])??0) + 1, 1);
 </script>
 
 <style lang="scss">
     svg {
         background-color: #222;
 
-       
-        rect.row {
-            fill: transparent;
-
-            &:hover {
-                fill: rgba(1,1,1,0.1);
-            }
-        }
         rect.now {
             fill: #666;
         }
@@ -263,7 +363,7 @@ import type { Quantity } from "./eve-data/EveMarkets";
     }
 </style>
 
-<select bind:value={selectedBlueprintItem}>
+<select value={selectedBlueprintItem} on:change={event=>selectedBlueprintItem = parseInt(event.currentTarget.value)}>
     {#each blueprints as blueprint (blueprint.item_id)}
         <option value={blueprint.item_id}>{$EveTypes.get(blueprint.type_id)?.name ?? blueprint.type_id} </option>
     {/each}
@@ -273,10 +373,9 @@ import type { Quantity } from "./eve-data/EveMarkets";
     <NewIndustryJob blueprint={blueprints.find(b=>b.item_id===job.blueprint_id) } job={job.industryJob} /> <button on:click={event=>removeJob(job.job_id)}>Remove</button><br/>
 {/each}
 
-<svg width="100%" height={Math.max(rows.size, 1)*rowHeight}>
+<svg width="100%" height={numberOfRows*rowHeight}>
     <g class="canvas" transform={`translate(${xOffset*100})`}>
-
-        <rect class="now" x={x(Date.now())} width={1} y={0} height={y(rows.size)} />
+        <rect class="now" x={x(Date.now())} width={1} y={0} height={y(numberOfRows)} />
         {#each flattenedRows as {row, job} (job.job_id)}
             <IndustryJobScheduleBlock {row} {job} {x} {y} />
         {/each}
@@ -285,4 +384,3 @@ import type { Quantity } from "./eve-data/EveMarkets";
         {/each}
     </g>
 </svg>
-

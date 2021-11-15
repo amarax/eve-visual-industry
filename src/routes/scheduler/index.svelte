@@ -35,6 +35,9 @@ import EveTypes from "$lib/eve-data/EveTypes";
         materialsList = materialsList;
     }
 
+    let materialsInventory: {[index: EveTypeId]: Quantity} = {}
+
+
     function timeout(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
@@ -43,7 +46,9 @@ import EveTypes from "$lib/eve-data/EveTypes";
     async function copyBOMToClipboard() {
         let bom = "";
         for(let [materialTypeId, quantity] of materialsList.entries()) {
-            bom += `${$EveTypes.get(materialTypeId).name} ${quantity}\n`;
+            let requiredQuantity = quantity - (materialsInventory[materialTypeId]??0)
+            if(requiredQuantity > 0)
+                bom += `${$EveTypes.get(materialTypeId).name} ${requiredQuantity}\n`;
         }
         await navigator.clipboard.writeText(bom);
         copied = true;
@@ -66,7 +71,34 @@ import EveTypes from "$lib/eve-data/EveTypes";
     button.fixedWidth {
         width: 150px;
     }
+
+
+    .itemName {
+        display: inline-block;
+        width: 200px;
+        overflow-x: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+    }
+
+    .qty {
+        display: inline-block;
+		text-align: right;
+		margin-right: 10px;
+        width: 70px;
+	}
+
+    .inventory {
+        input[type=number] {
+            width: 70px;
+            text-align: right;
+        }
+    }
 </style>
+
+<svelte:head>
+	<title>Job Scheduler - EVE Online Visual Industry Calculator</title>
+</svelte:head>
 
 <div class="controls">
     <select bind:value={groupBy}>
@@ -87,9 +119,10 @@ import EveTypes from "$lib/eve-data/EveTypes";
 
 <p>
 <b>Bill of Materials</b> <button class="fixedWidth" on:click={copyBOMToClipboard} disabled={copied}>{copied?"Copied!":"Copy to clipboard"}</button><br/>
-{#each [...materialsList.entries()] as [materialTypeId, quantity]}
+{#each [...materialsList.entries()].sort((a,b)=>$EveTypes.get(a[0]).name.localeCompare($EveTypes.get(b[0]).name)) as [materialTypeId, quantity]}
     <span class="itemName">{$EveTypes.get(materialTypeId).name}</span>
-    <span class="qty">{quantity}</span>
+    <span class="qty">{quantity - (materialsInventory[materialTypeId]??0)}</span>
+    <span class="inventory"><input type="number" bind:value={materialsInventory[materialTypeId]} /></span>
     <br/>
 {/each}
 </p>

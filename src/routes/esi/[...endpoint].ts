@@ -10,8 +10,13 @@ export const get: RequestHandler = async ({query, locals, params}) => {
     let body;
     try {
         body = await LoadFromESI(`/${params.endpoint}?${query.toString()}`, {characterId});
-    } catch(error) {
-        console.error(error);
+    } catch(response) {
+        if(response.status == 403) {
+            // try refreshing the token
+            console.log("Should try refreshing token")
+        }
+
+        console.error(response);
     }
     
     return {

@@ -8,6 +8,7 @@
 - Production scheduling
 - SSO
 - Invention graph
+- Progressive web app
 
 
 # Missing features that will affect calculations
