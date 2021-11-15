@@ -16,6 +16,9 @@
     import MarketGroupSelector from "$lib/components/MarketGroupSelector.svelte";
 
     import { extent, max } from "d3-array";
+import { getContext } from "svelte";
+import type { EveLocationId } from "$lib/eve-data/ESI";
+import type { Readable } from "svelte/store";
 
 
     let currentGroup: EveMarketGroupId;
@@ -55,21 +58,17 @@
         relatedMarketTypes.forEach((value,typeId)=>{
             getMarketType(typeId).subscribe(marketType=>{
                 relatedMarketTypes.set(typeId, marketType);
-
-                if(prices[typeId] === undefined) {
-                    prices[typeId] = marketType?.orders.sell[0]?.price
-                }
+                relatedMarketTypes = relatedMarketTypes;
             })
         })
+    }
 
-        for(let typeId in relatedMarketTypes) {
-            getMarketType(parseInt(typeId)).subscribe(value=>{
-                relatedMarketTypes[typeId]=value;
-                if(prices[typeId] === undefined) {
-                    prices[typeId] = value?.orders.sell[0]?.price
-                }
-            })
-        }
+    let marketFilterLocation: Readable<EveLocationId> = getContext('marketFilterLocation');
+    $: {
+        relatedMarketTypes.forEach((marketType,typeId)=>{
+            prices[typeId] = marketType?.orders.sell?.filter(o=>$marketFilterLocation ? o.location_id===$marketFilterLocation : true)[0]?.price 
+                ?? prices[typeId];
+        });
     }
 
     let metrics = {
