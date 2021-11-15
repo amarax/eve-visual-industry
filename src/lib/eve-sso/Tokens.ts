@@ -78,6 +78,8 @@ async function _refreshToken(userId, characterId) {
 }
 
 export async function RefreshToken(userId: UserId, characterId: EveCharacterId) {
+    console.log("request token refresh")
+
     let existingRequest = tokenRefreshRequests.find(req=>req.userId===userId && req.characterId===characterId);
     if(existingRequest) {
         await existingRequest.promise;
