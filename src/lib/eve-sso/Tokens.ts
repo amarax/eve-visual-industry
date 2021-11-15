@@ -35,3 +35,36 @@ export function ClearTokensFor(userId) {
 
     UserCharacters.delete(userId);
 }
+
+export async function RefreshToken(userId: UserId, characterId: EveCharacterId) {
+    let headers = {
+        'Authorization': `Basic ${
+            Buffer.from(`${import.meta.env.VITE_EVE_APP_CLIENT_ID}:${import.meta.env.VITE_EVE_APP_SECRET_KEY}`, 'utf-8').toString('base64')
+        }`,
+        'Content-Type': "application/x-www-form-urlencoded",
+        'Host': "login.eveonline.com"
+    }
+
+    let {refresh_token} = CharacterTokens.get(characterId)    
+    let body = new URLSearchParams({
+        'grant_type': "refresh_token",
+        refresh_token,
+        // scopes
+    })    
+
+    let response = await fetch(
+        "https://login.eveonline.com/v2/oauth/token",
+        { method: 'POST', headers, body }
+    )
+
+    if(response.ok) {
+        const token = await response.json();
+
+        StoreToken(userId, characterId, token);
+
+        console.log("Token refreshed", characterId);
+    } else {
+        console.error(response);
+        throw response;
+    }
+}

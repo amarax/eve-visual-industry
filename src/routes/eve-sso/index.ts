@@ -42,7 +42,6 @@ export const get: RequestHandler = async ({query, locals})=> {
             let {sub, name, owner} = jwt.decode(accessToken) as EveSSOJWT;
             let characterId = parseInt( sub.split(':')[2] );
             
-            const userId = "12345";
             StoreToken(locals.userId, characterId, token);
 
             return {
