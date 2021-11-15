@@ -3,12 +3,12 @@
     import type { EveCharacterId } from "$lib/eve-data/EveCharacter";
     import CreateESIStore, { ESIStoreStatus } from "./eve-data/ESIStore";
     import type {ESIStore} from "./eve-data/ESIStore";
-    import EveTypes, { EveTypeId } from "$lib/eve-data/EveTypes";
+    import EveTypes, { EveType, EveTypeId } from "$lib/eve-data/EveTypes";
 
     import { scaleLinear, scaleTime } from "d3-scale";
     import { Industry, INVENTION_ACTIVITY_ID, MANUFACTURING_ACTIVITY_ID, REACTION_ACTIVITY_ID } from "$lib/eve-data/EveIndustry";
     import type { Activity_Id } from "$lib/eve-data/EveIndustry";
-    import type { EveBlueprint, EveIndustryActivityId, EveItemId, EveJobDetails, EveJobDetailsStatus } from "$lib/eve-data/ESI";
+    import type { EveAsset, EveBlueprint, EveItemId, EveJobDetails, EveLocationId } from "$lib/eve-data/ESI";
     import { CreateIndustryJobStore, IndustryJobStore } from "./IndustryJob";
 import NewIndustryJob from "./NewIndustryJob.svelte";
 import { get } from "svelte/store";
@@ -19,15 +19,18 @@ import { onDestroy, onMount } from "svelte";
 import { GetScheduledJobs, OverwriteScheduledJobs } from "./local-data/ScheduledJobs";
 import type { EVIScheduledJob } from "./local-data/ScheduledJobs";
 import { max } from 'd3-array';
+import { GetLocationStore } from "./eve-data/EveData";
 
     export let characterId: EveCharacterId
 
     let characterJobs: ESIStore<Array<JobDetails>>;
     let characterBlueprints: ESIStore<Array<EveBlueprint>>;
+    let characterAssets: ESIStore<Array<EveAsset>>;
     let _prevCharacterId: EveCharacterId;
     $: if(characterId && _prevCharacterId !== characterId) {
         characterJobs = CreateESIStore<Array<EveJobDetails>>(`/characters/${characterId}/industry/jobs/`, null, {char:characterId, include_completed:true});
         characterBlueprints = CreateESIStore<Array<EveBlueprint>>(`/characters/${characterId}/blueprints/`, null, {char:characterId});
+        characterAssets = CreateESIStore<Array<EveAsset>>(`/characters/${characterId}/assets/`, null, {char:characterId});
 
         _prevCharacterId = characterId;
     }
@@ -131,6 +134,8 @@ import { max } from 'd3-array';
         save();
     }
 
+    // #region Load/save Scheduled Jobs
+
     const SAVE_DEBOUNCE_TIMEOUT = 500;
 
     // Combine multiple save requests in a short period so we don't overload the db unnecessarily
@@ -156,6 +161,8 @@ import { max } from 'd3-array';
             _save();
         }
     })
+
+    // #endregion
 
 
     
@@ -325,6 +332,35 @@ import { max } from 'd3-array';
             })
 
         // TODO save scheduled jobs if there are changes
+    }
+
+    // #endregion
+
+
+    // #region Character Assets
+
+    $: blueprintLocations = new Set($characterBlueprints?.map(b=>b.location_id));
+
+    // let locationNames = new Map<EveLocationId,string>();
+    // $: if($characterBlueprints) {
+    //     blueprintLocations.forEach(l=>GetLocationStore(l).subscribe(loc=>{locationNames.set(l,loc.name);locationNames=locationNames}))
+    // }
+
+    export let materialsInAssets = new Map<EveTypeId, Array<EveAsset>>();
+    $: relevantLocationAssets = $characterAssets?.filter(a=>blueprintLocations.has(a.location_id));
+
+    $: {
+        materialsInAssets.clear();
+        relevantLocationAssets
+            // ?.filter(asset=>materialsList.has(asset.type_id))    // Don't filter as there may be other jobs in other characters that need this material
+            ?.forEach(asset=>{
+                    if(!materialsInAssets.has(asset.type_id)) {
+                        materialsInAssets.set(asset.type_id, []);
+                    }
+
+                    materialsInAssets.get(asset.type_id).push(asset);
+                });
+        materialsInAssets = materialsInAssets;
     }
 
     // #endregion

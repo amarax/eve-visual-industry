@@ -1,8 +1,10 @@
 
 <script lang="ts">
+import type { EveAsset } from "$lib/eve-data/ESI";
+
     import type { EveCharacterId } from "$lib/eve-data/EveCharacter";
 import type { Quantity } from "$lib/eve-data/EveMarkets";
-import type { EveTypeId } from "$lib/eve-data/EveTypes";
+import type { EveType, EveTypeId } from "$lib/eve-data/EveTypes";
 import EveTypes from "$lib/eve-data/EveTypes";
 
 
@@ -12,11 +14,26 @@ import EveTypes from "$lib/eve-data/EveTypes";
 
     import type { Readable } from "svelte/store";
 
+    import { sum } from "d3-array";
 
 
 
 
     let availableEveCharacters = getContext('availableEveCharacters') as Readable<Array<EveCharacterId>>;
+    $: {
+        // Cleanup if available characters change
+        for(let characterId in characterMaterialsList) {
+            if(!$availableEveCharacters.includes(parseInt(characterId))) {
+                delete characterMaterialsList[characterId];
+            }
+        }
+        for(let characterId in characterAssetsList) {
+            if(!$availableEveCharacters.includes(parseInt(characterId))) {
+                delete characterAssetsList[characterId];
+            }
+        }
+    }
+
 
     let xOffset: number = 7;
     let scale: number = 100;
@@ -37,6 +54,25 @@ import EveTypes from "$lib/eve-data/EveTypes";
 
     let materialsInventory: {[index: EveTypeId]: Quantity} = {}
 
+    interface Asset extends EveAsset {
+        characterId: EveCharacterId
+    }
+    let assetsList = new Map<EveTypeId, Array<Asset>>();
+    let characterAssetsList: {[index: EveCharacterId]: Map<EveTypeId, Array<EveAsset>>} = {};
+    $: {
+        assetsList.clear();
+        for(let characterId in characterAssetsList) {
+            for(let [materialTypeId, assets] of characterAssetsList[characterId]) {
+                if(!assetsList.has(materialTypeId))
+                    assetsList.set(materialTypeId, []);
+
+                assets.forEach(asset=>{
+                    assetsList.get(materialTypeId).push({...asset, characterId:parseInt(characterId)})
+                })
+            }
+        }
+        assetsList = assetsList;
+    }
 
     function timeout(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
@@ -114,14 +150,23 @@ import EveTypes from "$lib/eve-data/EveTypes";
 </div>
 
 {#each $availableEveCharacters as characterId (characterId) }
-<IndustryJobScheduler {characterId} {xOffset} {scale} {groupBy} bind:materialsList={characterMaterialsList[characterId]} />
+<IndustryJobScheduler {characterId} {xOffset} {scale} {groupBy} 
+    bind:materialsList={characterMaterialsList[characterId]} 
+    bind:materialsInAssets={characterAssetsList[characterId]}
+/>
 {/each}
 
 <p>
 <b>Bill of Materials</b> <button class="fixedWidth" on:click={copyBOMToClipboard} disabled={copied}>{copied?"Copied!":"Copy to clipboard"}</button><br/>
+<span class="itemName">Material</span>
+<span class="qty">Required</span>
+<span class="qty">Assets</span>
+<br/>
+
 {#each [...materialsList.entries()].sort((a,b)=>$EveTypes.get(a[0]).name.localeCompare($EveTypes.get(b[0]).name)) as [materialTypeId, quantity]}
     <span class="itemName">{$EveTypes.get(materialTypeId).name}</span>
-    <span class="qty">{quantity - (materialsInventory[materialTypeId]??0)}</span>
+    <span class="qty">{quantity -sum(assetsList.get(materialTypeId)??[], (a)=>a.quantity) -(materialsInventory[materialTypeId]??0)}</span>
+    <span class="qty">{sum(assetsList.get(materialTypeId)??[], (a)=>a.quantity)}</span>
     <span class="inventory"><input type="number" bind:value={materialsInventory[materialTypeId]} /></span>
     <br/>
 {/each}
