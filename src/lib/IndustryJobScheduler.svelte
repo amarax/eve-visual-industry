@@ -38,12 +38,13 @@ import { GetLocationStore } from "./eve-data/EveData";
     export let incompleteJobs: Array<JobDetails> = [];
     $: incompleteJobs = [ 
         ...($characterJobs?.filter(j=>j.status==='active')??[]), 
-        ...scheduledJobs.values()
+        // ...scheduledJobs.values()    // We'll exclude scheduled jobs first until we can properly handle dependencies
     ];
 
     let blueprints: Array<EveBlueprint>;
     $: {
         blueprints = $characterBlueprints instanceof Array ? $characterBlueprints : [];
+        blueprints.sort((a,b)=>$EveTypes.get(a.type_id).name.localeCompare($EveTypes.get(b.type_id).name))
     }
 
 

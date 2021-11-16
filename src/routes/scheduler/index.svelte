@@ -95,7 +95,7 @@ import { Industry } from "$lib/eve-data/EveIndustry";
     async function copyBOMToClipboard() {
         let bom = "";
         for(let [materialTypeId, quantity] of materialsList.entries()) {
-            let requiredQuantity = quantity - (materialsInventory[materialTypeId]??0)
+            let requiredQuantity = quantity -getAssetQuantity(materialTypeId) -getJobOutputQuantity(materialTypeId) +(materialsInventory[materialTypeId]??0)
             if(requiredQuantity > 0)
                 bom += `${$EveTypes.get(materialTypeId).name} ${requiredQuantity}\n`;
         }
