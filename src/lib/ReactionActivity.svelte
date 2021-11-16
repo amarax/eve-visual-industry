@@ -1,6 +1,6 @@
 <script lang="ts">
     import { EntityCollection, Location_Id, Universe } from "$lib/eve-data/EveData";
-    import { ADVANCED_INDUSTRY_SKILL_ID, CanBeProduced, GetReactionActivity, Industry, MANUFACTURING_ACTIVITY_ID, ProductToActivity, REACTION_ACTIVITY_ID } from "$lib/eve-data/EveIndustry";
+    import { CanBeProduced, GetInventableBlueprint, Industry, MANUFACTURING_ACTIVITY_ID, ProductToActivity } from "$lib/eve-data/EveIndustry";
     import { CreateProductionJobStore, GetAffectingSkillModifiers, ModifiersFromCharacter, ModifiersFromLocationInfo } from "$lib/IndustryJob";
     import type { IndustryJobStore } from "$lib/IndustryJob";
     import { MarketPrices } from "./eve-data/EveMarkets";
@@ -10,26 +10,25 @@
     import type { IskAmount, Quantity } from "$lib/eve-data/EveMarkets";
     import type { Readable } from "svelte/store";
     import type { EveCharacterId } from "$lib/eve-data/EveCharacter";
+    import type { EveBlueprint } from "./eve-data/ESI";
 
     import { FormatDuration, FormatIskAmount, FormatIskChange } from "$lib/Format";
     import MarketOrdersBar from "$lib/components/MarketOrdersBar.svelte";
     import { getContext } from "svelte";
-    import { ApplyEffects, IndustryDogmaAttributes } from "./eve-data/EveDogma";
-import type { EveBlueprint } from "./eve-data/ESI";
-import FacilitySelector from "./components/FacilitySelector.svelte";
-import type { EveTypeId } from "./eve-data/EveTypes";
-import EveTypes from "./eve-data/EveTypes";
+    import FacilitySelector from "./components/FacilitySelector.svelte";
+    import InventionActivity from "./InventionActivity.svelte";
 
 
     export let productTypeId: Type_Id = null;
     export let job: IndustryJobStore = null;
     let _job: IndustryJobStore;
-    $: if(!job && productTypeId) {
-        _job = CreateProductionJobStore(productTypeId, $ProductToActivity);
+    $: if(!job) {
+        if(productTypeId && $ProductToActivity.size !== 0)
+            _job = CreateProductionJobStore(productTypeId, $ProductToActivity);
     } else {
         _job = job;
     }
-    $: _productTypeId = $_job.selectedProduct;
+    $: _productTypeId = $_job?.selectedProduct;
 
     export let blueprint: EveBlueprint = null;
     $: if(blueprint) {
@@ -38,6 +37,16 @@ import EveTypes from "./eve-data/EveTypes";
             timeEfficiency: blueprint.time_efficiency
         }})
     }
+
+    $: inventable = GetInventableBlueprint($Industry, $ProductToActivity.get(productTypeId)?.type.type_id);
+    let inventing: boolean = false;
+    let inventedRuns = 1;
+    $: if(inventing) {
+        _job.update({runs: inventedRuns})
+    }
+
+    let blueprintCostPerRun: IskAmount = 0;
+    $: _job?.update({blueprintCostPerRun});
 
     export let requiredQuantity: Quantity = null; 
     let overrideRequiredQuantity: boolean = false;
@@ -60,14 +69,14 @@ import EveTypes from "./eve-data/EveTypes";
     $: characterSkills = CharacterSkills[$currentCharacter];
     $: characterImplants = CharacterImplants[$currentCharacter]
     
-    $: affectingSkills = GetAffectingSkillModifiers($_job.activity, $characterSkills);
-    $: _job.update({characterModifiers:ModifiersFromCharacter($_job.activity, $characterSkills, $characterImplants)})
+    $: affectingSkills = _job && GetAffectingSkillModifiers($_job.activity, $characterSkills);
+    $: _job?.update({characterModifiers:ModifiersFromCharacter($_job.activity, $characterSkills, $characterImplants)})
 
     // #endregion
 
     // #region Facility-related
 
-    export let location: Location_Id;
+    export let location: Location_Id = null;
 
     // #endregion
 
@@ -77,14 +86,14 @@ import EveTypes from "./eve-data/EveTypes";
             prices[type_id] = prices[type_id];
         }
         prices = prices;
-        _job.update({prices});
+        _job?.update({prices});
     }
 
     // Force recalculation of _job when any changes happen
-    $: _job.update({indexPrices:$MarketPrices});
+    $: _job?.update({indexPrices:$MarketPrices});
 
     export let unitCost: IskAmount = 0;
-    $: unitCost = $_job.unitCost;
+    $: unitCost = $_job?.unitCost;
 
     export let salesTaxRate = 0.036;
     export let brokerFeeRate = 0.0113709973928; // Selene's broker fee
@@ -99,7 +108,7 @@ import EveTypes from "./eve-data/EveTypes";
     let _extents = [0,1000];
     $: {
         if(extents === null) {
-            _extents[1] = 1.1*Math.max(prices[_productTypeId] ?? 0, unitCost ?? 0, lowestSellPrice ?? 0, highestBuyPrice ?? 0)*$_job.producedQuantity;
+            _extents[1] = 1.1*Math.max(prices[_productTypeId] ?? 0, unitCost ?? 0, lowestSellPrice ?? 0, highestBuyPrice ?? 0)*$_job?.producedQuantity;
             if(_extents[1] == 0 || isNaN(_extents[1])) _extents[1] = 1000;
         } else {
             _extents = extents;
@@ -116,7 +125,14 @@ import EveTypes from "./eve-data/EveTypes";
         }
     }
 
-
+    let materialEfficiency: number = blueprint?.material_efficiency ?? 0;
+    let timeEfficiency: number = blueprint?.time_efficiency ?? 0;
+    $: if(!blueprint) {
+        _job?.update({blueprintModifiers:{
+            materialEfficiency,
+            timeEfficiency
+        }})
+    }
 </script>
 
 <style lang="scss">
@@ -128,6 +144,9 @@ import EveTypes from "./eve-data/EveTypes";
     }
 </style>
 
+{#if !_job}
+No product selected
+{:else}
 <div class={`breakdown ${!compact?"summary":""}`}>
     {#if compact}
         <div/>
@@ -163,6 +182,28 @@ import EveTypes from "./eve-data/EveTypes";
         <label><input type="checkbox" bind:checked={overrideRequiredQuantity} /> Override</label> 
     {/if}
 </div>
+
+<p>
+    <b>Blueprint</b> <br/>
+
+    {#if $_job.activity.activity.activityID === MANUFACTURING_ACTIVITY_ID}
+        <label><input type="checkbox" bind:checked={inventing} disabled={!inventable || blueprint != null} /> Invent</label>        <br/>
+
+        {#if inventing}
+            <div class="subItem">
+                <InventionActivity blueprintToInvent={$ProductToActivity.get(productTypeId).type} 
+                    bind:expectedCostPerRun={blueprintCostPerRun} bind:productME={materialEfficiency} bind:productTE={timeEfficiency} bind:productRuns={inventedRuns}
+                />
+            </div>
+        {/if}
+
+        <label>ME <input type="range" bind:value={materialEfficiency} min={0} max={10} disabled={inventing || blueprint!=null} /> {materialEfficiency}</label>
+        <label>TE <input type="range" bind:value={timeEfficiency} min={0} max={20} step={2} disabled={inventing || blueprint!=null} /> {timeEfficiency}</label>
+        <br/>
+    {/if}
+    
+    <label>Cost per run <input type="number" bind:value={blueprintCostPerRun} disabled={inventing} /></label>
+</p>
 
 <p>
     <b>Facility</b>
@@ -215,3 +256,4 @@ import EveTypes from "./eve-data/EveTypes";
     {/each}
 
 </div>
+{/if}

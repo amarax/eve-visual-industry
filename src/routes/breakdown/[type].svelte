@@ -49,9 +49,5 @@
 </p>
 
 
-{#if selectedActivityId === REACTION_ACTIVITY_ID}
 <ReactionActivity productTypeId={selectedProductId} />
-{:else if selectedActivityId === MANUFACTURING_ACTIVITY_ID}
-<ManufacturingActivity {selectedProductId} />
-{/if}
     
