@@ -4,14 +4,12 @@
     import { base as basePath } from '$app/paths';
 
     import { ProductToActivity } from "$lib/eve-data/EveIndustry";
-    import { MANUFACTURING_ACTIVITY_ID, REACTION_ACTIVITY_ID } from "$lib/eve-data/EveIndustry";
     import { DescendantGroups, EveMarketGroupId, GetProducibleTypes } from "$lib/eve-data/EveMarketGroups";
     import EveTypes, { MarketGroupToTypes } from "$lib/eve-data/EveTypes";
 
     import TypeSelector from "$lib/components/TypeSelector.svelte";
     import MarketGroupSelector from "$lib/components/MarketGroupSelector.svelte";
-    import ManufacturingActivity from "$lib/ManufacturingActivity.svelte";
-    import ReactionActivity from "$lib/ReactionActivity.svelte";
+    import IndustryJobBreakdown from "$lib/IndustryJobBreakdown.svelte";
     
     $: selectedProductId = parseInt( $page.params['type'] ) || null;
 
@@ -49,5 +47,5 @@
 </p>
 
 
-<ReactionActivity productTypeId={selectedProductId} />
+<IndustryJobBreakdown productTypeId={selectedProductId} />
     

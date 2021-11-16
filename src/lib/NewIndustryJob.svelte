@@ -7,7 +7,7 @@ import { Industry } from "./eve-data/EveIndustry";
 import EveTypes from "./eve-data/EveTypes";
 
 import type { IndustryFacilityModifiers, IndustryJobStore } from "./IndustryJob";
-import ReactionActivity from "./ReactionActivity.svelte";
+import IndustryJobBreakdown from "./IndustryJobBreakdown.svelte";
 
     export let blueprint: EveBlueprint;
     export let job: IndustryJobStore;
@@ -58,6 +58,6 @@ import ReactionActivity from "./ReactionActivity.svelte";
         <input type="number" value={$job.runs} on:input={event=>!isNaN(parseInt(event.currentTarget.value)) && job.update({runs:parseInt(event.currentTarget.value)})} />
         <FacilitySelector activity={$job.activity.activity.activityID} bind:value={location} bind:facilityModifiers />
     {:else}
-        <button on:click={()=>collapsed=true}>&ndash;</button> <ReactionActivity bind:location {job} {blueprint} />
+        <button on:click={()=>collapsed=true}>&ndash;</button> <IndustryJobBreakdown bind:location {job} {blueprint} />
     {/if}
 {/if}
