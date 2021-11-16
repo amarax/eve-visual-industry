@@ -24,11 +24,16 @@ type DogmaTypeAttributes = {
 }
 
 
-
+let _industryDogmaAttributes = {attributes:{}, types:{}};
+let industryDogmaAttributesLoaded = false;
 export const IndustryDogmaAttributes: Readable<{
     attributes: EntityCollection<DogmaAttributes>,
     types: EntityCollection<EntityCollection<DogmaTypeAttributes>>
-}> = readable({attributes:{}, types:{}}, (set)=>{
+}> = readable(_industryDogmaAttributes, (set)=>{
+    if(industryDogmaAttributesLoaded) {
+        return;
+    }
+
     let attributes = {};
     let types = {};
 
@@ -66,7 +71,9 @@ export const IndustryDogmaAttributes: Readable<{
                 }
             })
 
-            set({attributes, types});
+            _industryDogmaAttributes = {attributes, types};
+            set(_industryDogmaAttributes);
+            industryDogmaAttributesLoaded = true;
         })
         .catch(error=>console.error(error))
 

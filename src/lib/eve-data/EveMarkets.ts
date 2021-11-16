@@ -70,12 +70,14 @@ type Markets = {
     prices: Readable<EntityCollection<MarketPrices>>
 }
 
-
+let pricesLoaded = false;
 export const Markets: Markets = {
     regions:{
         10000002: {types:{}},
     }, 
     prices: readable({}, (set)=>{
+        if(pricesLoaded) return;
+
         LoadFromESI( `/markets/prices/?datasource=tranquility` )
             .then((prices: Array<MarketPrices>)=>{
                 let types = {}
@@ -86,7 +88,7 @@ export const Markets: Markets = {
                 
                 set(types);
         
-                        
+                pricesLoaded = true;
             })
             .catch(reason=>console.error(reason))
 
