@@ -1,6 +1,6 @@
 
 <script lang="ts">
-    import type { EveCharacterId } from "$lib/eve-data/EveCharacter";
+    import { CharacterBlueprints, EveCharacterId } from "$lib/eve-data/EveCharacter";
     import CreateESIStore, { ESIStoreStatus } from "./eve-data/ESIStore";
     import type {ESIStore} from "./eve-data/ESIStore";
     import EveTypes, { EveType, EveTypeId } from "$lib/eve-data/EveTypes";
@@ -11,11 +11,11 @@
     import type { EveAsset, EveBlueprint, EveItemId, EveJobDetails, EveLocationId } from "$lib/eve-data/ESI";
     import { CreateIndustryJobStore, IndustryJobStore } from "./IndustryJob";
 import NewIndustryJob from "./NewIndustryJob.svelte";
-import { get } from "svelte/store";
+import { get, readable } from "svelte/store";
 import type { JobDetails, JobDetailsStatus } from "./IndustryJobScheduler";
 import IndustryJobScheduleBlock from "./IndustryJobScheduleBlock.svelte";
 import type { Quantity } from "./eve-data/EveMarkets";
-import { onDestroy, onMount } from "svelte";
+import { onDestroy, onMount, setContext } from "svelte";
 import { GetScheduledJobs, OverwriteScheduledJobs } from "./local-data/ScheduledJobs";
 import type { EVIScheduledJob } from "./local-data/ScheduledJobs";
 import { max } from 'd3-array';
@@ -29,10 +29,12 @@ import { GetLocationStore } from "./eve-data/EveData";
     let _prevCharacterId: EveCharacterId;
     $: if(characterId && _prevCharacterId !== characterId) {
         characterJobs = CreateESIStore<Array<EveJobDetails>>(`/characters/${characterId}/industry/jobs/`, null, {char:characterId, include_completed:true});
-        characterBlueprints = CreateESIStore<Array<EveBlueprint>>(`/characters/${characterId}/blueprints/`, null, {char:characterId});
         characterAssets = CreateESIStore<Array<EveAsset>>(`/characters/${characterId}/assets/`, null, {char:characterId});
+        characterBlueprints = CharacterBlueprints[characterId];
 
         _prevCharacterId = characterId;
+
+        setContext('currentCharacter', readable(characterId));
     }
 
     export let incompleteJobs: Array<JobDetails> = [];
@@ -409,7 +411,7 @@ import { GetLocationStore } from "./eve-data/EveData";
 
 <select value={selectedBlueprintItem} on:change={event=>selectedBlueprintItem = parseInt(event.currentTarget.value)}>
     {#each blueprints as blueprint (blueprint.item_id)}
-        <option value={blueprint.item_id}>{$EveTypes.get(blueprint.type_id)?.name ?? blueprint.type_id} </option>
+        <option value={blueprint.item_id} disabled={blueprint.runs !== -1 && blueprint.runs <= _jobs.find((j)=>j.blueprint_id===blueprint.item_id && j.status==='active')?.runs}>{$EveTypes.get(blueprint.type_id)?.name ?? blueprint.type_id} </option>
     {/each}
 </select>
 <button on:click={addJob}>Add</button><br/>

@@ -23,7 +23,7 @@ import ReactionActivity from "./ReactionActivity.svelte";
         }
     })
     let facilityModifiers: IndustryFacilityModifiers;
-    $: if(facilityModifiers) job.update({facilityModifiers})
+    $: if(facilityModifiers && collapsed) job.update({facilityModifiers})
 
     let maxRuns: number;
     $: {

@@ -123,6 +123,8 @@ import FacilitySelector from "./components/FacilitySelector.svelte";
             maxRuns = $Industry.types[blueprint.type_id].maxProductionLimit;
         }
     }
+
+
 </script>
 
 <style lang="scss">
@@ -172,7 +174,7 @@ import FacilitySelector from "./components/FacilitySelector.svelte";
 
 <p>
     <b>Facility</b>
-    <FacilitySelector activity={$job?.activity.activity.activityID} bind:value={location} on:change={event=>job.update({facilityModifiers:event.detail})} />
+    <FacilitySelector activity={$_job.activity.activity.activityID} bind:value={location} on:change={event=>_job.update({facilityModifiers:event.detail})} />
 </p>
 
 <b>Production</b>
@@ -207,14 +209,14 @@ import FacilitySelector from "./components/FacilitySelector.svelte";
 
         {#if producedItems[type_id]}
         <div class="subItem">
-            {#if GetReactionActivity(type_id, $Industry).activity}
+            {#if CanBeProduced(type_id, $Industry)}
                 <svelte:self productTypeId={type_id} requiredQuantity={$_job.materialQuantity(type_id)} 
                     bind:unitCost={producedPrices[type_id]} bind:producedItems
-                    defaultLocationId={location}
+                    {location}
                     compact
                 />
             {:else}
-                Could not find industry details for {$Universe.types[type_id]?.name}
+                {$Universe.types[type_id]?.name} cannot be produced
             {/if}
         </div>
     {/if}

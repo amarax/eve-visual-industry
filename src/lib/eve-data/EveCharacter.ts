@@ -52,8 +52,8 @@ export const CharacterBlueprints: {
 export function GetCharacterInfo(id:EveCharacterId): ESIStore<Character> {
     if(!Characters[id]) {
         Characters[id] = CreateESIStore(`/characters/${id}/`);
-        CharacterSkills[id] = CreateESIStoreFromCache(`/characters/${id}/skills/`);
-        CharacterBlueprints[id] = CreateESIStoreFromCache(`/characters/${id}/blueprints/`);
+        CharacterSkills[id] = CreateESIStore(`/characters/${id}/skills/`,null,{char:id});
+        CharacterBlueprints[id] = CreateESIStore(`/characters/${id}/blueprints/`,null,{char:id});
     }
 
     return Characters[id];

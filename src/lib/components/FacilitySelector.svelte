@@ -44,7 +44,6 @@ import type { EveLocationId } from "$lib/eve-data/ESI";
     let locationInfo;
     export let facilityModifiers: IndustryFacilityModifiers = {};
     $: if(locationInfo) facilityModifiers = ModifiersFromLocationInfo(locationInfo);
-
 </script>
 
-<LocationSelector bind:value {activity} bind:locationInfo />
+<LocationSelector bind:value {activity} bind:locationInfo on:change={event=>dispatch('change',ModifiersFromLocationInfo(event.detail))} />
