@@ -37,7 +37,7 @@ import { GetLocationStore } from "./eve-data/EveData";
 
     export let incompleteJobs: Array<JobDetails> = [];
     $: incompleteJobs = [ 
-        ...($characterJobs?.filter(j=>j.status==='active')??[]), 
+        // ...($characterJobs?.filter(j=>j.status==='active')??[]), 
         // ...scheduledJobs.values()    // We'll exclude scheduled jobs first until we can properly handle dependencies
     ];
 

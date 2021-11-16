@@ -17,6 +17,7 @@ import EveTypes from "$lib/eve-data/EveTypes";
     import { sum } from "d3-array";
 import type { JobDetails } from "$lib/IndustryJobScheduler";
 import { Industry } from "$lib/eve-data/EveIndustry";
+import RelativeValueDisplay from "$lib/components/RelativeValueDisplay.svelte";
 
 
 
@@ -86,6 +87,10 @@ import { Industry } from "$lib/eve-data/EveIndustry";
     }
 
 
+    $: requiredQuantity = (materialTypeId: EveTypeId): Quantity => {
+        return materialsList.get(materialTypeId) -getAssetQuantity(materialTypeId) -getJobOutputQuantity(materialTypeId) -(materialsInventory[materialTypeId]??0);
+    }
+
 
     function timeout(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
@@ -95,9 +100,9 @@ import { Industry } from "$lib/eve-data/EveIndustry";
     async function copyBOMToClipboard() {
         let bom = "";
         for(let [materialTypeId, quantity] of materialsList.entries()) {
-            let requiredQuantity = quantity -getAssetQuantity(materialTypeId) -getJobOutputQuantity(materialTypeId) +(materialsInventory[materialTypeId]??0)
-            if(requiredQuantity > 0)
-                bom += `${$EveTypes.get(materialTypeId).name} ${requiredQuantity}\n`;
+            let qty = requiredQuantity(materialTypeId)
+            if(qty > 0)
+                bom += `${$EveTypes.get(materialTypeId).name} ${qty}\n`;
         }
         await navigator.clipboard.writeText(bom);
         copied = true;
@@ -198,7 +203,7 @@ import { Industry } from "$lib/eve-data/EveIndustry";
 
 {#each [...materialsList.entries()].sort((a,b)=>$EveTypes.get(a[0]).name.localeCompare($EveTypes.get(b[0]).name)) as [materialTypeId, quantity]}
     <span class="itemName">{$EveTypes.get(materialTypeId).name}</span>
-    <span class="qty">{quantity -getAssetQuantity(materialTypeId) -getJobOutputQuantity(materialTypeId) +(materialsInventory[materialTypeId]??0)}</span>
+    <span class="qty"><RelativeValueDisplay value={-requiredQuantity(materialTypeId)} extents={[-quantity,getAssetQuantity(materialTypeId) +getJobOutputQuantity(materialTypeId) +(materialsInventory[materialTypeId]??0)]}>{requiredQuantity(materialTypeId)}</RelativeValueDisplay></span>
     <span class="qty">{quantity}</span>
     <span class="qty">{getAssetQuantity(materialTypeId)}</span>
     <span class="qty">{getJobOutputQuantity(materialTypeId)}</span>
@@ -207,7 +212,7 @@ import { Industry } from "$lib/eve-data/EveIndustry";
 {/each}
 
 Total volume: {sum(materialsList.entries(), ([materialTypeId, quantity])=>{
-    let qty = quantity -getAssetQuantity(materialTypeId) -getJobOutputQuantity(materialTypeId) +(materialsInventory[materialTypeId]??0);
+    let qty = requiredQuantity(materialTypeId);
     return $EveTypes.get(materialTypeId).packaged_volume * Math.max(qty,0);
 })}m3
 </p>
