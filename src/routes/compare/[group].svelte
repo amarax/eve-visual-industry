@@ -18,7 +18,7 @@
     import { extent, max } from "d3-array";
 import { getContext } from "svelte";
 import type { EveLocationId } from "$lib/eve-data/ESI";
-import { get, Readable } from "svelte/store";
+import type { Readable } from "svelte/store";
 
 
     let currentGroup: EveMarketGroupId;
