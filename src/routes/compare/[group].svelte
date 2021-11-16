@@ -66,8 +66,9 @@ import type { Readable } from "svelte/store";
     let marketFilterLocation: Readable<EveLocationId> = getContext('marketFilterLocation');
     $: {
         relatedMarketTypes.forEach((marketType,typeId)=>{
-            prices[typeId] = marketType?.orders.sell?.filter(o=>$marketFilterLocation ? o.location_id===$marketFilterLocation : true)[0]?.price 
-                ?? prices[typeId];
+            if(!selectedTypeIds.includes(typeId)) {
+                prices[typeId] = marketType?.orders.sell?.filter(o=>$marketFilterLocation ? o.location_id===$marketFilterLocation : true)[0]?.price;
+            }
         });
     }
 

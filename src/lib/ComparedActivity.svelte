@@ -5,13 +5,17 @@
     import type { Type_Id } from "$lib/eve-data/EveData";
 
     import { Industry, ProductToActivity } from "$lib/eve-data/EveIndustry";
-    import { CreateProductionJobStore, IndustryFacilityModifiers } from "$lib/IndustryJob";
+    import { CreateProductionJobStore, IndustryFacilityModifiers, ModifiersFromCharacter } from "$lib/IndustryJob";
     import { IskAmount, MarketPrices } from "$lib/eve-data/EveMarkets";
     import MarketOrdersBar from "$lib/components/MarketOrdersBar.svelte";
 
-    import { FormatIskChange, FormatPercentageChange } from "$lib/Format";
+    import { FormatIskAmount, FormatIskChange, FormatPercentageChange } from "$lib/Format";
     import { base as basePath } from '$app/paths';
 import RelativeValueDisplay from "./components/RelativeValueDisplay.svelte";
+import { getContext } from "svelte";
+import type { Readable } from "svelte/store";
+import type { EveCharacterId } from "./eve-data/EveCharacter";
+import { CharacterSkills, CharacterImplants } from "./eve-data/EveCharacter";
 
 
 
@@ -24,6 +28,11 @@ import RelativeValueDisplay from "./components/RelativeValueDisplay.svelte";
 
     export let facilityModifiers: IndustryFacilityModifiers;
     $: if(facilityModifiers) job.update({facilityModifiers})
+
+    let currentCharacter = getContext('currentCharacter') as Readable<EveCharacterId>;
+    $: characterSkills = CharacterSkills[$currentCharacter];
+    $: characterImplants = CharacterImplants[$currentCharacter]
+    $: job.update({characterModifiers:ModifiersFromCharacter($job.activity, $characterSkills, $characterImplants)})
 
     export let salesTaxRate = 0.036;
     export let brokerFeeRate = 0.0113709973928; // Selene's broker fee
@@ -47,8 +56,6 @@ import RelativeValueDisplay from "./components/RelativeValueDisplay.svelte";
     export let priceUpperBound: IskAmount = 0;
     let lowestSellPrice: IskAmount;
     $: priceUpperBound = Math.max( $job?.totalCost, prices[productTypeId] * $job?.producedQuantity ?? 0, lowestSellPrice )
-
-    // TODO factor in character skills
 </script>
 
 <style lang="scss">
