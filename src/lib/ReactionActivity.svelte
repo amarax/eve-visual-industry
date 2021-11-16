@@ -165,8 +165,8 @@ import FacilitySelector from "./components/FacilitySelector.svelte";
 </div>
 
 <div class="combinedInput">
-    Runs <input type="range" value={$job?.runs} on:input={event=>job.update({runs:parseInt(event.currentTarget.value)})} min={1} max={maxRuns} disabled={requiredQuantity !== null && !overrideRequiredQuantity} /> 
-    <input type="number" value={$job?.runs} on:input={event=>job.update({runs:parseInt(event.currentTarget.value)})} disabled={requiredQuantity !== null && !overrideRequiredQuantity} /> 
+    Runs <input type="range" value={$_job.runs} on:input={event=>!isNaN(parseInt(event.currentTarget.value)) && _job.update({runs:parseInt(event.currentTarget.value)})} min={1} max={maxRuns} disabled={requiredQuantity !== null && !overrideRequiredQuantity} /> 
+    <input type="number" value={$_job.runs} on:input={event=>!isNaN(parseInt(event.currentTarget.value)) && _job.update({runs:parseInt(event.currentTarget.value)})} disabled={requiredQuantity !== null && !overrideRequiredQuantity} /> 
     {#if requiredQuantity !== null}
         <label><input type="checkbox" bind:checked={overrideRequiredQuantity} /> Override</label> 
     {/if}
