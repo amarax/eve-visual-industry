@@ -1,10 +1,15 @@
-import { writable } from "svelte/store";
+import { get, writable } from "svelte/store";
+
+import { ADVANCED_INDUSTRY_SKILL_ID, MANUFACTURING_ACTIVITY_ID, REACTION_ACTIVITY_ID } from "$lib/eve-data/EveIndustry"
+import { ApplyEffects, IndustryDogmaAttributes } from "$lib/eve-data/EveDogma";
 
 import type { Readable } from "svelte/store";
 import type { EntityCollection, Type_Id } from "$lib/eve-data/EveData"
 import type { IndustryActivity, ProductToIndustryTypeMap } from "$lib/eve-data/EveIndustry"
 import type { DurationSeconds, IskAmount, MarketPrices, Quantity } from "$lib/eve-data/EveMarkets"
-import { ApplyEffects } from "$lib/eve-data/EveDogma";
+import type { CharacterSkills } from "./eve-data/EveCharacter";
+import type { EveTypeId } from "./eve-data/EveTypes";
+import { debug } from "svelte/internal";
 
 // Get all the computed details for a facility that affect this job
 export type IndustryFacilityModifiers = {
@@ -22,6 +27,10 @@ export type IndustryFacilityModifiers = {
     systemCostIndex?: number,
 }
 
+export type IndustryCharacterModifiers = {
+    skill_jobDuration: number,
+    implant_jobDuration: number,
+}
 
 
 // Purely functional class that has all the calculations
@@ -29,10 +38,7 @@ export class IndustryJob {
     activity: IndustryActivity
     selectedProduct: Type_Id
 
-    characterModifiers: {
-        skill_jobDuration: number,
-        implant_jobDuration: number,
-    }
+    characterModifiers: IndustryCharacterModifiers
     facilityModifiers: IndustryFacilityModifiers
     blueprintModifiers: {
         materialEfficiency: number,
@@ -131,15 +137,16 @@ export class IndustryJob {
     // #region Duration metrics
 
     get jobDuration(): DurationSeconds {
-        return ApplyEffects(
+        return Math.round(ApplyEffects(
             this.activity?.time * this.runs,
             [
                 {value: -this.blueprintModifiers?.timeEfficiency},
                 {value: this.characterModifiers?.skill_jobDuration},
+                {value: this.characterModifiers?.implant_jobDuration},
                 {value: this.facilityModifiers.roleModifiers?.jobDuration},
                 {value: this.facilityModifiers.rigModifiers?.timeReduction},
             ]
-        )
+        ))
     }
 
     // #endregion
@@ -265,4 +272,88 @@ export function ModifiersFromLocationInfo(locationInfo: EveLocationInfo): Indust
     }
 
     return modifiers;
+}
+
+type AffectingSkillModifier = {
+    skillId: EveTypeId, 
+    activeLevel: number, 
+    valuePerLevel: number
+}
+export function GetAffectingSkillModifiers(activity: IndustryActivity, characterSkills: CharacterSkills): Array<AffectingSkillModifier> {
+    const dogmaAttributes = get(IndustryDogmaAttributes);
+    console.assert(Object.keys(dogmaAttributes.attributes).length > 0 && Object.keys(dogmaAttributes.types).length > 0), "IndustryDogmaAttributes not yet loaded";
+
+    const REACTION_TIME_ATTRIBUTE_ID = 2660;
+    let relevantAttributes: Array<number> = [];
+    switch(activity.activity.activityID) {
+        case 9:
+            relevantAttributes = [REACTION_TIME_ATTRIBUTE_ID];
+            break;
+        case REACTION_ACTIVITY_ID:
+            relevantAttributes = [REACTION_TIME_ATTRIBUTE_ID];
+            break;
+        case MANUFACTURING_ACTIVITY_ID:
+            relevantAttributes = [440,1982,1961];   // Need to label what attributes these are
+        break;
+    }
+
+    let affectingSkillIds = [...Object.values( activity.requiredSkills ), {type_id:ADVANCED_INDUSTRY_SKILL_ID}]
+        .map(s=>s.type_id)
+        .filter((s: Type_Id)=>dogmaAttributes.types[s] != undefined)
+    
+    let skillModifiers = affectingSkillIds
+        .map((skillId:Type_Id) => {
+            let valuePerLevel = 0;
+            for(let attributeId of relevantAttributes) {
+                valuePerLevel = dogmaAttributes.types[skillId][attributeId]?.value ?? 0;
+                if(valuePerLevel !== 0) break;
+            }
+            let activeLevel = characterSkills?.skills.find(c=>c.skill_id==skillId)?.active_skill_level ?? 0;
+            return {skillId, activeLevel, valuePerLevel}
+        })
+        .filter(mod=>mod.valuePerLevel !== 0)
+
+    return skillModifiers;
+}
+
+type AffectingImplantModifier = {
+    typeId: EveTypeId,
+    value: number,
+}
+export function GetAffectingImplantModifiers(activity: IndustryActivity, characterImplants?: Array<EveTypeId>): Array<AffectingImplantModifier> {
+    const dogmaAttributes = get(IndustryDogmaAttributes);
+    console.assert(Object.keys(dogmaAttributes.attributes).length > 0 && Object.keys(dogmaAttributes.types).length > 0), "IndustryDogmaAttributes not yet loaded";
+
+    let relevantAttributes: Array<number> = [];
+    switch(activity.activity.activityID) {
+        case MANUFACTURING_ACTIVITY_ID:
+            relevantAttributes = [440];   // Need to label what attributes these are
+        break;
+    }
+
+    let implantModifiers = (characterImplants ?? [])
+        .map((typeId:EveTypeId)=>{
+            let value = 0;
+            for(let attributeId of relevantAttributes) {
+                if(!dogmaAttributes.types[typeId]) continue;
+                value = dogmaAttributes.types[typeId][attributeId]?.value ?? 0;
+                if(value != 0)
+                    break;
+            }
+            return {typeId, value};
+        })
+        .filter(mod=>mod.value !== 0)
+
+    return implantModifiers;
+}
+
+export function ModifiersFromCharacter(activity: IndustryActivity, characterSkills: CharacterSkills, characterImplants: Array<EveTypeId>): IndustryCharacterModifiers {
+    let skill_jobDuration = ApplyEffects(1, GetAffectingSkillModifiers(activity, characterSkills).map(asm=>({value:asm.activeLevel*asm.valuePerLevel})) )*100 -100;
+
+    let implant_jobDuration = ApplyEffects(1, GetAffectingImplantModifiers(activity, characterImplants).map(aim=>({value:aim.value})) )*100 -100;
+
+    return {
+        skill_jobDuration,
+        implant_jobDuration,
+    }
 }

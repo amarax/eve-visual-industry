@@ -6,6 +6,7 @@ import type { Quantity } from "./EveMarkets";
 import { browser } from "$app/env";
 
 import { base as basePath } from '$app/paths';
+import type { EveTypeId } from "./EveTypes";
 
 
 export type EveCharacterId = number;
@@ -48,12 +49,17 @@ export const CharacterBlueprints: {
     [index: EveCharacterId]: ESIStore<CharacterBlueprints>
 } = {}
 
+export const CharacterImplants: {
+    [index: EveCharacterId]: ESIStore<Array<EveTypeId>>
+} = {}
 
 export function GetCharacterInfo(id:EveCharacterId): ESIStore<Character> {
     if(!Characters[id]) {
         Characters[id] = CreateESIStore(`/characters/${id}/`);
         CharacterSkills[id] = CreateESIStore(`/characters/${id}/skills/`,null,{char:id});
         CharacterBlueprints[id] = CreateESIStore(`/characters/${id}/blueprints/`,null,{char:id});
+        CharacterImplants[id] = CreateESIStore(`/characters/${id}/implants/`,null,{char:id});
+
     }
 
     return Characters[id];

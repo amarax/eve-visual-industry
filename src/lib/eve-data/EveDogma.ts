@@ -62,14 +62,16 @@ export const IndustryDogmaAttributes: Readable<{
             valueInt: number | "None",
             valueFloat: number | "None"
         }>)=>{
-            data.filter(typeAttribute=>attributes[typeAttribute.attributeID] !== undefined).forEach(t=>{
-                types[t.typeID] = types[t.typeID] ?? {};
-                types[t.typeID][t.attributeID] = {
-                    type_id: t.typeID,
-                    attribute_id: t.attributeID,
-                    value: t.valueInt === "None" ? t.valueFloat : t.valueInt
-                }
-            })
+            data
+                .filter(typeAttribute=>attributes[typeAttribute.attributeID] !== undefined)
+                .forEach(t=>{
+                    types[t.typeID] = types[t.typeID] ?? {};
+                    types[t.typeID][t.attributeID] = {
+                        type_id: t.typeID,
+                        attribute_id: t.attributeID,
+                        value: t.valueInt === "None" ? t.valueFloat : t.valueInt
+                    }
+                })
 
             _industryDogmaAttributes = {attributes, types};
             set(_industryDogmaAttributes);

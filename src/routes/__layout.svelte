@@ -16,9 +16,10 @@
 import { session } from '$app/stores';
 import type { EveLocationId } from '$lib/eve-data/ESI';
 import type { EveLocationsContext } from 'src/contexts';
+import { IndustryDogmaAttributes } from '$lib/eve-data/EveDogma';
 
 
-    $: loaded = $EveTypes.size > 0 && $EveMarketGroups.size > 0;
+    $: loaded = $EveTypes.size > 0 && $EveMarketGroups.size > 0 && Object.keys( $IndustryDogmaAttributes.types ).length > 0;
     
 
     $: blueprints = CharacterBlueprints[ $currentCharacter ];

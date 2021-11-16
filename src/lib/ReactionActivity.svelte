@@ -1,10 +1,10 @@
 <script lang="ts">
     import { EntityCollection, Location_Id, Universe } from "$lib/eve-data/EveData";
-    import { CanBeProduced, GetReactionActivity, Industry, ProductToActivity, REACTION_ACTIVITY_ID } from "$lib/eve-data/EveIndustry";
-    import { CreateProductionJobStore, ModifiersFromLocationInfo } from "$lib/IndustryJob";
+    import { ADVANCED_INDUSTRY_SKILL_ID, CanBeProduced, GetReactionActivity, Industry, MANUFACTURING_ACTIVITY_ID, ProductToActivity, REACTION_ACTIVITY_ID } from "$lib/eve-data/EveIndustry";
+    import { CreateProductionJobStore, GetAffectingSkillModifiers, ModifiersFromCharacter, ModifiersFromLocationInfo } from "$lib/IndustryJob";
     import type { IndustryJobStore } from "$lib/IndustryJob";
     import { MarketPrices } from "./eve-data/EveMarkets";
-    import { CharacterSkills } from "$lib/eve-data/EveCharacter";
+    import { CharacterImplants, CharacterSkills } from "$lib/eve-data/EveCharacter";
 
     import type { Type_Id, EveLocation } from "$lib/eve-data/EveData";
     import type { IskAmount, Quantity } from "$lib/eve-data/EveMarkets";
@@ -17,14 +17,12 @@
     import { ApplyEffects, IndustryDogmaAttributes } from "./eve-data/EveDogma";
 import type { EveBlueprint } from "./eve-data/ESI";
 import FacilitySelector from "./components/FacilitySelector.svelte";
+import type { EveTypeId } from "./eve-data/EveTypes";
+import EveTypes from "./eve-data/EveTypes";
 
 
     export let productTypeId: Type_Id = null;
-
     export let job: IndustryJobStore = null;
-
-    export let blueprint: EveBlueprint = null;
-
     let _job: IndustryJobStore;
     $: if(!job && productTypeId) {
         _job = CreateProductionJobStore(productTypeId, $ProductToActivity);
@@ -32,6 +30,14 @@ import FacilitySelector from "./components/FacilitySelector.svelte";
         _job = job;
     }
     $: _productTypeId = $_job.selectedProduct;
+
+    export let blueprint: EveBlueprint = null;
+    $: if(blueprint) {
+        _job.update({blueprintModifiers:{
+            materialEfficiency: blueprint.material_efficiency,
+            timeEfficiency: blueprint.time_efficiency
+        }})
+    }
 
     export let requiredQuantity: Quantity = null; 
     let overrideRequiredQuantity: boolean = false;
@@ -52,24 +58,10 @@ import FacilitySelector from "./components/FacilitySelector.svelte";
 
     let currentCharacter = getContext('currentCharacter') as Readable<EveCharacterId>;
     $: characterSkills = CharacterSkills[$currentCharacter];
+    $: characterImplants = CharacterImplants[$currentCharacter]
     
-    const REACTION_TIME_ATTRIBUTE_ID = 2660;
-    $: {
-        let affectingSkills = Object.values( $_job.activity?.requiredSkills ?? {} )
-            .map(s=>s.type_id)
-            .filter((s: Type_Id)=>$IndustryDogmaAttributes.types[s] != undefined)
-            .filter((s: Type_Id)=>$IndustryDogmaAttributes.types[s][REACTION_TIME_ATTRIBUTE_ID] != undefined)
-
-        let skillModifiers = affectingSkills
-            .map( (s:Type_Id) => ({value:$IndustryDogmaAttributes.types[s][REACTION_TIME_ATTRIBUTE_ID].value
-                * ($characterSkills?.skills.find(c=>c.skill_id==s)?.active_skill_level ?? 0)}) )
-
-        let skill_jobDuration = ApplyEffects(1, skillModifiers)*100 -100;
-
-        _job.update({characterModifiers:{
-            skill_jobDuration
-        }})
-    }
+    $: affectingSkills = GetAffectingSkillModifiers($_job.activity, $characterSkills);
+    $: _job.update({characterModifiers:ModifiersFromCharacter($_job.activity, $characterSkills, $characterImplants)})
 
     // #endregion
 
