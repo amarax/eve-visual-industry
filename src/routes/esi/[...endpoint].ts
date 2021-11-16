@@ -1,5 +1,5 @@
 import { LoadFromESI } from "$lib/eve-data/EveData";
-import { GetAccessToken } from "$lib/eve-sso/Tokens";
+import { GetAccessToken, RefreshToken } from "$lib/eve-sso/Tokens";
 import type { RequestHandler } from "@sveltejs/kit";
 
 
@@ -8,15 +8,24 @@ export const get: RequestHandler = async ({query, locals, params}) => {
 
 
     let body;
-    try {
-        body = await LoadFromESI(`/${params.endpoint}?${query.toString()}`, {characterId});
-    } catch(response) {
-        if(response.status == 403) {
-            // try refreshing the token
-            console.log("Should try refreshing token")
+    while(!body) {
+        try {
+            body = await LoadFromESI(`/${params.endpoint}?${query.toString()}`, {characterId});
+        } catch(response) {
+            if(response.status == 403) {
+                // try refreshing the token
+                try {
+                    await RefreshToken(locals.userId, characterId);
+                    continue;
+                } catch(error) {
+                    console.log(error);
+                    break;
+                }
+            }
+    
+            console.error(response);
+            break;
         }
-
-        console.error(response);
     }
     
     return {

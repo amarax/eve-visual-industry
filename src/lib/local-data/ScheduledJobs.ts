@@ -17,18 +17,15 @@ export interface EVIScheduledJob {
     activity_id: EveIndustryActivityId,
     runs: number,
     location_id: EveLocationId,
+    installer_id: EveCharacterId,
 }
 
-interface EVIScheduledJobStored extends EVIScheduledJob {
-    characterId: EveCharacterId,
-    
-}
 
 
 export const SCHEDULED_JOBS_OBJECTSTORE_NAME = "ScheduledJobs";
 export interface ScheduledJobsObjectStore {
     key: EVIJobId,
-    value: EVIScheduledJobStored,
+    value: EVIScheduledJob,
 
     // Currently we only need the character id 
     // because we will need all the records to do the subsequent processing
@@ -67,7 +64,7 @@ export async function OverwriteScheduledJobs(characterId: EveCharacterId, jobs: 
     for(const key of exit) {
         if(dev) {
             const job = await store.get(key)
-            console.assert(job.characterId === characterId);
+            console.assert(job.installer_id === characterId);
         }
         await store.delete(key)
     }

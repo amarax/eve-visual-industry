@@ -1,4 +1,6 @@
 import type { Activity_Id } from "./EveIndustry";
+import type { Quantity } from "./EveMarkets";
+import type { EveTypeId } from "./EveTypes";
 
 export type EveJobDetailsStatus = 'active' | 'cancelled' | 'delivered' | 'paused' | 'ready' | 'reverted';
 
@@ -32,6 +34,17 @@ export type EveBlueprint = {
     runs,
     time_efficiency,
     type_id 
+}
+
+export type EveAsset = {
+    is_blueprint_copy?: boolean,
+    is_singleton: boolean,
+    item_id: EveItemId,
+    location_flag: string,
+    location_id: EveLocationId,
+    location_type: string,
+    quantity: Quantity,
+    type_id: EveTypeId
 }
 
 

@@ -1,5 +1,6 @@
 import type {EveJobDetailsStatus} from "$lib/eve-data/ESI";
 import type {IndustryJobStore} from "$lib/IndustryJob"
+import type { EveCharacterId } from "./eve-data/EveCharacter";
 
 export type JobDetailsStatus = EveJobDetailsStatus | 'scheduled';
 export interface JobDetails {
@@ -14,4 +15,5 @@ export interface JobDetails {
     runs,
     product_type_id,
     industryJob?: IndustryJobStore,
+    installer_id: EveCharacterId,
 }
