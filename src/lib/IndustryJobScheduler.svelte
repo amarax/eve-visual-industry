@@ -193,9 +193,9 @@ import { GetLocationStore } from "./eve-data/EveData";
         [REACTION_ACTIVITY_ID]: 1,
         9: 1,
         [INVENTION_ACTIVITY_ID]: 2,
-        5: 3,   // Copying
-        4: 4,   // Material efficiency
-        3: 5,   // Time efficiency
+        5: 2,   // Copying
+        4: 2,   // Material efficiency
+        3: 2,   // Time efficiency
 
         // Not used in TQ
         0: 6,
@@ -210,20 +210,20 @@ import { GetLocationStore } from "./eve-data/EveData";
         // Group jobs in the same facility together
         let groups = new Map<number, Array<JobDetails>>();
         _jobs.forEach(job=>{
-            if(!groups.has(job[groupBy])) {
-                groups.set(job[groupBy], []);
+            let g = job[groupBy];
+            if(groupBy == 'activity_id') {
+                g = ACTIVITY_ID_SORT_ORDER[g];
             }
 
-            groups.get(job[groupBy]).push(job);
+            if(!groups.has(g)) {
+                groups.set(g, []);
+            }
+
+            groups.get(g).push(job);
         })
 
         let sortedGroups = [...groups.entries()];
-        if(groupBy == 'activity_id') {
-            // Impose a sort order
-            sortedGroups.sort((a,b)=>ACTIVITY_ID_SORT_ORDER[a[0]] - ACTIVITY_ID_SORT_ORDER[b[0]])
-        } else {
-            sortedGroups.sort((a,b)=>a[0] - b[0])
-       }
+        sortedGroups.sort((a,b)=>a[0] - b[0])
         let groupValues = sortedGroups.map(([g, fg])=>fg);
 
         rows.clear();

@@ -40,6 +40,8 @@
 
     $: inventable = GetInventableBlueprint($Industry, $ProductToActivity.get(productTypeId)?.type.type_id);
     let inventing: boolean = false;
+    $: if(!inventable) inventing = false;
+
     let inventedRuns = 1;
     $: if(inventing) {
         _job?.update({runs: inventedRuns})
@@ -144,6 +146,17 @@
             width: 60px;
             text-align: right;
         }
+    }
+
+    .summary {
+        position: sticky;
+        top: 0;
+        padding-top: 8px;
+        padding-bottom: 8px;
+
+        z-index: var(--zindex-overlay);
+
+        background-color: rgba(24,24,24,0.9);
     }
 </style>
 
