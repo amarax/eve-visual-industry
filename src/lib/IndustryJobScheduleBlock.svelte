@@ -49,7 +49,7 @@ import type { JobDetails } from "./IndustryJobScheduler";
 
     let currentCharacter = getContext('currentCharacter') as Readable<EveCharacterId>;
     $: blueprints = CharacterBlueprints[$currentCharacter] as Readable<CharacterBlueprints>;
-    $: blueprintItem = $blueprints.find(b=>b.item_id === job.blueprint_id);
+    $: blueprintItem = $blueprints?.find(b=>b.item_id === job.blueprint_id);
     $: blueprintExhausted = blueprintItem == null || blueprintItem.runs == job.runs;
 </script>
 
@@ -113,7 +113,7 @@ import type { JobDetails } from "./IndustryJobScheduler";
     <clipPath id={`job-${job.job_id}`}>
         <rect x={x(job.start_date)} width={x(job.end_date)-x(job.start_date)} y={margin} height={y(row+1)-y(row) - margin*2} />
     </clipPath>
-    <rect x={x(job.start_date)} class={`job ${activityToClass(job.activity_id)} ${job.status}`} width={x(job.end_date)-x(job.start_date) -(blueprintExhausted?2:0)} y={margin} height={y(row+1)-y(row) - margin*2} 
+    <rect x={x(job.start_date)} class={`job ${activityToClass(job.activity_id)} ${job.status}`} width={Math.max(x(job.end_date)-x(job.start_date) -(blueprintExhausted?2:0), 1)} y={margin} height={y(row+1)-y(row) - margin*2} 
         on:click={event=>console.log(job)}
     >
         <title>{textLabel}</title>

@@ -127,8 +127,8 @@
         }
     }
 
-    let materialEfficiency: number = blueprint?.material_efficiency ?? 0;
-    let timeEfficiency: number = blueprint?.time_efficiency ?? 0;
+    let materialEfficiency: number = blueprint?.material_efficiency ?? 10;
+    let timeEfficiency: number = blueprint?.time_efficiency ?? 20;
     $: if(!blueprint) {
         _job?.update({blueprintModifiers:{
             materialEfficiency,

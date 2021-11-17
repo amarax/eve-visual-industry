@@ -353,7 +353,7 @@ import { GetLocationStore } from "./eve-data/EveData";
 
     // #region Character Assets
 
-    $: blueprintLocations = new Set($characterBlueprints?.map(b=>b.location_id));
+    $: blueprintLocations = new Set($characterBlueprints && $characterBlueprints.map(b=>b.location_id));
 
     // let locationNames = new Map<EveLocationId,string>();
     // $: if($characterBlueprints) {

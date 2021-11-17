@@ -35,8 +35,7 @@ import IndustryJobBreakdown from "./IndustryJobBreakdown.svelte";
     $: characterSkills = CharacterSkills[$currentCharacter];
     $: characterImplants = CharacterImplants[$currentCharacter]
     
-    let activity = $job.activity;   // Prevent the next line from reacting to changes in $job
-    $: job.update({characterModifiers:ModifiersFromCharacter(activity, $characterSkills, $characterImplants)});
+    $: if(collapsed) job.update({characterModifiers:ModifiersFromCharacter($job.activity, $characterSkills, $characterImplants)});
 
     // #endregion
 
