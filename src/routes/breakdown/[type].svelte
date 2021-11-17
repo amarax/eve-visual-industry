@@ -10,6 +10,7 @@
     import TypeSelector from "$lib/components/TypeSelector.svelte";
     import MarketGroupSelector from "$lib/components/MarketGroupSelector.svelte";
     import IndustryJobBreakdown from "$lib/IndustryJobBreakdown.svelte";
+import IndustryJobVisualBreakdownStandalone from "$lib/components/IndustryJobVisualBreakdown/IndustryJobVisualBreakdownStandalone.svelte";
     
     $: selectedProductId = parseInt( $page.params['type'] ) || null;
 
@@ -46,6 +47,6 @@
     on:change={event=>{goto(`${event.detail}`, {keepfocus:true})}} />
 </p>
 
-
+<IndustryJobVisualBreakdownStandalone productTypeId={selectedProductId} />
 <IndustryJobBreakdown productTypeId={selectedProductId} />
     
