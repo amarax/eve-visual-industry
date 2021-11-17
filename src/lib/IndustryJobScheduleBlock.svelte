@@ -1,5 +1,7 @@
 <script lang="ts">
-import { onDestroy, onMount } from "svelte";
+import { getContext, onDestroy, onMount } from "svelte";
+import type { Readable } from "svelte/store";
+import { CharacterBlueprints, EveCharacterId } from "./eve-data/EveCharacter";
 
 import { Activity_Id, Industry, INVENTION_ACTIVITY_ID, MANUFACTURING_ACTIVITY_ID, REACTION_ACTIVITY_ID } from "./eve-data/EveIndustry";
 import type { Quantity } from "./eve-data/EveMarkets";
@@ -44,6 +46,11 @@ import type { JobDetails } from "./IndustryJobScheduler";
         textLabel = $EveTypes.get(job.product_type_id)?.name;
         if(!isNaN(producedItems)) textLabel += ` x${producedItems}` // There is no quantity for research activities
     }
+
+    let currentCharacter = getContext('currentCharacter') as Readable<EveCharacterId>;
+    $: blueprints = CharacterBlueprints[$currentCharacter] as Readable<CharacterBlueprints>;
+    $: blueprintItem = $blueprints.find(b=>b.item_id === job.blueprint_id);
+    $: blueprintExhausted = blueprintItem == null || blueprintItem.runs == job.runs;
 </script>
 
 <style lang="scss">
@@ -106,10 +113,13 @@ import type { JobDetails } from "./IndustryJobScheduler";
     <clipPath id={`job-${job.job_id}`}>
         <rect x={x(job.start_date)} width={x(job.end_date)-x(job.start_date)} y={margin} height={y(row+1)-y(row) - margin*2} />
     </clipPath>
-    <rect x={x(job.start_date)} class={`job ${activityToClass(job.activity_id)} ${job.status}`} width={x(job.end_date)-x(job.start_date)} y={margin} height={y(row+1)-y(row) - margin*2} 
+    <rect x={x(job.start_date)} class={`job ${activityToClass(job.activity_id)} ${job.status}`} width={x(job.end_date)-x(job.start_date) -(blueprintExhausted?2:0)} y={margin} height={y(row+1)-y(row) - margin*2} 
         on:click={event=>console.log(job)}
     >
         <title>{textLabel}</title>
     </rect>
     <text clip-path={`url(#job-${job.job_id})`} y={13} x={x(job.start_date)+4}>{textLabel}</text>
+    {#if blueprintExhausted}
+        <rect x={x(job.end_date)-1} width={1} class={`job ${activityToClass(job.activity_id)}`} y={margin} height={y(row+1)-y(row) - margin*2} />
+    {/if}
 </g>
