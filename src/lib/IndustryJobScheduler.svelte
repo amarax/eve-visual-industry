@@ -72,9 +72,13 @@ import { GetLocationStore } from "./eve-data/EveData";
                 })
             }
             let _initIndustryJob = get(industryJob);
-            
+
+            // Find the last active or scheduled job, and if it exists, use that job end date as our default start date
+            let currentJob = _jobs.find(j=>(j.status === 'active') && j.blueprint_id === blueprint_id);
+            currentJob = [currentJob, ...scheduledJobs.values()].filter(j=>j && j.blueprint_id === blueprint_id).sort((a,b)=>new Date(b.end_date).getTime()-new Date(a.end_date).getTime())[0];
+
             let activity_id = activity.activity.activityID;
-            let start_date = restore?.start_date || Date.now();
+            let start_date = currentJob ? new Date(currentJob.end_date).getTime()+1000 : restore?.start_date ?? Date.now();
             let runs = _initIndustryJob.runs;
 
             let _id = restore?.job_id ?? Date.now();   // Maybe we should automatically generate this
