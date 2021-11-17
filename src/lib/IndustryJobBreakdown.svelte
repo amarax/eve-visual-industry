@@ -32,7 +32,7 @@
 
     export let blueprint: EveBlueprint = null;
     $: if(blueprint) {
-        _job.update({blueprintModifiers:{
+        _job?.update({blueprintModifiers:{
             materialEfficiency: blueprint.material_efficiency,
             timeEfficiency: blueprint.time_efficiency
         }})
@@ -51,7 +51,7 @@
     export let requiredQuantity: Quantity = null; 
     let overrideRequiredQuantity: boolean = false;
     $: if(!overrideRequiredQuantity) { 
-        _job.update({requiredQuantity});
+        _job?.update({requiredQuantity});
     } else {
         _job?.update({requiredQuantity: null});
     }
