@@ -69,6 +69,8 @@ export class IndustryJob {
     }
 
     set requiredQuantity(value: Quantity) {
+        if(value === null || isNaN(value)) return;
+
         this.runs = Math.ceil( value / this.activity?.products[this.selectedProduct]?.quantity );
     }
 

@@ -23,7 +23,7 @@
     export let job: IndustryJobStore = null;
     let _job: IndustryJobStore;
     $: if(!job) {
-        if(productTypeId && $ProductToActivity.size !== 0)
+        if(productTypeId && $ProductToActivity.size !== 0 && productTypeId != $_job?.selectedProduct)
             _job = CreateProductionJobStore(productTypeId, $ProductToActivity);
     } else {
         _job = job;
@@ -42,7 +42,7 @@
     let inventing: boolean = false;
     let inventedRuns = 1;
     $: if(inventing) {
-        _job.update({runs: inventedRuns})
+        _job?.update({runs: inventedRuns})
     }
 
     let blueprintCostPerRun: IskAmount = 0;
@@ -50,8 +50,10 @@
 
     export let requiredQuantity: Quantity = null; 
     let overrideRequiredQuantity: boolean = false;
-    $: if(requiredQuantity !== null && !overrideRequiredQuantity) { 
+    $: if(!overrideRequiredQuantity) { 
         _job.update({requiredQuantity});
+    } else {
+        _job?.update({requiredQuantity: null});
     }
 
     type ItemPickedList = {
@@ -133,6 +135,7 @@
             timeEfficiency
         }})
     }
+
 </script>
 
 <style lang="scss">
