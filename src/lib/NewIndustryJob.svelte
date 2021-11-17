@@ -1,12 +1,16 @@
 <script lang="ts">
+import { getContext } from "svelte";
+import type { Readable } from "svelte/store";
+
 import FacilitySelector from "./components/FacilitySelector.svelte";
 
 import LocationSelector from "./components/LocationSelector.svelte";
 import type { EveBlueprint, EveLocationId } from "./eve-data/ESI";
+import { CharacterImplants, CharacterSkills, EveCharacterId } from "./eve-data/EveCharacter";
 import { Industry } from "./eve-data/EveIndustry";
 import EveTypes from "./eve-data/EveTypes";
 
-import type { IndustryFacilityModifiers, IndustryJobStore } from "./IndustryJob";
+import { IndustryFacilityModifiers, IndustryJobStore, ModifiersFromCharacter } from "./IndustryJob";
 import IndustryJobBreakdown from "./IndustryJobBreakdown.svelte";
 
     export let blueprint: EveBlueprint;
@@ -24,6 +28,16 @@ import IndustryJobBreakdown from "./IndustryJobBreakdown.svelte";
     })
     let facilityModifiers: IndustryFacilityModifiers;
     $: if(facilityModifiers && collapsed) job.update({facilityModifiers})
+
+    // #region Character-related
+
+    let currentCharacter = getContext('currentCharacter') as Readable<EveCharacterId>;
+    $: characterSkills = CharacterSkills[$currentCharacter];
+    $: characterImplants = CharacterImplants[$currentCharacter]
+    
+    $: job.update({characterModifiers:ModifiersFromCharacter($job.activity, $characterSkills, $characterImplants)})
+
+    // #endregion
 
     let maxRuns: number;
     $: {
