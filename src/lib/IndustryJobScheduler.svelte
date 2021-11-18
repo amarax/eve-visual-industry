@@ -79,6 +79,7 @@ import { GetLocationStore } from "./eve-data/EveData";
 
             let activity_id = activity.activity.activityID;
             let start_date = currentJob ? new Date(currentJob.end_date).getTime()+1000 : restore?.start_date ?? Date.now();
+            start_date = Math.max(start_date, Date.now());
             let runs = _initIndustryJob.runs;
 
             let _id = restore?.job_id ?? Date.now();   // Maybe we should automatically generate this

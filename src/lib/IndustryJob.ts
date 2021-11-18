@@ -282,6 +282,8 @@ type AffectingSkillModifier = {
     valuePerLevel: number
 }
 export function GetAffectingSkillModifiers(activity: IndustryActivity, characterSkills: CharacterSkills): Array<AffectingSkillModifier> {
+    if(!activity || !characterSkills) return [];
+    
     const dogmaAttributes = get(IndustryDogmaAttributes);
     console.assert(Object.keys(dogmaAttributes.attributes).length > 0 && Object.keys(dogmaAttributes.types).length > 0), "IndustryDogmaAttributes not yet loaded";
 
@@ -299,7 +301,7 @@ export function GetAffectingSkillModifiers(activity: IndustryActivity, character
         break;
     }
 
-    let affectingSkillIds = [...Object.values( activity.requiredSkills ), {type_id:ADVANCED_INDUSTRY_SKILL_ID}]
+    let affectingSkillIds = [...Object.values( activity.requiredSkills ?? {} ), {type_id:ADVANCED_INDUSTRY_SKILL_ID}]
         .map(s=>s.type_id)
         .filter((s: Type_Id)=>dogmaAttributes.types[s] != undefined)
     

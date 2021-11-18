@@ -25,7 +25,7 @@ import type { EveLocationId } from "$lib/eve-data/ESI";
                 
                 let _locations: EveLocationsContext = new Map();
                 for(let [id, location] of $locations.entries()) {
-                    if(location.type_id == ATHANOR_TYPE_ID) {
+                    if(location?.type_id == ATHANOR_TYPE_ID) {
                         _locations.set(id, location);
                     }
                 }
