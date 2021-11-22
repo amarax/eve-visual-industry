@@ -420,7 +420,7 @@ import { GetLocationStore } from "./eve-data/EveData";
     {/each}
 </select>
 <button on:click={addJob}>Add</button><br/>
-{#each [...scheduledJobs.values()] as job}
+{#each [...scheduledJobs.values()] as job (job.job_id)}
     <NewIndustryJob blueprint={blueprints.find(b=>b.item_id===job.blueprint_id) } job={job.industryJob} /> <button on:click={event=>removeJob(job.job_id)}>Remove</button><br/>
 {/each}
 

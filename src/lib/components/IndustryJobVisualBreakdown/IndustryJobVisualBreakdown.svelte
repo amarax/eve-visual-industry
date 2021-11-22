@@ -10,13 +10,12 @@ import BreakdownMaterial from "./BreakdownMaterial.svelte";
 
     export let job: IndustryJobStore;
 
-    let height = 64;
+    let height = 32;
 
     let topMargin = 8;
-    let bottomMargin = 16;
+    let bottomMargin = 0;
 
     $: extents = [0, $job.totalCost * 1.1]
-    $: console.log($job.totalCost, $job.jobCost);
 
     let xScale = scaleLinear()
         .range([0, 100]);
@@ -24,10 +23,12 @@ import BreakdownMaterial from "./BreakdownMaterial.svelte";
         xScale.domain(extents);
         xScale = xScale;
     }
-    $: x = (value: number)=>`${xScale(value)}%`
+    $: x = (value: IskAmount)=>{
+        return `${xScale(value)}%`
+    }
     
     let y = scaleLinear()
-        .range([topMargin, height -topMargin -bottomMargin])
+        .range([topMargin, height -bottomMargin])
     $: {
         y.domain([0,1]);
         y = y;
@@ -41,27 +42,38 @@ import BreakdownMaterial from "./BreakdownMaterial.svelte";
 
     let prices: {[index:EveTypeId]: IskAmount} = {};
     $: { 
-        for(let type_id in prices) {
-            prices[type_id] = prices[type_id];
-        }
-        prices = prices;
+        // for(let type_id in prices) {
+        //     prices[type_id] = prices[type_id];
+        // }
+        // prices = prices;
         job.update({prices});
     }
 
     let xOffsets: {[index:EveTypeId]: IskAmount} = {};
+    let materialOrder: Array<EveTypeId> = [];
     $: {
-        let cumulativeOffset = 0;
-        for(let materialId in $job.activity.materials) {
+        materialOrder = Object.keys($job.activity.materials).map(id=>parseInt(id));
+        materialOrder.sort((a,b)=>$job.materialCost(b) - $job.materialCost(a))
+
+        let cumulativeOffset = $job.jobCost + ($job.blueprintCostPerRun ?? 0) * $job.runs;
+        for(let materialId of materialOrder) {
             xOffsets[materialId] = cumulativeOffset;
-            cumulativeOffset += $job.materialQuantity(parseInt(materialId)) * prices[materialId];
+            cumulativeOffset += $job.materialCost(materialId);
         }
     }
 
+    const graphPaddingLeft = 0;
+
+    const markWidth = 1;
 </script>
 
 <style lang="scss">
     svg {
         width: 100%;
+
+        svg.graph {
+            overflow: visible;
+        }
 
         .graphArea {
             fill: #2a2a2a;
@@ -85,17 +97,71 @@ import BreakdownMaterial from "./BreakdownMaterial.svelte";
             stroke: none;
         }
     }
+
+    ul.itemList {
+        margin: 0;
+        padding: 0;
+        list-style-type: none;
+        
+        display: block;
+        overflow-x: scroll;
+        white-space: nowrap;
+
+        font-size: 12px;
+
+        button {
+            font-size: 12px;
+            
+            padding: 0;
+            margin: 0;
+            background: none;
+            border: none;
+
+            color: white;
+
+            cursor: pointer;
+
+            &:hover {
+                background: #333;
+            }
+        }
+
+        li {
+            display: inline;
+            margin-inline-end: 8px;
+        }
+
+        &::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        &::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 2px;
+        }
+    }
 </style>
 
 {$EveTypes.get($job.selectedProduct).name}<br/>
 
 <svg {height}>
-    <rect class="graphArea" width="100%" {...fillGraphHeight} />
-    <svg class="graph" {...fillGraphHeight}>
+    <rect class="graphArea" x={graphPaddingLeft} width={`calc(100% - ${graphPaddingLeft}px)`} {...fillGraphHeight} />
+    <svg class="graph" x={graphPaddingLeft} width={`calc(100% - ${graphPaddingLeft}px)`} {...fillGraphHeight}>
+
+    <rect class="breakdown" x={0} width={x($job.jobCost)} height="100%" />
+    <rect class="mark" x={`calc(${x($job.jobCost)} - ${markWidth/2}px)`} width={markWidth} height="100%" />
+
     {#each Object.keys($job.activity.materials).map(id=>parseInt(id)) as materialId (materialId)}
         <BreakdownMaterial xOffset={xOffsets[materialId]} {materialId} {x} {job} bind:price={prices[materialId]} />
     {/each}
 
-    <rect class="breakdown" x={x($job.totalCost - $job.jobCost)} width={x($job.jobCost)} height="100%" />
     </svg>
 </svg>
+
+<ul class="itemList">
+    <li><button>Job</button></li>
+    <li><button>Blueprint</button></li>
+    {#each materialOrder as materialId}
+        <li><button>{$EveTypes.get(materialId).name}</button></li>
+    {/each}
+</ul>

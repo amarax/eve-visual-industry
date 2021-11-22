@@ -1,8 +1,12 @@
 <script lang="ts">
+import type { EveLocationId } from "$lib/eve-data/ESI";
+
 import { getMarketType, IskAmount } from "$lib/eve-data/EveMarkets";
 
 import type { EveTypeId } from "$lib/eve-data/EveTypes";
 import type { IndustryJobStore } from "$lib/IndustryJob";
+import { getContext } from "svelte";
+import type { Readable } from "svelte/store";
 
 
     export let job: IndustryJobStore;
@@ -10,13 +14,15 @@ import type { IndustryJobStore } from "$lib/IndustryJob";
 
     export let price: IskAmount = 0;
 
+    let marketFilterLocation = getContext('marketFilterLocation') as Readable<EveLocationId>;
+
     let market = getMarketType(materialId);
     $: { 
         price = price;
-        price = $market?.orders.sell[0]?.price ?? 0;
+        price = $market?.orders.sell?.filter(o=>$marketFilterLocation ? o.location_id===$marketFilterLocation : true)[0]?.price ?? 0;
     }
 
-    export let x;
+    export let x: (value:number)=>number|string;
     export let xOffset: IskAmount = 0;
 
     $: valid = !isNaN($job.materialQuantity(materialId)*price)
@@ -25,13 +31,15 @@ import type { IndustryJobStore } from "$lib/IndustryJob";
         console.log(materialId, price, $market)
     }
 
-    let nudge = 1;
+    let nudge = 0;
+
+    let markWidth = 1;
 </script>
 
 
-<g>
+<g style={`transform: translate(${x(xOffset)})`}>
     {#if valid}
-        <rect class="breakdown" x={x(xOffset)} width={`calc(${x($job.materialQuantity(materialId)*price)} - ${nudge}px)`} height="100%" />
-        <rect class="mark" x={`calc(${x(xOffset+$job.materialQuantity(materialId)*price)} - ${nudge+1}px)`} width={1} height="100%" />
+        <rect class="breakdown" width={x($job.materialQuantity(materialId)*price)} height="100%" />
+        <rect class="mark" x={`calc(${x($job.materialQuantity(materialId)*price)} - ${markWidth/2}px)`} width={markWidth} height="100%" />
     {/if}
 </g>

@@ -95,6 +95,10 @@ export class IndustryJob {
         return this.qty(this.activity?.materials[type_id]?.quantity);
     }
 
+    materialCost(type_id: Type_Id): IskAmount {
+        return this.materialQuantity(type_id) * (this.prices[type_id] ?? 0);
+    }
+
     get estimatedItemValue(): IskAmount {
         let total = 0;
         for(let type_id in (this.activity?.materials ?? [])) {
@@ -121,9 +125,7 @@ export class IndustryJob {
     get totalCost(): IskAmount {
         let totalCost = 0;
         for(let type_id in (this.activity?.materials ?? [])) {
-            let materialQuantity = this.qty(this.activity.materials[type_id].quantity);
-
-            totalCost += materialQuantity * (this.prices[type_id] ?? 0);
+            totalCost += this.materialCost(parseInt(type_id));
         }
         totalCost += this.jobCost;
         totalCost += (this.blueprintCostPerRun ?? 0) * this.runs;
